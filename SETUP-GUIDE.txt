@@ -1,0 +1,198 @@
+===============================================================================
+WATER BLOB STORE - COMPLETE SETUP GUIDE
+===============================================================================
+
+STEP 1: COPY FILES TO YOUR LOCAL FOLDER
+----------------------------------------
+1. Extract this zip/folder
+2. Copy ALL contents to: C:\waterblob-store
+3. Your folder should have:
+   - backend/
+   - frontend/
+   - database/
+   - README.md
+   - This file
+
+STEP 2: PUSH TO GITHUB
+---------------------
+cd C:\waterblob-store
+git add .
+git commit -m "Initial Water Blob Store"
+git push origin main
+
+STEP 3: GET STRIPE KEYS
+-----------------------
+1. Go to https://stripe.com
+2. Create account / Login
+3. Dashboard → Developers → API keys
+4. Copy:
+   - Publishable key (pk_test_...)
+   - Secret key (sk_test_...)
+5. Save them somewhere safe!
+
+STEP 4: CREATE DATABASE (RENDER)
+--------------------------------
+1. Go to https://dashboard.render.com
+2. Click "New" → "PostgreSQL"
+3. Name: waterblob-store-db
+4. Plan: Free (for testing) or Starter ($7/mo)
+5. Click "Create Database"
+6. Copy "Internal Database URL"
+
+STEP 5: RUN DATABASE SCHEMA
+---------------------------
+1. In Render, click your database
+2. Click "Connect" → "External Connection"
+3. Copy the PSQL Command
+4. Run in your terminal:
+   
+   (paste the PSQL command here)
+   
+5. Then paste the contents of database/schema.sql
+6. Type \q to exit
+
+STEP 6: DEPLOY BACKEND (RENDER)
+-------------------------------
+1. In Render dashboard, click "New" → "Web Service"
+2. Connect your GitHub account
+3. Select "waterblob-store" repo
+4. Settings:
+   - Name: waterblob-store-api
+   - Root Directory: backend
+   - Build Command: npm install
+   - Start Command: npm start
+   - Plan: Starter ($7/mo)
+   
+5. Environment Variables (click "Add Environment Variable"):
+   DATABASE_URL = (your database internal URL from step 4)
+   STRIPE_SECRET_KEY = sk_test_your_key
+   STRIPE_WEBHOOK_SECRET = (leave empty for now)
+   FRONTEND_URL = https://unclephilburt.github.io/waterblob-store
+   NODE_ENV = production
+
+6. Click "Create Web Service"
+7. Wait for deploy (5-10 minutes)
+8. Copy your API URL: https://waterblob-store-api.onrender.com
+
+STEP 7: SETUP STRIPE WEBHOOK
+----------------------------
+1. Go to https://dashboard.stripe.com/webhooks
+2. Click "Add endpoint"
+3. Endpoint URL: https://waterblob-store-api.onrender.com/api/webhook
+4. Select events: checkout.session.completed
+5. Click "Add endpoint"
+6. Copy the "Signing secret" (whsec_...)
+7. Go back to Render → your web service → Environment
+8. Add: STRIPE_WEBHOOK_SECRET = whsec_your_secret
+9. Save and redeploy
+
+STEP 8: DEPLOY FRONTEND (GITHUB PAGES)
+--------------------------------------
+1. Update frontend/config.js:
+   
+   const CONFIG = {
+       API_URL: 'https://waterblob-store-api.onrender.com',
+       STRIPE_PUBLISHABLE_KEY: 'pk_test_your_key_here'
+   };
+
+2. Push to GitHub:
+   git add .
+   git commit -m "Update config"
+   git push origin main
+
+3. GitHub repo → Settings → Pages
+4. Source: Deploy from branch
+5. Branch: main
+6. Folder: /frontend
+7. Save
+
+8. Wait 2-3 minutes
+9. Visit: https://unclephilburt.github.io/waterblob-store
+
+STEP 9: TEST YOUR STORE!
+------------------------
+1. Go to your GitHub Pages URL
+2. Click "Products"
+3. Add item to cart
+4. Checkout
+5. Use test card: 4242 4242 4242 4242
+6. Any future date, any CVC
+7. Complete purchase!
+
+STEP 10: POINT YOUR DOMAIN (OPTIONAL)
+-------------------------------------
+To use thewaterblob.com:
+
+1. Create file: frontend/CNAME
+   Contents: thewaterblob.com
+
+2. Push to GitHub
+
+3. In Porkbun (or your domain registrar):
+   - A record: @ → 185.199.108.153
+   - A record: @ → 185.199.109.153
+   - A record: @ → 185.199.110.153
+   - A record: @ → 185.199.111.153
+   - CNAME: www → unclephilburt.github.io
+
+4. GitHub repo Settings → Pages:
+   - Custom domain: thewaterblob.com
+   - Check "Enforce HTTPS"
+   - Wait 24 hours for DNS
+
+===============================================================================
+USING CLAUDE CODE TO CUSTOMIZE
+===============================================================================
+
+Now use Claude Code to customize your store:
+
+cd C:\waterblob-store\frontend
+claude
+
+Tell Claude things like:
+- "Change the color scheme to blue and green"
+- "Add a newsletter signup form"
+- "Make the product cards bigger"
+- "Add product filtering by category"
+- "Create an admin dashboard"
+
+===============================================================================
+COST BREAKDOWN
+===============================================================================
+
+Monthly Costs:
+- Render Web Service: $7/mo
+- Render Database: $7/mo (or FREE for starter)
+- GitHub Pages: FREE
+- Domain: ~$1/mo ($10-15/year)
+
+Total: ~$14-15/month
+
+Annual Savings vs Shopify:
+- Shopify: $1,000+/year
+- Your Store: ~$170/year
+- SAVINGS: $830/year!
+
+===============================================================================
+NEED HELP?
+===============================================================================
+
+- Backend not working? Check Render logs
+- Frontend not loading? Check browser console (F12)
+- Payments failing? Check Stripe dashboard logs
+- Database errors? Verify schema was run correctly
+
+===============================================================================
+YOU'RE DONE! 🎉
+===============================================================================
+
+Your store is now live and ready to make sales!
+
+Next steps:
+1. Add your actual products (replace sample products)
+2. Add real product images
+3. Customize design with Claude Code
+4. Test thoroughly before going live
+5. Switch to Stripe live keys when ready
+
+Good luck with The Water Blob Store!

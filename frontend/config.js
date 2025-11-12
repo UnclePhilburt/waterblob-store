@@ -1,0 +1,4 @@
+const CONFIG = {
+    API_URL: 'http://localhost:3000',
+    STRIPE_PUBLISHABLE_KEY: 'pk_test_your_publishable_key_here'
+};
