@@ -3,58 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Water Blob - Official Store</title>
+    <meta name="theme-color" content="#FAFAFA">
+    <title>Water Blob — Ultimate Summer Camp Experience</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="index.html" class="logo">The Water Blob</a>
+            <a href="index.html" class="logo">Water Blob</a>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
                 <li><a href="products.html">Products</a></li>
                 <li><a href="cart.html" class="cart-link">
                     Cart (<span id="cart-count">0</span>)
                 </a></li>
+                <li>
+                    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                        <span class="theme-icon sun">☀️</span>
+                        <span class="theme-icon moon">🌙</span>
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>
 
     <header class="hero">
-        <div class="container">
-            <h1>Welcome to The Water Blob</h1>
-            <p>Revolutionary water storage solutions for your home and business</p>
-            <a href="products.html" class="btn btn-primary">Shop Now</a>
+        <div id="canvas-container"></div>
+        <div class="hero-content">
+            <div class="container">
+                <h1>Make Every Camp <span class="gradient-text">Unforgettable</span></h1>
+                <p>The ultimate inflatable water experience. Launch. Splash. Repeat.</p>
+                <a href="products.html" class="btn btn-primary">Shop Now →</a>
+            </div>
         </div>
     </header>
 
-    <section class="features">
+    <section class="stats">
         <div class="container">
-            <h2>Why Choose Water Blob?</h2>
-            <div class="feature-grid">
-                <div class="feature">
-                    <h3>🌊 Premium Quality</h3>
-                    <p>Made from the highest quality materials for lasting durability</p>
+            <div class="stats-grid">
+                <div class="stat">
+                    <h3>40+</h3>
+                    <p>Years of Excellence</p>
                 </div>
-                <div class="feature">
-                    <h3>📦 Fast Shipping</h3>
-                    <p>Get your Water Blob delivered to your door in days</p>
+                <div class="stat">
+                    <h3>Global</h3>
+                    <p>Reach</p>
                 </div>
-                <div class="feature">
-                    <h3>💯 Satisfaction Guaranteed</h3>
-                    <p>30-day money-back guarantee on all products</p>
+                <div class="stat">
+                    <h3>1M+</h3>
+                    <p>Epic Launches</p>
+                </div>
+                <div class="stat">
+                    <h3>Original</h3>
+                    <p>Water Blob®</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <section class="features">
+        <div class="container">
+            <h2>Built for Adventure</h2>
+            <p class="subtitle">Everything you need for the ultimate water experience</p>
+            <div class="feature-grid">
+                <div class="feature">
+                    <h3>🚀 Epic Launches</h3>
+                    <p>Launch up to 10+ feet in the air. The more weight, the bigger the splash.</p>
+                </div>
+                <div class="feature">
+                    <h3>⚡ Quick Setup</h3>
+                    <p>From storage to fun in under 30 minutes. Pump and anchors included.</p>
+                </div>
+                <div class="feature">
+                    <h3>🏕️ Camp Ready</h3>
+                    <p>Commercial-grade materials built to withstand hundreds of launches daily.</p>
+                </div>
+                <div class="feature">
+                    <h3>🌊 Safety First</h3>
+                    <p>Reinforced seams, soft landing zones. Meets all safety standards.</p>
+                </div>
+                <div class="feature">
+                    <h3>☀️ All Season</h3>
+                    <p>UV-resistant and weatherproof. Built to last year after year.</p>
+                </div>
+                <div class="feature">
+                    <h3>💪 Heavy Duty</h3>
+                    <p>Supports up to 1,500 lbs. Perfect for all ages and sizes.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="video-section">
+        <div class="container">
+            <h2>See It In Action</h2>
+            <div class="video-container">
+                📹 Video Coming Soon
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Ready for the Best Summer Ever?</h2>
+            <p>Join thousands of camps creating incredible memories with Water Blob</p>
+            <a href="products.html" class="btn btn-primary">Get Started →</a>
+        </div>
+    </section>
+
     <footer>
         <div class="container">
-            <p>&copy; 2024 The Water Blob. All rights reserved.</p>
+            <p>© 2024 Water Blob. The original since 1984.</p>
         </div>
     </footer>
 
     <script src="cart.js"></script>
+    <script src="theme.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="blob-viewer.js"></script>
     <script>updateCartCount();</script>
 </body>
 </html>
