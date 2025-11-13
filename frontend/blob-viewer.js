@@ -63,14 +63,14 @@ class BlobViewer {
         // Scene
         this.scene = new THREE.Scene();
 
-        // Camera
+        // Camera - closer and more centered
         this.camera = new THREE.PerspectiveCamera(
-            45,
+            50,
             window.innerWidth / window.innerHeight,
             0.1,
             1000
         );
-        this.camera.position.set(0, 2, 8);
+        this.camera.position.set(0, 1, 6);
 
         // Renderer
         this.renderer = new THREE.WebGLRenderer({
@@ -96,7 +96,7 @@ class BlobViewer {
         this.controls.enableZoom = false;
         this.controls.enablePan = false;
         this.controls.autoRotate = true;
-        this.controls.autoRotateSpeed = 0.5;
+        this.controls.autoRotateSpeed = 0.8; // Faster rotation
         this.controls.minPolarAngle = Math.PI / 3;
         this.controls.maxPolarAngle = Math.PI / 1.5;
 
@@ -202,11 +202,11 @@ class BlobViewer {
                 const size = box.getSize(new THREE.Vector3());
 
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 4 / maxDim;
+                const scale = 5.5 / maxDim; // Bigger model
                 this.model.scale.setScalar(scale);
 
                 this.model.position.sub(center.multiplyScalar(scale));
-                this.model.position.y = -0.5;
+                this.model.position.y = 0; // Center vertically
 
                 // Enhanced materials
                 this.model.traverse((child) => {
@@ -306,8 +306,8 @@ class BlobViewer {
                 0.05
             );
 
-            // Floating animation
-            this.model.position.y = -0.5 + Math.sin(Date.now() * 0.001) * 0.2;
+            // Floating animation - more dramatic
+            this.model.position.y = Math.sin(Date.now() * 0.0008) * 0.3;
         }
 
         // Animate point lights
