@@ -3,8 +3,8 @@ services:
   - type: web
     name: waterblob-store
     env: node
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    buildCommand: chmod +x backend/build.sh && backend/build.sh
+    startCommand: chmod +x backend/start.sh && cd backend && ./start.sh
     envVars:
       - key: NODE_ENV
         value: production
