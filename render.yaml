@@ -2,24 +2,9 @@ services:
   - type: web
     name: waterblob-store
     env: node
-    buildCommand: |
-      echo "🔥 BUILD STARTING"
-      echo "PWD: $(pwd)"
-      echo "LS: $(ls -la)"
-      cd backend
-      echo "IN BACKEND: $(pwd)"
-      echo "BACKEND FILES: $(ls -la)"
-      npm install
-      echo "✅ BUILD DONE"
-    startCommand: |
-      echo "🚀 START COMMAND"
-      echo "PWD: $(pwd)"
-      cd backend
-      echo "IN BACKEND: $(pwd)"
-      echo "CHECKING FILES: $(ls -la)"
-      echo "NODE VERSION: $(node --version)"
-      echo "STARTING SERVER..."
-      node server.js
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
