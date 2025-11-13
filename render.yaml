@@ -1,22 +1,25 @@
 services:
-  # Web Service - serves both frontend and API
   - type: web
     name: waterblob-store
     env: node
-    buildCommand: chmod +x backend/build.sh && backend/build.sh
-    startCommand: chmod +x backend/start.sh && cd backend && ./start.sh
+    buildCommand: |
+      echo "🔥 BUILD STARTING"
+      echo "PWD: $(pwd)"
+      echo "LS: $(ls -la)"
+      cd backend
+      echo "IN BACKEND: $(pwd)"
+      echo "BACKEND FILES: $(ls -la)"
+      npm install
+      echo "✅ BUILD DONE"
+    startCommand: |
+      echo "🚀 START COMMAND"
+      echo "PWD: $(pwd)"
+      cd backend
+      echo "IN BACKEND: $(pwd)"
+      echo "CHECKING FILES: $(ls -la)"
+      echo "NODE VERSION: $(node --version)"
+      echo "STARTING SERVER..."
+      node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
-      - key: FRONTEND_URL
-        sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false

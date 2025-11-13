@@ -27,8 +27,15 @@ git push origin main
 - **Root Directory:** Leave blank (uses repo root)
 
 **Build & Deploy:**
-- **Build Command:** `cd backend && npm install`
-- **Start Command:** `cd backend && npm start`
+- **Build Command:**
+```bash
+echo "BUILD START" && echo "PWD: $(pwd)" && cd backend && echo "IN BACKEND" && npm install && echo "BUILD DONE"
+```
+
+- **Start Command:**
+```bash
+echo "START" && cd backend && echo "IN BACKEND: $(pwd)" && node server.js
+```
 
 ### 4. Environment Variables
 
