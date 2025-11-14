@@ -20,7 +20,7 @@ class BlobViewer {
         this.model = null;
         this.controls = null;
         this.composer = null;
-        this.rotationSpeed = 0.003;
+        this.rotationSpeed = 0.006; // Faster for more dramatic showcase
         this.mouseX = 0;
         this.mouseY = 0;
 
@@ -64,9 +64,10 @@ class BlobViewer {
         this.scene = new THREE.Scene();
 
         // Camera - closer and more centered
+        const containerSize = 400; // Match CSS container size
         this.camera = new THREE.PerspectiveCamera(
             50,
-            window.innerWidth / window.innerHeight,
+            1, // Square aspect ratio
             0.1,
             1000
         );
@@ -78,7 +79,7 @@ class BlobViewer {
             alpha: true,
             powerPreference: "high-performance"
         });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(containerSize, containerSize);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
@@ -96,7 +97,7 @@ class BlobViewer {
         this.controls.enableZoom = false;
         this.controls.enablePan = false;
         this.controls.autoRotate = true;
-        this.controls.autoRotateSpeed = 0.8; // Faster rotation
+        this.controls.autoRotateSpeed = 1.5; // Faster rotation for showcase
         this.controls.minPolarAngle = Math.PI / 3;
         this.controls.maxPolarAngle = Math.PI / 1.5;
 
@@ -166,12 +167,12 @@ class BlobViewer {
         // Render pass
         const renderPass = new RenderPass(this.scene, this.camera);
 
-        // Bloom pass for glow effect
+        // Bloom pass for glow effect - enhanced for showcase
         const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.6,  // strength
-            0.4,  // radius
-            0.85  // threshold
+            new THREE.Vector2(400, 400),
+            0.8,  // strength - more intense
+            0.5,  // radius
+            0.8   // threshold
         );
 
         // Composer
@@ -202,7 +203,7 @@ class BlobViewer {
                 const size = box.getSize(new THREE.Vector3());
 
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 5.5 / maxDim; // Bigger model
+                const scale = 4.0 / maxDim; // Smaller for showcase
                 this.model.scale.setScalar(scale);
 
                 this.model.position.sub(center.multiplyScalar(scale));
@@ -216,14 +217,14 @@ class BlobViewer {
 
                         // Make material more reflective and glossy
                         if (child.material) {
-                            child.material.metalness = 0.3;
-                            child.material.roughness = 0.2;
-                            child.material.envMapIntensity = 1.5;
+                            child.material.metalness = 0.4;
+                            child.material.roughness = 0.15;
+                            child.material.envMapIntensity = 2.0;
 
-                            // Add emissive glow
+                            // Add emissive glow - enhanced for showcase
                             if (child.material.color) {
                                 child.material.emissive = child.material.color.clone();
-                                child.material.emissiveIntensity = 0.1;
+                                child.material.emissiveIntensity = 0.3;
                             }
                         }
                     }
@@ -285,10 +286,8 @@ class BlobViewer {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.composer.setSize(window.innerWidth, window.innerHeight);
+        // Keep container at fixed size (400x400) for showcase effect
+        // No resize needed
     }
 
     animate() {
@@ -306,8 +305,8 @@ class BlobViewer {
                 0.05
             );
 
-            // Floating animation - more dramatic
-            this.model.position.y = Math.sin(Date.now() * 0.0008) * 0.3;
+            // Floating animation - more dramatic for showcase
+            this.model.position.y = Math.sin(Date.now() * 0.001) * 0.5;
         }
 
         // Animate point lights
