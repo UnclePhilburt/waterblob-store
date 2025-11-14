@@ -64,10 +64,9 @@ class BlobViewer {
         this.scene = new THREE.Scene();
 
         // Camera - closer and more centered
-        const containerSize = 400; // Match CSS container size
         this.camera = new THREE.PerspectiveCamera(
             50,
-            1, // Square aspect ratio
+            window.innerWidth / window.innerHeight,
             0.1,
             1000
         );
@@ -79,7 +78,7 @@ class BlobViewer {
             alpha: true,
             powerPreference: "high-performance"
         });
-        this.renderer.setSize(containerSize, containerSize);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
@@ -167,12 +166,12 @@ class BlobViewer {
         // Render pass
         const renderPass = new RenderPass(this.scene, this.camera);
 
-        // Bloom pass for glow effect - enhanced for showcase
+        // Bloom pass for glow effect
         const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(400, 400),
-            0.8,  // strength - more intense
-            0.5,  // radius
-            0.8   // threshold
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            0.7,  // strength
+            0.4,  // radius
+            0.85  // threshold
         );
 
         // Composer
@@ -203,7 +202,7 @@ class BlobViewer {
                 const size = box.getSize(new THREE.Vector3());
 
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 4.0 / maxDim; // Smaller for showcase
+                const scale = 6.5 / maxDim; // Bigger model
                 this.model.scale.setScalar(scale);
 
                 this.model.position.sub(center.multiplyScalar(scale));
@@ -286,8 +285,10 @@ class BlobViewer {
     }
 
     onWindowResize() {
-        // Keep container at fixed size (400x400) for showcase effect
-        // No resize needed
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.composer.setSize(window.innerWidth, window.innerHeight);
     }
 
     animate() {
