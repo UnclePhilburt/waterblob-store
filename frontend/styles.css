@@ -468,10 +468,70 @@ body {
     box-shadow: var(--shadow-md);
 }
 
+/* Media Section */
+.media-section {
+    padding: 8rem 0;
+    background: var(--bg-secondary) !important;
+    position: relative;
+}
+
+.media-section h2 {
+    text-align: center;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+}
+
+.media-section .subtitle {
+    text-align: center;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    color: var(--text-secondary);
+    margin-bottom: 4rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: 1.5rem;
+}
+
+.media-item {
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border-subtle);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.media-item:hover {
+    border-color: var(--border-medium);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.media-item h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.media-item p {
+    font-size: 0.9375rem;
+    color: var(--text-tertiary);
+    margin: 0;
+}
+
 /* Features Section - Bento Grid Style */
 .features {
     padding: 8rem 0;
-    background: var(--bg-secondary) !important;
+    background: var(--bg-primary) !important;
     position: relative;
 }
 
@@ -686,6 +746,7 @@ footer p {
         opacity: 0.8;
     }
 
+    .media-section,
     .features,
     .video-section,
     .cta {
@@ -696,7 +757,8 @@ footer p {
         padding: 4rem 0;
     }
 
-    .feature-grid {
+    .feature-grid,
+    .media-grid {
         gap: 1rem;
     }
 
