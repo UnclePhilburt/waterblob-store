@@ -196,26 +196,26 @@ body {
     justify-content: center;
     position: relative;
     background:
-        radial-gradient(ellipse at top, rgba(0, 150, 255, 0.3) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom, rgba(0, 100, 200, 0.2) 0%, transparent 50%),
+        radial-gradient(ellipse at top, rgba(0, 180, 255, 0.4) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 150, 255, 0.3) 0%, transparent 50%),
         linear-gradient(180deg,
-            #0A1E3D 0%,
-            #0D2847 30%,
-            #0F3A5F 60%,
-            #124B75 100%);
+            #0A2540 0%,
+            #0D3A5F 30%,
+            #115078 60%,
+            #1565A0 100%) !important;
     padding-top: 5rem;
     overflow: hidden;
 }
 
 [data-theme="dark"] .hero {
     background:
-        radial-gradient(ellipse at top, rgba(0, 150, 255, 0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at bottom, rgba(0, 100, 200, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at top, rgba(0, 200, 255, 0.5) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom, rgba(0, 150, 255, 0.4) 0%, transparent 50%),
         linear-gradient(180deg,
-            #000D1A 0%,
-            #001833 30%,
-            #002447 60%,
-            #003A5C 100%);
+            #051825 0%,
+            #082840 30%,
+            #0C3D5C 60%,
+            #0F5278 100%) !important;
 }
 
 /* Water splash effects */
@@ -471,7 +471,7 @@ body {
 /* Features Section - Bento Grid Style */
 .features {
     padding: 8rem 0;
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
     position: relative;
 }
 
@@ -534,7 +534,7 @@ body {
 /* Stats Section - Modern */
 .stats {
     padding: 6rem 0;
-    background: var(--bg-primary);
+    background: var(--bg-primary) !important;
 }
 
 .stats-grid {
@@ -568,7 +568,7 @@ body {
 /* Video Section - Clean */
 .video-section {
     padding: 8rem 0;
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
 }
 
 .video-section h2 {
@@ -605,7 +605,7 @@ body {
 
 /* CTA Section - Bold */
 .cta {
-    background: var(--bg-primary);
+    background: var(--bg-primary) !important;
     padding: 8rem 0;
     text-align: center;
     position: relative;
@@ -630,7 +630,7 @@ body {
 
 /* Footer - Minimal */
 footer {
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
     border-top: 1px solid var(--border-subtle);
     padding: 3rem 0;
     text-align: center;
