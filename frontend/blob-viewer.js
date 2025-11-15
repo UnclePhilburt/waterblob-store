@@ -38,6 +38,13 @@ class BlobViewer {
         this.waterPool = null;
         this.isMobile = window.innerWidth <= 768;
         this.isLowEnd = window.innerWidth <= 480;
+        this.lightRays = null;
+        this.atmosphericParticles = [];
+        this.waterShadow = null;
+        this.frameCount = 0;
+        this.fps = 60;
+        this.lastFrameTime = performance.now();
+        this.adaptiveQuality = 1.0;
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -45,7 +52,25 @@ class BlobViewer {
             this.showProtocolWarning();
         }
 
-        this.init();
+        // Lazy load - only initialize when in viewport
+        this.setupLazyLoading();
+    }
+
+    setupLazyLoading() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !this.initialized) {
+                    this.initialized = true;
+                    observer.disconnect();
+                    console.log('3D scene entering viewport, initializing...');
+                    this.init();
+                }
+            });
+        }, {
+            rootMargin: '50px' // Start loading slightly before it's visible
+        });
+
+        observer.observe(this.container);
     }
 
     showProtocolWarning() {
@@ -127,6 +152,14 @@ class BlobViewer {
         // Create water pool
         this.createWaterPool();
 
+        // Create volumetric light rays
+        if (!this.isMobile) {
+            this.createVolumetricLightRays();
+        }
+
+        // Create atmospheric particles
+        this.createAtmosphericParticles();
+
         // Load model
         this.loadModel();
 
@@ -194,15 +227,16 @@ class BlobViewer {
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(renderPass);
 
-        // Bloom pass for glow effect - disabled on mobile for performance
+        // Enhanced bloom pass for dramatic glow - disabled on mobile for performance
         if (!this.isMobile) {
             const bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                0.4,  // strength - reduced from 0.7
-                0.3,  // radius - reduced from 0.4
-                0.9   // threshold - increased from 0.85
+                0.8,  // strength - increased for more dramatic glow
+                0.5,  // radius - increased for wider glow
+                0.7   // threshold - lowered to bloom more elements
             );
             this.composer.addPass(bloomPass);
+            this.bloomPass = bloomPass;
         }
     }
 
@@ -302,7 +336,36 @@ class BlobViewer {
         normalTexture.wrapT = THREE.RepeatWrapping;
         normalTexture.repeat.set(4, 4);
 
-        // Water material with realistic properties and enhanced normal map
+        // Create caustics texture for animated light patterns
+        const causticsCanvas = document.createElement('canvas');
+        causticsCanvas.width = 512;
+        causticsCanvas.height = 512;
+        const causticsCtx = causticsCanvas.getContext('2d');
+
+        // Generate caustics pattern
+        causticsCtx.fillStyle = '#000000';
+        causticsCtx.fillRect(0, 0, 512, 512);
+
+        // Create wavy caustic light patterns
+        for (let i = 0; i < 40; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 512;
+            const size = 30 + Math.random() * 80;
+
+            const gradient = causticsCtx.createRadialGradient(x, y, 0, x, y, size);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+            gradient.addColorStop(0.5, 'rgba(200, 240, 255, 0.4)');
+            gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+            causticsCtx.fillStyle = gradient;
+            causticsCtx.fillRect(0, 0, 512, 512);
+        }
+
+        const causticsTexture = new THREE.CanvasTexture(causticsCanvas);
+        causticsTexture.wrapS = THREE.RepeatWrapping;
+        causticsTexture.wrapT = THREE.RepeatWrapping;
+        causticsTexture.repeat.set(2, 2);
+
+        // Water material with realistic properties, enhanced normal map, and caustics
         const waterMaterial = new THREE.MeshPhysicalMaterial({
             color: 0x0077BE,
             metalness: 0.1,
@@ -316,17 +379,124 @@ class BlobViewer {
             clearcoatRoughness: 0.03,
             normalMap: normalTexture,
             normalScale: new THREE.Vector2(1.2, 1.2), // Increased for more visible texture
+            emissiveMap: causticsTexture, // Add caustics as emissive
+            emissive: 0xffffff,
+            emissiveIntensity: 0.15,
             side: THREE.DoubleSide,
             ior: 1.333 // Water's index of refraction
         });
 
         this.waterPool = new THREE.Mesh(waterGeometry, waterMaterial);
 
+        // Store caustics texture for animation
+        this.causticsTexture = causticsTexture;
+
         // Position the water below the blob
         this.waterPool.rotation.x = -Math.PI / 2; // Make it horizontal
         this.waterPool.position.y = -0.8;
 
         this.scene.add(this.waterPool);
+    }
+
+    createVolumetricLightRays() {
+        // Create god rays/volumetric light effect
+        const rayGeometry = new THREE.ConeGeometry(0.05, 12, 8, 1, true);
+        const rayMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.06,
+            side: THREE.DoubleSide,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+        // Create multiple light rays for fuller effect
+        const rayCount = 8;
+        for (let i = 0; i < rayCount; i++) {
+            const ray = new THREE.Mesh(rayGeometry, rayMaterial.clone());
+            ray.position.set(0, 6, 3);
+            ray.rotation.x = Math.PI;
+
+            // Slight offset for each ray
+            const angle = (Math.PI * 2 * i) / rayCount;
+            ray.position.x += Math.cos(angle) * 0.5;
+            ray.position.z += 3 + Math.sin(angle) * 0.5;
+
+            // Store for animation
+            ray.userData.baseOpacity = 0.06 + Math.random() * 0.02;
+            ray.userData.phase = Math.random() * Math.PI * 2;
+
+            this.scene.add(ray);
+
+            if (!this.lightRays) this.lightRays = [];
+            this.lightRays.push(ray);
+        }
+    }
+
+    createAtmosphericParticles() {
+        // Create dust motes floating in the light
+        const particleCount = this.isLowEnd ? 15 : (this.isMobile ? 25 : 50);
+        const particleGeometry = new THREE.SphereGeometry(0.02, 4, 4);
+        const particleMaterial = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.AdditiveBlending
+        });
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
+
+            // Position in light cone area
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * 3;
+            const height = Math.random() * 10;
+
+            particle.position.set(
+                Math.cos(angle) * radius,
+                height - 2,
+                Math.sin(angle) * radius + 3
+            );
+
+            // Store animation data
+            particle.userData.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.02,
+                Math.random() * 0.01 + 0.005,
+                (Math.random() - 0.5) * 0.02
+            );
+            particle.userData.startY = particle.position.y;
+            particle.userData.range = 4 + Math.random() * 6;
+            particle.userData.baseOpacity = 0.2 + Math.random() * 0.3;
+
+            this.scene.add(particle);
+            this.atmosphericParticles.push(particle);
+        }
+    }
+
+    createWaterShadow() {
+        // Create shadow plane under blob
+        const shadowGeometry = new THREE.PlaneGeometry(4, 4);
+        const shadowMaterial = new THREE.MeshBasicMaterial({
+            color: 0x000000,
+            transparent: true,
+            opacity: 0.3,
+            blending: THREE.MultiplyBlending,
+            depthWrite: false
+        });
+
+        this.waterShadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+        this.waterShadow.rotation.x = -Math.PI / 2;
+        this.waterShadow.position.y = -0.75;
+
+        this.scene.add(this.waterShadow);
+    }
+
+    addReflectedLight() {
+        // Add upward-facing cyan light to simulate water reflection
+        const reflectedLight = new THREE.PointLight(0x00AAFF, this.isMobile ? 0.8 : 1.2, 8);
+        reflectedLight.position.set(0, -0.5, 0);
+        this.scene.add(reflectedLight);
+        this.reflectedLight = reflectedLight;
     }
 
     loadModel() {
@@ -389,6 +559,12 @@ class BlobViewer {
                 });
 
                 this.scene.add(this.model);
+
+                // Create water shadow now that model is loaded
+                this.createWaterShadow();
+
+                // Add reflected light from water bouncing onto blob
+                this.addReflectedLight();
 
                 // Initial rotation for best angle
                 this.model.rotation.y = Math.PI / 4;
@@ -633,6 +809,72 @@ class BlobViewer {
         // Update particles
         this.updateParticles();
 
+        // Adaptive quality - measure frame rate
+        this.frameCount++;
+        const currentTime = performance.now();
+        if (currentTime >= this.lastFrameTime + 1000) {
+            this.fps = this.frameCount;
+            this.frameCount = 0;
+            this.lastFrameTime = currentTime;
+
+            // Adjust quality based on FPS
+            if (this.fps < 30 && this.adaptiveQuality > 0.5) {
+                this.adaptiveQuality -= 0.1;
+                console.log('Reducing quality, FPS:', this.fps);
+            } else if (this.fps > 55 && this.adaptiveQuality < 1.0) {
+                this.adaptiveQuality += 0.05;
+            }
+        }
+
+        // Animate volumetric light rays
+        if (this.lightRays) {
+            this.lightRays.forEach((ray, i) => {
+                const pulse = Math.sin(time * 0.5 + ray.userData.phase) * 0.5 + 0.5;
+                ray.material.opacity = ray.userData.baseOpacity * (0.7 + pulse * 0.3);
+
+                // Subtle rotation
+                ray.rotation.y = time * 0.1 + i * 0.5;
+            });
+        }
+
+        // Animate atmospheric particles
+        this.atmosphericParticles.forEach(particle => {
+            // Float upward and drift
+            particle.position.add(particle.userData.velocity);
+
+            // Reset when too high
+            if (particle.position.y > particle.userData.startY + particle.userData.range) {
+                particle.position.y = particle.userData.startY;
+            }
+
+            // Twinkle effect
+            const twinkle = Math.sin(time * 2 + particle.position.x) * 0.5 + 0.5;
+            particle.material.opacity = particle.userData.baseOpacity * twinkle;
+        });
+
+        // Spotlight breathing animation
+        if (this.spotlight) {
+            const breath = Math.sin(time * 0.4) * 0.15;
+            this.spotlight.intensity = (this.isMobile ? 2.5 : 3.5) * (1 + breath);
+        }
+
+        // Animate caustics texture
+        if (this.causticsTexture) {
+            this.causticsTexture.offset.x = time * 0.03;
+            this.causticsTexture.offset.y = time * 0.02;
+        }
+
+        // Update water shadow position and size based on blob
+        if (this.waterShadow && this.model) {
+            this.waterShadow.position.x = this.model.position.x;
+            this.waterShadow.position.z = this.model.position.z;
+
+            // Shadow gets smaller/lighter when blob is higher
+            const shadowScale = 1 - (this.model.position.y * 0.15);
+            this.waterShadow.scale.set(shadowScale, shadowScale, 1);
+            this.waterShadow.material.opacity = 0.2 + (this.model.position.y * 0.05);
+        }
+
         // Animate water pool with realistic waves
         if (this.waterPool && this.waterVertices) {
             const positions = this.waterPool.geometry.attributes.position;
@@ -640,6 +882,19 @@ class BlobViewer {
             for (let i = 0; i < positions.count; i++) {
                 const x = positions.getX(i);
                 const y = positions.getY(i);
+
+                // Blob interaction ripple - emanates from blob position
+                let blobRipple = 0;
+                if (this.model) {
+                    const blobX = this.model.position.x;
+                    const blobZ = this.model.position.z;
+                    const distToBlob = Math.sqrt((x - blobX) * (x - blobX) + (y - blobZ) * (y - blobZ));
+
+                    // Ripple under blob synced to floating motion
+                    if (distToBlob < 3) {
+                        blobRipple = Math.sin(distToBlob * 2 - time * 2) * (1 - distToBlob / 3) * 0.3;
+                    }
+                }
 
                 // Simplified wave calculation on mobile
                 if (this.isMobile) {
@@ -650,7 +905,7 @@ class BlobViewer {
                     const dist = Math.sqrt(x * x + y * y);
                     const ripple1 = Math.sin(dist * 0.4 - time * 1.2) * 0.18;
 
-                    positions.setZ(i, wave1 + wave2 + wave3 + ripple1);
+                    positions.setZ(i, wave1 + wave2 + wave3 + ripple1 + blobRipple);
                 } else {
                     // Full wave layers on desktop
                     const dist = Math.sqrt(x * x + y * y);
@@ -674,9 +929,9 @@ class BlobViewer {
                     // Circular interference pattern
                     const interference = Math.sin((x * x + y * y) * 0.05 + time * 0.4) * 0.1;
 
-                    // Combine all waves
+                    // Combine all waves including blob interaction
                     const height = wave1 + wave2 + wave3 + wave4 +
-                                  ripple1 + ripple2 + detail1 + detail2 + interference;
+                                  ripple1 + ripple2 + detail1 + detail2 + interference + blobRipple;
 
                     positions.setZ(i, height);
                 }
