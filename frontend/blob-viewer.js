@@ -76,14 +76,18 @@ class BlobViewer {
         // Scene
         this.scene = new THREE.Scene();
 
-        // Camera - closer and more centered
+        // Camera - responsive positioning
+        const isMobile = window.innerWidth <= 768;
+        const fov = isMobile ? 60 : 50; // Wider FOV on mobile
+        const cameraDistance = isMobile ? 8 : 6; // Further back on mobile
+
         this.camera = new THREE.PerspectiveCamera(
-            50,
+            fov,
             window.innerWidth / window.innerHeight,
             0.1,
             1000
         );
-        this.camera.position.set(0, 1, 6);
+        this.camera.position.set(0, 1, cameraDistance);
 
         // Renderer
         this.renderer = new THREE.WebGLRenderer({
@@ -326,7 +330,21 @@ class BlobViewer {
                 const size = box.getSize(new THREE.Vector3());
 
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const scale = 6.5 / maxDim; // Bigger model
+
+                // Responsive scaling based on screen size
+                const isMobile = window.innerWidth <= 768;
+                const isSmallMobile = window.innerWidth <= 480;
+                let scaleMultiplier;
+
+                if (isSmallMobile) {
+                    scaleMultiplier = 3.5; // Much smaller for small phones
+                } else if (isMobile) {
+                    scaleMultiplier = 4.5; // Smaller for tablets/large phones
+                } else {
+                    scaleMultiplier = 6.5; // Original size for desktop
+                }
+
+                const scale = scaleMultiplier / maxDim;
                 this.baseScale = scale;
                 this.model.scale.setScalar(scale);
 
@@ -535,6 +553,38 @@ class BlobViewer {
         // Update camera aspect ratio
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
+
+        // Adjust camera FOV and position for mobile
+        const isMobile = width <= 768;
+        const isSmallMobile = width <= 480;
+
+        this.camera.fov = isMobile ? 60 : 50;
+        this.camera.position.z = isMobile ? 8 : 6;
+        this.camera.updateProjectionMatrix();
+
+        // Rescale model based on screen size
+        if (this.model) {
+            const box = new THREE.Box3().setFromObject(this.model);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+
+            let scaleMultiplier;
+            if (isSmallMobile) {
+                scaleMultiplier = 3.5;
+            } else if (isMobile) {
+                scaleMultiplier = 4.5;
+            } else {
+                scaleMultiplier = 6.5;
+            }
+
+            const newScale = scaleMultiplier / maxDim;
+            this.baseScale = newScale;
+
+            // Only update if scale actually changed
+            if (Math.abs(this.model.scale.x - newScale) > 0.01) {
+                this.model.scale.setScalar(newScale);
+            }
+        }
 
         // Update renderer size
         this.renderer.setSize(width, height);
