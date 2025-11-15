@@ -24,6 +24,16 @@ class BlobViewer {
         this.mouseX = 0;
         this.mouseY = 0;
 
+        // Interactive states
+        this.isHovering = false;
+        this.clickTime = 0;
+        this.squishAmount = 0;
+        this.hoverIntensity = 0;
+        this.particles = [];
+        this.raycaster = new THREE.Raycaster();
+        this.mouse = new THREE.Vector2();
+        this.baseScale = 1;
+
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
             console.warn('Running from file:// protocol. You may need to run a local server for 3D models to load.');
@@ -203,6 +213,7 @@ class BlobViewer {
 
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const scale = 6.5 / maxDim; // Bigger model
+                this.baseScale = scale;
                 this.model.scale.setScalar(scale);
 
                 this.model.position.sub(center.multiplyScalar(scale));
@@ -268,10 +279,118 @@ class BlobViewer {
     }
 
     setupMouseInteraction() {
+        // Track mouse position for parallax
         document.addEventListener('mousemove', (event) => {
             this.mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             this.mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            // Update mouse position for raycasting
+            this.mouse.x = this.mouseX;
+            this.mouse.y = this.mouseY;
+
+            // Check for hover
+            this.checkHover();
         });
+
+        // Click to make blob squish and splash
+        this.renderer.domElement.addEventListener('click', (event) => {
+            this.onClick(event);
+        });
+
+        // Change cursor on hover
+        this.renderer.domElement.style.cursor = 'pointer';
+    }
+
+    checkHover() {
+        if (!this.model) return;
+
+        this.raycaster.setFromCamera(this.mouse, this.camera);
+        const intersects = this.raycaster.intersectObject(this.model, true);
+
+        this.isHovering = intersects.length > 0;
+    }
+
+    onClick(event) {
+        if (!this.model || !this.isHovering) return;
+
+        // Trigger squish animation
+        this.clickTime = Date.now();
+        this.squishAmount = 1;
+
+        // Create particle splash
+        this.createSplash(event);
+
+        // Make blob glow briefly
+        this.model.traverse((child) => {
+            if (child.isMesh && child.material) {
+                const originalIntensity = child.material.emissiveIntensity;
+                child.material.emissiveIntensity = 0.8;
+
+                setTimeout(() => {
+                    child.material.emissiveIntensity = originalIntensity;
+                }, 300);
+            }
+        });
+    }
+
+    createSplash(event) {
+        const particleCount = 30;
+        const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0x00E5FF,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = new THREE.Mesh(geometry, material.clone());
+
+            // Position near the model
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const radius = 2 + Math.random() * 2;
+            particle.position.set(
+                Math.cos(angle) * radius,
+                Math.random() * 2 - 1,
+                Math.sin(angle) * radius
+            );
+
+            // Random velocity
+            particle.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 0.3,
+                Math.random() * 0.3 + 0.2,
+                (Math.random() - 0.5) * 0.3
+            );
+
+            particle.life = 1.0;
+            particle.decay = 0.02 + Math.random() * 0.02;
+
+            this.scene.add(particle);
+            this.particles.push(particle);
+        }
+    }
+
+    updateParticles() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const particle = this.particles[i];
+
+            // Update position
+            particle.position.add(particle.velocity);
+
+            // Apply gravity
+            particle.velocity.y -= 0.01;
+
+            // Fade out
+            particle.life -= particle.decay;
+            particle.material.opacity = particle.life;
+
+            // Remove dead particles
+            if (particle.life <= 0) {
+                this.scene.remove(particle);
+                particle.geometry.dispose();
+                particle.material.dispose();
+                this.particles.splice(i, 1);
+            }
+        }
     }
 
     updateTheme() {
@@ -294,6 +413,11 @@ class BlobViewer {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        const time = Date.now() * 0.001;
+
+        // Update particles
+        this.updateParticles();
+
         // Smooth mouse parallax
         if (this.model) {
             const targetRotationY = this.model.rotation.y + this.rotationSpeed;
@@ -307,17 +431,73 @@ class BlobViewer {
             );
 
             // Floating animation - more dramatic for showcase
-            this.model.position.y = Math.sin(Date.now() * 0.001) * 0.5;
+            const baseY = Math.sin(time) * 0.5;
+            this.model.position.y = baseY;
+
+            // Squish animation on click
+            if (this.squishAmount > 0) {
+                const timeSinceClick = (Date.now() - this.clickTime) / 1000;
+                const squishDuration = 0.5;
+
+                if (timeSinceClick < squishDuration) {
+                    // Squish and bounce back
+                    const progress = timeSinceClick / squishDuration;
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const squish = Math.sin(progress * Math.PI * 2) * (1 - easeOut);
+
+                    this.model.scale.y = this.baseScale * (1 - squish * 0.3);
+                    this.model.scale.x = this.baseScale * (1 + squish * 0.15);
+                    this.model.scale.z = this.baseScale * (1 + squish * 0.15);
+                } else {
+                    // Reset scale
+                    this.model.scale.setScalar(this.baseScale);
+                    this.squishAmount = 0;
+                }
+            }
+
+            // Hover glow effect
+            const targetHoverIntensity = this.isHovering ? 1 : 0;
+            this.hoverIntensity = THREE.MathUtils.lerp(
+                this.hoverIntensity,
+                targetHoverIntensity,
+                0.1
+            );
+
+            // Apply hover effects to materials
+            if (this.hoverIntensity > 0.01) {
+                this.model.traverse((child) => {
+                    if (child.isMesh && child.material && child.material.emissive) {
+                        const baseIntensity = 0.3;
+                        child.material.emissiveIntensity = baseIntensity + (this.hoverIntensity * 0.4);
+                    }
+                });
+            }
+
+            // Wobble on hover
+            if (this.isHovering) {
+                const wobble = Math.sin(time * 3) * 0.02;
+                this.model.rotation.z = wobble;
+            } else {
+                this.model.rotation.z = THREE.MathUtils.lerp(this.model.rotation.z, 0, 0.1);
+            }
         }
 
         // Animate point lights
-        const time = Date.now() * 0.001;
         if (this.animatedLights) {
             this.animatedLights[0].position.x = Math.sin(time * 0.7) * 4;
             this.animatedLights[0].position.z = Math.cos(time * 0.7) * 4;
 
             this.animatedLights[1].position.x = Math.sin(time * 0.5 + Math.PI) * 4;
             this.animatedLights[1].position.z = Math.cos(time * 0.5 + Math.PI) * 4;
+
+            // Pulse lights on hover
+            if (this.hoverIntensity > 0.01) {
+                this.animatedLights[0].intensity = 1 + this.hoverIntensity * 0.5;
+                this.animatedLights[1].intensity = 0.8 + this.hoverIntensity * 0.4;
+            } else {
+                this.animatedLights[0].intensity = 1;
+                this.animatedLights[1].intensity = 0.8;
+            }
         }
 
         // Update controls
