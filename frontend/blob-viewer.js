@@ -242,16 +242,16 @@ class BlobViewer {
 
     createWaterPool() {
         // Create a realistic water surface below the blob
-        // Reduce geometry complexity on mobile for better performance
-        const segments = this.isLowEnd ? 32 : (this.isMobile ? 64 : 128);
+        // Reduce geometry complexity for better performance
+        const segments = this.isLowEnd ? 24 : (this.isMobile ? 48 : 96); // Reduced from 32/64/128
         const waterGeometry = new THREE.PlaneGeometry(30, 30, segments, segments);
 
         // Create vertices array for wave animation
         this.waterVertices = waterGeometry.attributes.position.array;
 
         // Create procedural water normal map for texture with realistic patterns
-        // Reduce texture size on mobile for better performance
-        const texSize = this.isLowEnd ? 256 : (this.isMobile ? 384 : 512);
+        // Reduce texture size for better performance
+        const texSize = this.isLowEnd ? 256 : (this.isMobile ? 256 : 384); // Reduced
         const canvas = document.createElement('canvas');
         canvas.width = texSize;
         canvas.height = texSize;
@@ -262,8 +262,8 @@ class BlobViewer {
         ctx.fillRect(0, 0, texSize, texSize);
 
         // Create realistic water ripple patterns using Perlin-like noise simulation
-        // Reduce pattern complexity on mobile
-        const patternCount1 = this.isLowEnd ? 30 : (this.isMobile ? 60 : 100);
+        // Reduce pattern complexity for performance
+        const patternCount1 = this.isLowEnd ? 20 : (this.isMobile ? 40 : 60); // Reduced
         // Layer 1: Large wave patterns
         for (let i = 0; i < patternCount1; i++) {
             const x = Math.random() * texSize;
@@ -280,7 +280,7 @@ class BlobViewer {
         }
 
         // Layer 2: Medium ripples for detail
-        const patternCount2 = this.isLowEnd ? 50 : (this.isMobile ? 100 : 150);
+        const patternCount2 = this.isLowEnd ? 30 : (this.isMobile ? 60 : 100); // Reduced
         ctx.globalCompositeOperation = 'overlay';
         for (let i = 0; i < patternCount2; i++) {
             const x = Math.random() * texSize;
@@ -310,8 +310,8 @@ class BlobViewer {
             ctx.putImageData(imageData, 0, 0);
         }
 
-        // Layer 4: Flowing water streaks - reduced on mobile
-        const patternCount4 = this.isLowEnd ? 15 : (this.isMobile ? 25 : 40);
+        // Layer 4: Flowing water streaks - reduced for performance
+        const patternCount4 = this.isLowEnd ? 10 : (this.isMobile ? 15 : 25); // Reduced
         ctx.globalCompositeOperation = 'screen';
         ctx.strokeStyle = 'rgba(180, 210, 255, 0.15)';
         for (let i = 0; i < patternCount4; i++) {
@@ -338,18 +338,20 @@ class BlobViewer {
 
         // Create caustics texture for animated light patterns
         const causticsCanvas = document.createElement('canvas');
-        causticsCanvas.width = 512;
-        causticsCanvas.height = 512;
+        const causticsSize = this.isMobile ? 256 : 384; // Reduced size
+        causticsCanvas.width = causticsSize;
+        causticsCanvas.height = causticsSize;
         const causticsCtx = causticsCanvas.getContext('2d');
 
         // Generate caustics pattern
         causticsCtx.fillStyle = '#000000';
-        causticsCtx.fillRect(0, 0, 512, 512);
+        causticsCtx.fillRect(0, 0, causticsSize, causticsSize);
 
-        // Create wavy caustic light patterns
-        for (let i = 0; i < 40; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 512;
+        // Create wavy caustic light patterns - reduced count
+        const causticsCount = this.isLowEnd ? 15 : (this.isMobile ? 20 : 30);
+        for (let i = 0; i < causticsCount; i++) {
+            const x = Math.random() * causticsSize;
+            const y = Math.random() * causticsSize;
             const size = 30 + Math.random() * 80;
 
             const gradient = causticsCtx.createRadialGradient(x, y, 0, x, y, size);
@@ -357,7 +359,7 @@ class BlobViewer {
             gradient.addColorStop(0.5, 'rgba(200, 240, 255, 0.4)');
             gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
             causticsCtx.fillStyle = gradient;
-            causticsCtx.fillRect(0, 0, 512, 512);
+            causticsCtx.fillRect(0, 0, causticsSize, causticsSize);
         }
 
         const causticsTexture = new THREE.CanvasTexture(causticsCanvas);
@@ -371,9 +373,9 @@ class BlobViewer {
             metalness: 0.1,
             roughness: 0.05,
             transparent: true,
-            opacity: 0.8,
-            transmission: 0.7,
-            thickness: 0.8,
+            opacity: 0.5, // Reduced from 0.8 for more transparency
+            transmission: 0.85, // Increased from 0.7 for more see-through effect
+            thickness: 0.5, // Reduced from 0.8
             envMapIntensity: 2.5,
             clearcoat: 1.0,
             clearcoatRoughness: 0.03,
@@ -400,7 +402,7 @@ class BlobViewer {
 
     createVolumetricLightRays() {
         // Create god rays/volumetric light effect
-        const rayGeometry = new THREE.ConeGeometry(0.05, 12, 8, 1, true);
+        const rayGeometry = new THREE.ConeGeometry(0.05, 12, 6, 1, true); // Reduced segments
         const rayMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -411,7 +413,7 @@ class BlobViewer {
         });
 
         // Create multiple light rays for fuller effect
-        const rayCount = 8;
+        const rayCount = 6; // Reduced from 8
         for (let i = 0; i < rayCount; i++) {
             const ray = new THREE.Mesh(rayGeometry, rayMaterial.clone());
             ray.position.set(0, 6, 3);
@@ -435,8 +437,8 @@ class BlobViewer {
 
     createAtmosphericParticles() {
         // Create dust motes floating in the light
-        const particleCount = this.isLowEnd ? 15 : (this.isMobile ? 25 : 50);
-        const particleGeometry = new THREE.SphereGeometry(0.02, 4, 4);
+        const particleCount = this.isLowEnd ? 10 : (this.isMobile ? 18 : 35); // Reduced from 15/25/50
+        const particleGeometry = new THREE.SphereGeometry(0.02, 3, 3); // Reduced segments
         const particleMaterial = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -817,10 +819,20 @@ class BlobViewer {
             this.frameCount = 0;
             this.lastFrameTime = currentTime;
 
-            // Adjust quality based on FPS
-            if (this.fps < 30 && this.adaptiveQuality > 0.5) {
-                this.adaptiveQuality -= 0.1;
+            // Adjust quality based on FPS - more aggressive
+            if (this.fps < 40 && this.adaptiveQuality > 0.4) {
+                this.adaptiveQuality -= 0.15;
                 console.log('Reducing quality, FPS:', this.fps);
+
+                // Reduce particle count if struggling
+                if (this.fps < 25 && this.atmosphericParticles.length > 10) {
+                    for (let i = this.atmosphericParticles.length - 1; i >= this.atmosphericParticles.length / 2; i--) {
+                        this.scene.remove(this.atmosphericParticles[i]);
+                        this.atmosphericParticles[i].geometry.dispose();
+                        this.atmosphericParticles[i].material.dispose();
+                        this.atmosphericParticles.pop();
+                    }
+                }
             } else if (this.fps > 55 && this.adaptiveQuality < 1.0) {
                 this.adaptiveQuality += 0.05;
             }
