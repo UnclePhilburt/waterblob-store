@@ -36,6 +36,7 @@ class BlobViewer {
         this.lastHoverCheck = 0;
         this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
         this.waterPool = null;
+        this.fish = [];
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -122,6 +123,9 @@ class BlobViewer {
 
         // Create water pool
         this.createWaterPool();
+
+        // Create swimming fish
+        this.createFish();
 
         // Load model
         this.loadModel();
@@ -306,6 +310,82 @@ class BlobViewer {
         this.waterPool.position.y = -0.8;
 
         this.scene.add(this.waterPool);
+    }
+
+    createFish() {
+        // Create several small fish swimming around in the water
+        const fishCount = 12;
+        const colors = [0xFF6B35, 0xF7931E, 0xFDC830, 0x00E5FF, 0x0077BE, 0xEC4899];
+
+        for (let i = 0; i < fishCount; i++) {
+            // Create fish body (elongated ellipsoid)
+            const bodyGeometry = new THREE.SphereGeometry(0.08, 8, 6);
+            bodyGeometry.scale(1.5, 0.7, 0.6); // Make it fish-shaped
+
+            // Random color for each fish
+            const fishColor = colors[Math.floor(Math.random() * colors.length)];
+            const bodyMaterial = new THREE.MeshPhysicalMaterial({
+                color: fishColor,
+                metalness: 0.3,
+                roughness: 0.4,
+                transparent: true,
+                opacity: 0.9,
+                emissive: fishColor,
+                emissiveIntensity: 0.2
+            });
+
+            const fishBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
+
+            // Create tail (triangle)
+            const tailGeometry = new THREE.ConeGeometry(0.05, 0.12, 3);
+            tailGeometry.rotateZ(Math.PI / 2);
+            const tailMaterial = new THREE.MeshPhysicalMaterial({
+                color: fishColor,
+                metalness: 0.2,
+                roughness: 0.5,
+                transparent: true,
+                opacity: 0.85
+            });
+            const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+            tail.position.x = -0.12;
+            fishBody.add(tail);
+
+            // Create eyes (tiny spheres)
+            const eyeGeometry = new THREE.SphereGeometry(0.015, 4, 4);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
+            const eye1 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            eye1.position.set(0.08, 0.03, 0.04);
+            fishBody.add(eye1);
+
+            const eye2 = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            eye2.position.set(0.08, 0.03, -0.04);
+            fishBody.add(eye2);
+
+            // Random starting position in a circular area
+            const angle = (Math.PI * 2 * i) / fishCount;
+            const radius = 4 + Math.random() * 6;
+            fishBody.position.x = Math.cos(angle) * radius;
+            fishBody.position.y = -0.5 - Math.random() * 0.8; // Near/in the water
+            fishBody.position.z = Math.sin(angle) * radius;
+
+            // Random rotation
+            fishBody.rotation.y = angle + Math.PI / 2;
+
+            // Store fish data for animation
+            this.fish.push({
+                mesh: fishBody,
+                tail: tail,
+                speed: 0.3 + Math.random() * 0.5,
+                radius: radius,
+                angle: angle,
+                verticalOffset: Math.random() * Math.PI * 2,
+                verticalSpeed: 0.5 + Math.random() * 0.5,
+                tailPhase: Math.random() * Math.PI * 2
+            });
+
+            this.scene.add(fishBody);
+        }
     }
 
     loadModel() {
@@ -606,6 +686,27 @@ class BlobViewer {
 
         // Update particles
         this.updateParticles();
+
+        // Animate fish swimming
+        this.fish.forEach(fishData => {
+            // Circular swimming motion
+            fishData.angle += fishData.speed * 0.01;
+            fishData.mesh.position.x = Math.cos(fishData.angle) * fishData.radius;
+            fishData.mesh.position.z = Math.sin(fishData.angle) * fishData.radius;
+
+            // Vertical bobbing motion
+            fishData.mesh.position.y = -0.7 + Math.sin(time * fishData.verticalSpeed + fishData.verticalOffset) * 0.3;
+
+            // Point fish in swimming direction
+            fishData.mesh.rotation.y = fishData.angle + Math.PI / 2;
+
+            // Add slight tilt based on vertical movement
+            const verticalVelocity = Math.cos(time * fishData.verticalSpeed + fishData.verticalOffset);
+            fishData.mesh.rotation.x = verticalVelocity * 0.2;
+
+            // Wag tail
+            fishData.tail.rotation.y = Math.sin(time * 3 + fishData.tailPhase) * 0.4;
+        });
 
         // Animate water pool with realistic waves
         if (this.waterPool && this.waterVertices) {
