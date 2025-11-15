@@ -30,14 +30,11 @@ class BlobViewer {
         this.squishAmount = 0;
         this.hoverIntensity = 0;
         this.particles = [];
-        this.waterDroplets = []; // Pouring water particles
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.baseScale = 1;
         this.lastHoverCheck = 0;
         this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
-        this.lastWaterSpawn = 0;
-        this.waterSpawnInterval = 100; // Spawn water droplets every 100ms
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -390,121 +387,6 @@ class BlobViewer {
         }
     }
 
-    spawnWaterDroplets() {
-        const now = Date.now();
-        if (now - this.lastWaterSpawn < this.waterSpawnInterval) {
-            return;
-        }
-        this.lastWaterSpawn = now;
-
-        // Spawn 3-5 droplets per interval
-        const count = 3 + Math.floor(Math.random() * 3);
-
-        for (let i = 0; i < count; i++) {
-            const geometry = new THREE.SphereGeometry(0.08, 4, 4);
-            const material = new THREE.MeshBasicMaterial({
-                color: 0x00E5FF,
-                transparent: true,
-                opacity: 0.7
-            });
-
-            const droplet = new THREE.Mesh(geometry, material);
-
-            // Start from above, scattered around
-            const spread = 3;
-            droplet.position.set(
-                (Math.random() - 0.5) * spread,
-                8 + Math.random() * 2,
-                (Math.random() - 0.5) * spread
-            );
-
-            // Downward velocity with slight variation
-            droplet.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 0.05,
-                -0.15 - Math.random() * 0.1,
-                (Math.random() - 0.5) * 0.05
-            );
-
-            droplet.life = 1.0;
-
-            this.scene.add(droplet);
-            this.waterDroplets.push(droplet);
-        }
-    }
-
-    updateWaterDroplets() {
-        for (let i = this.waterDroplets.length - 1; i >= 0; i--) {
-            const droplet = this.waterDroplets[i];
-
-            // Update position
-            droplet.position.add(droplet.velocity);
-
-            // Gravity
-            droplet.velocity.y -= 0.015;
-
-            // Stretch droplets as they fall (tear drop shape)
-            const speed = Math.abs(droplet.velocity.y);
-            droplet.scale.y = 1 + speed * 0.5;
-            droplet.scale.x = 1 - speed * 0.1;
-            droplet.scale.z = 1 - speed * 0.1;
-
-            // Check if droplet hit the blob or fell too far
-            const distanceFromCenter = Math.sqrt(
-                droplet.position.x * droplet.position.x +
-                droplet.position.z * droplet.position.z
-            );
-
-            // Simple collision detection
-            if (droplet.position.y < 0 && distanceFromCenter < 3) {
-                // Hit the blob - create small splash
-                this.createMiniSplash(droplet.position);
-
-                // Remove droplet
-                this.scene.remove(droplet);
-                droplet.geometry.dispose();
-                droplet.material.dispose();
-                this.waterDroplets.splice(i, 1);
-            } else if (droplet.position.y < -5) {
-                // Fell off screen
-                this.scene.remove(droplet);
-                droplet.geometry.dispose();
-                droplet.material.dispose();
-                this.waterDroplets.splice(i, 1);
-            }
-        }
-    }
-
-    createMiniSplash(position) {
-        // Create small splash particles when water hits
-        const splashCount = 4;
-        const geometry = new THREE.SphereGeometry(0.04, 3, 3);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0x00E5FF,
-            transparent: true,
-            opacity: 0.6
-        });
-
-        for (let i = 0; i < splashCount; i++) {
-            const particle = new THREE.Mesh(geometry, material.clone());
-
-            particle.position.copy(position);
-
-            // Splash outward
-            const angle = (Math.PI * 2 * i) / splashCount;
-            particle.velocity = new THREE.Vector3(
-                Math.cos(angle) * 0.15,
-                Math.random() * 0.1 + 0.05,
-                Math.sin(angle) * 0.15
-            );
-
-            particle.life = 1.0;
-            particle.decay = 0.04;
-
-            this.scene.add(particle);
-            this.particles.push(particle);
-        }
-    }
-
     updateTheme() {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
@@ -529,10 +411,6 @@ class BlobViewer {
 
         // Check hover (throttled)
         this.checkHover();
-
-        // Spawn and update water pouring effect
-        this.spawnWaterDroplets();
-        this.updateWaterDroplets();
 
         // Update particles
         this.updateParticles();
