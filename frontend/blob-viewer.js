@@ -188,24 +188,106 @@ class BlobViewer {
 
     createWaterPool() {
         // Create a realistic water surface below the blob
-        const waterGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+        const waterGeometry = new THREE.PlaneGeometry(30, 30, 128, 128);
 
         // Create vertices array for wave animation
         this.waterVertices = waterGeometry.attributes.position.array;
 
-        // Water material with realistic properties
+        // Create procedural water normal map for texture with realistic patterns
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+
+        // Fill with base blue-gray color
+        ctx.fillStyle = '#7799BB';
+        ctx.fillRect(0, 0, 512, 512);
+
+        // Create realistic water ripple patterns using Perlin-like noise simulation
+        // Layer 1: Large wave patterns
+        for (let i = 0; i < 100; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 512;
+            const radius = Math.random() * 50 + 30;
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, 'rgba(150, 180, 220, 0.4)');
+            gradient.addColorStop(0.5, 'rgba(100, 140, 180, 0.2)');
+            gradient.addColorStop(1, 'rgba(70, 110, 150, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Layer 2: Medium ripples for detail
+        ctx.globalCompositeOperation = 'overlay';
+        for (let i = 0; i < 150; i++) {
+            const x = Math.random() * 512;
+            const y = Math.random() * 512;
+            const radius = Math.random() * 20 + 8;
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, 'rgba(200, 220, 255, 0.5)');
+            gradient.addColorStop(0.6, 'rgba(100, 150, 200, 0.2)');
+            gradient.addColorStop(1, 'rgba(50, 100, 150, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Layer 3: Fine detail noise
+        ctx.globalCompositeOperation = 'soft-light';
+        const imageData = ctx.getImageData(0, 0, 512, 512);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const noise = (Math.random() - 0.5) * 30;
+            data[i] += noise;     // R
+            data[i + 1] += noise; // G
+            data[i + 2] += noise; // B
+        }
+        ctx.putImageData(imageData, 0, 0);
+
+        // Layer 4: Flowing water streaks
+        ctx.globalCompositeOperation = 'screen';
+        ctx.strokeStyle = 'rgba(180, 210, 255, 0.15)';
+        for (let i = 0; i < 40; i++) {
+            ctx.lineWidth = Math.random() * 3 + 1;
+            ctx.beginPath();
+            const startX = Math.random() * 512;
+            const startY = Math.random() * 512;
+            const angle = Math.random() * Math.PI * 2;
+            const length = Math.random() * 80 + 40;
+            ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(
+                startX + Math.cos(angle) * length * 0.5 + (Math.random() - 0.5) * 20,
+                startY + Math.sin(angle) * length * 0.5 + (Math.random() - 0.5) * 20,
+                startX + Math.cos(angle) * length,
+                startY + Math.sin(angle) * length
+            );
+            ctx.stroke();
+        }
+
+        const normalTexture = new THREE.CanvasTexture(canvas);
+        normalTexture.wrapS = THREE.RepeatWrapping;
+        normalTexture.wrapT = THREE.RepeatWrapping;
+        normalTexture.repeat.set(4, 4);
+
+        // Water material with realistic properties and enhanced normal map
         const waterMaterial = new THREE.MeshPhysicalMaterial({
             color: 0x0077BE,
             metalness: 0.1,
-            roughness: 0.1,
+            roughness: 0.05,
             transparent: true,
-            opacity: 0.7,
-            transmission: 0.5,
-            thickness: 0.5,
-            envMapIntensity: 1.5,
+            opacity: 0.8,
+            transmission: 0.7,
+            thickness: 0.8,
+            envMapIntensity: 2.5,
             clearcoat: 1.0,
-            clearcoatRoughness: 0.1,
-            side: THREE.DoubleSide
+            clearcoatRoughness: 0.03,
+            normalMap: normalTexture,
+            normalScale: new THREE.Vector2(1.2, 1.2), // Increased for more visible texture
+            side: THREE.DoubleSide,
+            ior: 1.333 // Water's index of refraction
         });
 
         this.waterPool = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -466,17 +548,44 @@ class BlobViewer {
                 const x = positions.getX(i);
                 const y = positions.getY(i);
 
-                // Create multiple wave layers for realistic water motion
-                const wave1 = Math.sin(x * 0.5 + time * 0.5) * 0.15;
-                const wave2 = Math.sin(y * 0.3 + time * 0.7) * 0.1;
-                const wave3 = Math.sin((x + y) * 0.4 + time * 0.3) * 0.08;
-                const ripple = Math.sin(Math.sqrt(x * x + y * y) * 0.3 - time) * 0.05;
+                // Distance from center for radial waves
+                const dist = Math.sqrt(x * x + y * y);
 
-                positions.setZ(i, wave1 + wave2 + wave3 + ripple);
+                // Create multiple wave layers for realistic water motion
+                // Large slow waves
+                const wave1 = Math.sin(x * 0.4 + time * 0.5) * 0.25;
+                const wave2 = Math.sin(y * 0.35 + time * 0.6) * 0.2;
+
+                // Medium frequency waves at different angles
+                const wave3 = Math.sin((x + y) * 0.6 + time * 0.8) * 0.15;
+                const wave4 = Math.sin((x - y) * 0.5 + time * 0.7) * 0.12;
+
+                // Radial ripples from center
+                const ripple1 = Math.sin(dist * 0.4 - time * 1.2) * 0.18;
+                const ripple2 = Math.sin(dist * 0.6 - time * 0.9) * 0.1;
+
+                // High frequency detail waves
+                const detail1 = Math.sin(x * 1.2 + y * 0.8 + time * 1.5) * 0.08;
+                const detail2 = Math.sin(x * 0.9 - y * 1.1 + time * 1.3) * 0.06;
+
+                // Circular interference pattern
+                const interference = Math.sin((x * x + y * y) * 0.05 + time * 0.4) * 0.1;
+
+                // Combine all waves
+                const height = wave1 + wave2 + wave3 + wave4 +
+                              ripple1 + ripple2 + detail1 + detail2 + interference;
+
+                positions.setZ(i, height);
             }
 
             positions.needsUpdate = true;
             this.waterPool.geometry.computeVertexNormals();
+
+            // Animate normal map for flowing water texture effect with dual-direction flow
+            if (this.waterPool.material.normalMap) {
+                this.waterPool.material.normalMap.offset.x = time * 0.025;
+                this.waterPool.material.normalMap.offset.y = time * 0.018;
+            }
         }
 
         // Smooth mouse parallax
