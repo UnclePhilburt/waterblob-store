@@ -56,6 +56,9 @@
 
 html {
     scroll-behavior: smooth;
+    /* Fix mobile viewport height issues */
+    height: 100%;
+    width: 100%;
 }
 
 body {
@@ -67,6 +70,9 @@ body {
     transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100%;
+    width: 100%;
+    position: relative;
 }
 
 .container {
@@ -190,13 +196,16 @@ body {
 /* Hero Section - 3D Enhanced with Water Background */
 .hero {
     min-height: 100vh;
+    min-height: 100dvh; /* Use dynamic viewport height for mobile */
     height: 100vh;
+    height: 100dvh;
     display: flex;
     align-items: flex-end;
     justify-content: center;
     position: relative;
     padding-top: 5rem;
     overflow: hidden;
+    width: 100%;
 }
 
 /* Light theme hero - brighter blue water */
@@ -359,13 +368,19 @@ html:not([data-theme="dark"]) .hero,
     top: 0;
     left: 0;
     width: 100%;
+    width: 100vw;
     height: 100%;
     z-index: 0;
+    overflow: hidden;
 }
 
 #canvas-container canvas {
     cursor: pointer;
     pointer-events: auto;
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100vw;
 }
 
 /* Interactive hint for the 3D model */
@@ -954,11 +969,19 @@ footer p {
     .hero {
         padding-top: 4rem;
         min-height: 100vh;
+        min-height: 100dvh; /* Dynamic viewport for mobile */
+        height: 100vh;
+        height: 100dvh;
         align-items: center;
+        width: 100vw;
+        max-width: 100%;
     }
 
     .hero-content {
         padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        max-width: 100%;
     }
 
     .hero h1 {
@@ -975,6 +998,14 @@ footer p {
 
     #canvas-container {
         opacity: 0.7;
+        width: 100vw;
+        max-width: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    #canvas-container canvas {
+        max-width: 100vw !important;
     }
 
     /* Reduce animations for better mobile performance */
@@ -1149,6 +1180,17 @@ footer p {
     /* Hero */
     .hero {
         min-height: 100vh;
+        min-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
+        width: 100vw;
+        max-width: 100%;
+    }
+
+    .hero-content {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        width: 100%;
     }
 
     .hero h1 {
@@ -1160,6 +1202,12 @@ footer p {
         font-size: 0.9375rem;
         padding: 0;
         line-height: 1.5;
+    }
+
+    #canvas-container {
+        width: 100vw;
+        left: 50%;
+        transform: translateX(-50%);
     }
 
     .btn {

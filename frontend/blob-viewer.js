@@ -128,6 +128,11 @@ class BlobViewer {
         // Handle resize
         window.addEventListener('resize', () => this.onWindowResize());
 
+        // Handle orientation change on mobile
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.onWindowResize(), 100);
+        });
+
         // Handle theme changes
         this.updateTheme();
         const observer = new MutationObserver(() => this.updateTheme());
@@ -523,10 +528,22 @@ class BlobViewer {
     }
 
     onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        // Get actual viewport dimensions
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        // Update camera aspect ratio
+        this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.composer.setSize(window.innerWidth, window.innerHeight);
+
+        // Update renderer size
+        this.renderer.setSize(width, height);
+        this.composer.setSize(width, height);
+
+        // Force canvas to fit container on mobile
+        const canvas = this.renderer.domElement;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
     }
 
     animate() {
