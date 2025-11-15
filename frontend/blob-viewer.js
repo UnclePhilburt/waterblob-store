@@ -474,8 +474,8 @@ class BlobViewer {
     }
 
     createWaterShadow() {
-        // Create shadow plane under blob
-        const shadowGeometry = new THREE.PlaneGeometry(4, 4);
+        // Create circular shadow under blob
+        const shadowGeometry = new THREE.CircleGeometry(2, 32); // Radius 2, 32 segments for smooth circle
         const shadowMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             transparent: true,
