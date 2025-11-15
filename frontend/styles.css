@@ -429,6 +429,62 @@ html:not([data-theme="dark"]) .hero,
     }
 }
 
+/* Scroll Safe Zone - Mobile Only */
+.scroll-safe-zone {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .scroll-safe-zone {
+        display: block;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        z-index: 15;
+        pointer-events: auto;
+        touch-action: pan-y;
+    }
+
+    .scroll-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: rgba(255, 255, 255, 0.9);
+        animation: scroll-bounce 2s ease-in-out infinite;
+    }
+
+    .scroll-arrow {
+        font-size: 2rem;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+        filter: drop-shadow(0 0 8px rgba(0, 230, 255, 0.6));
+    }
+
+    .scroll-text {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    @keyframes scroll-bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+}
+
 
 .hero-content {
     position: relative;
@@ -1001,7 +1057,7 @@ footer p {
     }
 
     .hero-content {
-        padding-bottom: 2rem;
+        padding-bottom: 6rem; /* Extra padding for scroll safe zone */
         padding-left: 1rem;
         padding-right: 1rem;
         max-width: 100%;

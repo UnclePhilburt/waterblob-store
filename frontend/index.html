@@ -39,6 +39,12 @@
                 <a href="products.html" class="btn btn-primary">Shop Now →</a>
             </div>
         </div>
+        <div class="scroll-safe-zone">
+            <div class="scroll-indicator">
+                <span class="scroll-arrow">↓</span>
+                <span class="scroll-text">Swipe here to scroll</span>
+            </div>
+        </div>
     </header>
 
     <section class="stats">
@@ -155,6 +161,23 @@
 
     <script src="cart.js"></script>
     <script src="theme.js"></script>
+    <script>
+        // Hide scroll indicator after user scrolls
+        let scrolled = false;
+        window.addEventListener('scroll', function() {
+            if (!scrolled && window.scrollY > 50) {
+                scrolled = true;
+                const scrollZone = document.querySelector('.scroll-safe-zone');
+                if (scrollZone) {
+                    scrollZone.style.opacity = '0';
+                    scrollZone.style.transition = 'opacity 0.5s ease';
+                    setTimeout(() => {
+                        scrollZone.style.display = 'none';
+                    }, 500);
+                }
+            }
+        });
+    </script>
     <script type="importmap">
     {
         "imports": {
