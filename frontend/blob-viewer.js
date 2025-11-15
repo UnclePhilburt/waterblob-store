@@ -835,15 +835,20 @@ class BlobViewer {
         });
 
         // Animate bouncing ball
-        if (this.bouncingBall) {
+        if (this.bouncingBall && this.model) {
             this.ballAnimation.time = (this.ballAnimation.time + 0.016) % this.ballAnimation.duration;
             const t = this.ballAnimation.time / this.ballAnimation.duration; // 0 to 1
+
+            // Get blob's current floating position
+            const blobY = this.model.position.y;
+            const landingHeight = blobY + 2.0; // Land 2 units above blob center
 
             if (t < 0.3) {
                 // Phase 1: Falling onto blob (0 to 0.3)
                 const fallT = t / 0.3;
                 const easeInQuad = fallT * fallT;
-                this.bouncingBall.position.y = 8 - easeInQuad * 8.3; // Stop at 0.7 instead of going below
+                const startY = 8;
+                this.bouncingBall.position.y = startY - easeInQuad * (startY - landingHeight);
                 this.bouncingBall.position.x = 2 - fallT * 2;
                 this.bouncingBall.position.z = -1;
 
@@ -858,7 +863,7 @@ class BlobViewer {
                 // Phase 2: Bouncing up from blob (0.3 to 0.45)
                 const bounceT = (t - 0.3) / 0.15;
                 const easeOutQuad = 1 - (1 - bounceT) * (1 - bounceT);
-                this.bouncingBall.position.y = 0.7 + easeOutQuad * 3.5;
+                this.bouncingBall.position.y = landingHeight + easeOutQuad * 3.5;
                 this.bouncingBall.position.x = 0 - bounceT * 2;
                 this.bouncingBall.position.z = -1 + bounceT * 2; // Move away from blob
 
@@ -873,7 +878,8 @@ class BlobViewer {
                 // Phase 3: Falling into water (0.45 to 0.7)
                 const fallT = (t - 0.45) / 0.25;
                 const easeInCubic = fallT * fallT * fallT;
-                this.bouncingBall.position.y = 4.2 - easeInCubic * 5.0;
+                const bounceApex = landingHeight + 3.5;
+                this.bouncingBall.position.y = bounceApex - easeInCubic * (bounceApex + 0.8);
                 this.bouncingBall.position.x = -2 - fallT * 2; // Arc away from blob
                 this.bouncingBall.position.z = 1 + fallT * 1; // Continue away
 
