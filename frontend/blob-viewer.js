@@ -20,7 +20,7 @@ class BlobViewer {
         this.model = null;
         this.controls = null;
         this.composer = null;
-        this.rotationSpeed = 0.006; // Faster for more dramatic showcase
+        this.rotationSpeed = 0.002; // Gentle rotation to avoid motion sickness
         this.mouseX = 0;
         this.mouseY = 0;
 
@@ -108,7 +108,7 @@ class BlobViewer {
         this.controls.enableZoom = false;
         this.controls.enablePan = false;
         this.controls.autoRotate = true;
-        this.controls.autoRotateSpeed = 1.5; // Faster rotation for showcase
+        this.controls.autoRotateSpeed = 0.5; // Gentle rotation
         this.controls.minPolarAngle = Math.PI / 3;
         this.controls.maxPolarAngle = Math.PI / 1.5;
 
