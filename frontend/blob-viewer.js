@@ -843,39 +843,39 @@ class BlobViewer {
                 // Phase 1: Falling onto blob (0 to 0.3)
                 const fallT = t / 0.3;
                 const easeInQuad = fallT * fallT;
-                this.bouncingBall.position.y = 8 - easeInQuad * 8.5;
+                this.bouncingBall.position.y = 8 - easeInQuad * 8.3; // Stop at 0.7 instead of going below
                 this.bouncingBall.position.x = 2 - fallT * 2;
-                this.bouncingBall.position.z = 0;
+                this.bouncingBall.position.z = -1;
 
                 // Squish blob on impact
                 if (this.model && fallT > 0.95) {
                     const squishAmount = (fallT - 0.95) / 0.05;
-                    this.model.scale.y = this.baseScale * (1 - squishAmount * 0.15);
-                    this.model.scale.x = this.baseScale * (1 + squishAmount * 0.075);
-                    this.model.scale.z = this.baseScale * (1 + squishAmount * 0.075);
+                    this.model.scale.y = this.baseScale * (1 - squishAmount * 0.12);
+                    this.model.scale.x = this.baseScale * (1 + squishAmount * 0.06);
+                    this.model.scale.z = this.baseScale * (1 + squishAmount * 0.06);
                 }
             } else if (t < 0.45) {
                 // Phase 2: Bouncing up from blob (0.3 to 0.45)
                 const bounceT = (t - 0.3) / 0.15;
                 const easeOutQuad = 1 - (1 - bounceT) * (1 - bounceT);
-                this.bouncingBall.position.y = -0.5 + easeOutQuad * 3;
-                this.bouncingBall.position.x = -0.5;
-                this.bouncingBall.position.z = 0;
+                this.bouncingBall.position.y = 0.7 + easeOutQuad * 3.5;
+                this.bouncingBall.position.x = 0 - bounceT * 2;
+                this.bouncingBall.position.z = -1 + bounceT * 2; // Move away from blob
 
                 // Restore blob shape
                 if (this.model) {
                     const restoreAmount = bounceT;
-                    this.model.scale.y = this.baseScale * (0.85 + restoreAmount * 0.15);
-                    this.model.scale.x = this.baseScale * (1.075 - restoreAmount * 0.075);
-                    this.model.scale.z = this.baseScale * (1.075 - restoreAmount * 0.075);
+                    this.model.scale.y = this.baseScale * (0.88 + restoreAmount * 0.12);
+                    this.model.scale.x = this.baseScale * (1.06 - restoreAmount * 0.06);
+                    this.model.scale.z = this.baseScale * (1.06 - restoreAmount * 0.06);
                 }
             } else if (t < 0.7) {
                 // Phase 3: Falling into water (0.45 to 0.7)
                 const fallT = (t - 0.45) / 0.25;
                 const easeInCubic = fallT * fallT * fallT;
-                this.bouncingBall.position.y = 2.5 - easeInCubic * 4;
-                this.bouncingBall.position.x = -0.5 - fallT * 1.5;
-                this.bouncingBall.position.z = 0;
+                this.bouncingBall.position.y = 4.2 - easeInCubic * 5.0;
+                this.bouncingBall.position.x = -2 - fallT * 2; // Arc away from blob
+                this.bouncingBall.position.z = 1 + fallT * 1; // Continue away
 
                 // Create splash when entering water
                 if (fallT > 0.7 && fallT < 0.75 && this.ballAnimation.splashParticles.length === 0) {
@@ -886,12 +886,12 @@ class BlobViewer {
                 const resetT = (t - 0.7) / 0.3;
                 if (resetT < 0.1) {
                     // Sink into water
-                    this.bouncingBall.position.y = -1.5 - resetT * 2;
-                    this.bouncingBall.position.x = -2;
-                    this.bouncingBall.position.z = 0;
+                    this.bouncingBall.position.y = -0.8 - resetT * 2;
+                    this.bouncingBall.position.x = -4;
+                    this.bouncingBall.position.z = 2;
                 } else {
                     // Teleport back to start for next loop
-                    this.bouncingBall.position.set(2, 8, 0);
+                    this.bouncingBall.position.set(2, 8, -1);
 
                     // Clear splash particles
                     this.ballAnimation.splashParticles.forEach(p => {
