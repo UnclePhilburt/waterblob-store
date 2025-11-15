@@ -36,15 +36,8 @@ class BlobViewer {
         this.lastHoverCheck = 0;
         this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
         this.waterPool = null;
-        this.fish = [];
         this.isMobile = window.innerWidth <= 768;
         this.isLowEnd = window.innerWidth <= 480;
-        this.bouncingBall = null;
-        this.ballAnimation = {
-            time: 0,
-            duration: 4, // 4 second loop
-            splashParticles: []
-        };
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -134,12 +127,6 @@ class BlobViewer {
         // Create water pool
         this.createWaterPool();
 
-        // Create swimming fish
-        this.createFish();
-
-        // Create bouncing ball
-        this.createBouncingBall();
-
         // Load model
         this.loadModel();
 
@@ -167,41 +154,36 @@ class BlobViewer {
     }
 
     setupLights() {
-        // Ambient light - increased on mobile to reduce need for other lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, this.isMobile ? 1.0 : 0.7);
+        // Lower ambient light for darker scene
+        const ambientLight = new THREE.AmbientLight(0xffffff, this.isMobile ? 0.3 : 0.2);
         this.scene.add(ambientLight);
 
-        // Main directional light (key light) - no shadows for performance
-        const keyLight = new THREE.DirectionalLight(0x0066FF, this.isMobile ? 0.8 : 1.2);
-        keyLight.position.set(5, 10, 5);
-        this.scene.add(keyLight);
+        // Bright spotlight on blob from above
+        const spotlight = new THREE.SpotLight(0xffffff, this.isMobile ? 2.5 : 3.5);
+        spotlight.position.set(0, 8, 3);
+        spotlight.angle = Math.PI / 6; // 30 degree cone
+        spotlight.penumbra = 0.3; // Soft edges
+        spotlight.decay = 1.5;
+        spotlight.distance = 25;
+        spotlight.target.position.set(0, 0, 0);
+        this.scene.add(spotlight);
+        this.scene.add(spotlight.target);
 
-        if (!this.isMobile) {
-            // Fill light (cyan/blue) - desktop only
-            const fillLight = new THREE.DirectionalLight(0x00E5FF, 0.7);
-            fillLight.position.set(-5, 3, -5);
+        // Rim light from behind for depth
+        const rimLight = new THREE.DirectionalLight(0x00E5FF, this.isMobile ? 0.6 : 1.0);
+        rimLight.position.set(0, 3, -8);
+        this.scene.add(rimLight);
+
+        // Subtle blue fill from side
+        if (!this.isLowEnd) {
+            const fillLight = new THREE.DirectionalLight(0x0066FF, 0.4);
+            fillLight.position.set(-6, 2, 2);
             this.scene.add(fillLight);
         }
 
-        // Point lights for extra sparkle - desktop only or reduced on mobile
-        if (!this.isLowEnd) {
-            const pointLight1 = new THREE.PointLight(0x00E5FF, this.isMobile ? 0.4 : 0.8, 20);
-            pointLight1.position.set(-3, 2, 3);
-            this.scene.add(pointLight1);
-
-            if (!this.isMobile) {
-                const pointLight2 = new THREE.PointLight(0xEC4899, 0.6, 20);
-                pointLight2.position.set(3, 2, -3);
-                this.scene.add(pointLight2);
-
-                // Animated lights
-                this.animatedLights = [pointLight1, pointLight2];
-            } else {
-                this.animatedLights = [pointLight1];
-            }
-        } else {
-            this.animatedLights = [];
-        }
+        // Store spotlight for potential animation
+        this.spotlight = spotlight;
+        this.animatedLights = [];
     }
 
     setupPostProcessing() {
@@ -347,132 +329,6 @@ class BlobViewer {
         this.scene.add(this.waterPool);
     }
 
-    createFish() {
-        // Create several small fish swimming around in the water
-        // Reduce fish count on mobile for better performance
-        const fishCount = this.isLowEnd ? 4 : (this.isMobile ? 6 : 12);
-        const colors = [0xFF6B35, 0xF7931E, 0xFDC830, 0x00E5FF, 0x0077BE, 0xEC4899];
-
-        for (let i = 0; i < fishCount; i++) {
-            // Create fish body (elongated ellipsoid)
-            // Reduce geometry detail on mobile
-            const segments = this.isMobile ? 6 : 8;
-            const bodyGeometry = new THREE.SphereGeometry(0.08, segments, segments - 2);
-            bodyGeometry.scale(1.5, 0.7, 0.6); // Make it fish-shaped
-
-            // Random color for each fish
-            const fishColor = colors[Math.floor(Math.random() * colors.length)];
-
-            // Use simpler materials on mobile for better performance
-            const bodyMaterial = this.isMobile
-                ? new THREE.MeshLambertMaterial({
-                    color: fishColor,
-                    transparent: true,
-                    opacity: 0.9,
-                    emissive: fishColor,
-                    emissiveIntensity: 0.15
-                })
-                : new THREE.MeshPhysicalMaterial({
-                    color: fishColor,
-                    metalness: 0.3,
-                    roughness: 0.4,
-                    transparent: true,
-                    opacity: 0.9,
-                    emissive: fishColor,
-                    emissiveIntensity: 0.2
-                });
-
-            const fishBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
-
-            // Create tail (triangle)
-            const tailGeometry = new THREE.ConeGeometry(0.05, 0.12, 3);
-            tailGeometry.rotateZ(Math.PI / 2);
-            const tailMaterial = this.isMobile
-                ? new THREE.MeshLambertMaterial({
-                    color: fishColor,
-                    transparent: true,
-                    opacity: 0.85
-                })
-                : new THREE.MeshPhysicalMaterial({
-                    color: fishColor,
-                    metalness: 0.2,
-                    roughness: 0.5,
-                    transparent: true,
-                    opacity: 0.85
-                });
-            const tail = new THREE.Mesh(tailGeometry, tailMaterial);
-            tail.position.x = -0.12;
-            fishBody.add(tail);
-
-            // Create eyes (tiny spheres)
-            const eyeGeometry = new THREE.SphereGeometry(0.015, 4, 4);
-            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
-
-            const eye1 = new THREE.Mesh(eyeGeometry, eyeMaterial);
-            eye1.position.set(0.08, 0.03, 0.04);
-            fishBody.add(eye1);
-
-            const eye2 = new THREE.Mesh(eyeGeometry, eyeMaterial);
-            eye2.position.set(0.08, 0.03, -0.04);
-            fishBody.add(eye2);
-
-            // Random starting position in a circular area
-            const angle = (Math.PI * 2 * i) / fishCount;
-            const radius = 4 + Math.random() * 6;
-            fishBody.position.x = Math.cos(angle) * radius;
-            fishBody.position.y = -0.5 - Math.random() * 0.8; // Near/in the water
-            fishBody.position.z = Math.sin(angle) * radius;
-
-            // Random rotation
-            fishBody.rotation.y = angle + Math.PI / 2;
-
-            // Store fish data for animation
-            this.fish.push({
-                mesh: fishBody,
-                tail: tail,
-                speed: 0.3 + Math.random() * 0.5,
-                radius: radius,
-                angle: angle,
-                verticalOffset: Math.random() * Math.PI * 2,
-                verticalSpeed: 0.5 + Math.random() * 0.5,
-                tailPhase: Math.random() * Math.PI * 2
-            });
-
-            this.scene.add(fishBody);
-        }
-    }
-
-    createBouncingBall() {
-        // Create a colorful bouncing ball
-        const ballRadius = 0.3;
-        const segments = this.isMobile ? 16 : 32;
-        const ballGeometry = new THREE.SphereGeometry(ballRadius, segments, segments);
-
-        // Bright colorful ball material
-        const ballMaterial = this.isMobile
-            ? new THREE.MeshLambertMaterial({
-                color: 0xFF6B35,
-                emissive: 0xFF6B35,
-                emissiveIntensity: 0.2
-            })
-            : new THREE.MeshPhysicalMaterial({
-                color: 0xFF6B35,
-                metalness: 0.1,
-                roughness: 0.3,
-                clearcoat: 1.0,
-                clearcoatRoughness: 0.1,
-                emissive: 0xFF6B35,
-                emissiveIntensity: 0.1
-            });
-
-        this.bouncingBall = new THREE.Mesh(ballGeometry, ballMaterial);
-
-        // Start position above the blob
-        this.bouncingBall.position.set(2, 8, 0);
-
-        this.scene.add(this.bouncingBall);
-    }
-
     loadModel() {
         const loader = new GLTFLoader();
 
@@ -516,18 +372,18 @@ class BlobViewer {
                 this.model.position.sub(center.multiplyScalar(scale));
                 this.model.position.y = 0; // Center vertically
 
-                // Enhanced materials (optimized)
+                // Enhanced materials with brighter, more dramatic lighting response
                 this.model.traverse((child) => {
                     if (child.isMesh && child.material) {
-                        // Make material more reflective and glossy
-                        child.material.metalness = 0.3;
-                        child.material.roughness = 0.2;
-                        child.material.envMapIntensity = 1.5;
+                        // Make material highly reflective and glossy for spotlight
+                        child.material.metalness = 0.5;
+                        child.material.roughness = 0.1;
+                        child.material.envMapIntensity = 2.5;
 
-                        // Add emissive glow
+                        // Brighter emissive glow under spotlight
                         if (child.material.color) {
                             child.material.emissive = child.material.color.clone();
-                            child.material.emissiveIntensity = 0.25;
+                            child.material.emissiveIntensity = 0.4;
                         }
                     }
                 });
@@ -669,42 +525,6 @@ class BlobViewer {
         }
     }
 
-    createWaterSplash() {
-        // Create water splash when ball hits water
-        const particleCount = this.isLowEnd ? 8 : (this.isMobile ? 12 : 20);
-        const segments = this.isMobile ? 3 : 4;
-        const geometry = new THREE.SphereGeometry(0.1, segments, segments);
-
-        for (let i = 0; i < particleCount; i++) {
-            const material = new THREE.MeshBasicMaterial({
-                color: 0x0099DD,
-                transparent: true,
-                opacity: 0.8
-            });
-
-            const particle = new THREE.Mesh(geometry, material);
-
-            // Position at water impact location
-            particle.position.set(
-                this.bouncingBall.position.x,
-                -0.8,
-                this.bouncingBall.position.z
-            );
-
-            // Random velocity radiating outward
-            const angle = (Math.PI * 2 * i) / particleCount;
-            const speed = 0.1 + Math.random() * 0.15;
-            particle.userData.velocity = new THREE.Vector3(
-                Math.cos(angle) * speed,
-                0.3 + Math.random() * 0.4, // Upward
-                Math.sin(angle) * speed
-            );
-
-            this.scene.add(particle);
-            this.ballAnimation.splashParticles.push(particle);
-        }
-    }
-
     updateParticles() {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const particle = this.particles[i];
@@ -812,124 +632,6 @@ class BlobViewer {
 
         // Update particles
         this.updateParticles();
-
-        // Animate fish swimming
-        this.fish.forEach(fishData => {
-            // Circular swimming motion
-            fishData.angle += fishData.speed * 0.01;
-            fishData.mesh.position.x = Math.cos(fishData.angle) * fishData.radius;
-            fishData.mesh.position.z = Math.sin(fishData.angle) * fishData.radius;
-
-            // Vertical bobbing motion
-            fishData.mesh.position.y = -0.7 + Math.sin(time * fishData.verticalSpeed + fishData.verticalOffset) * 0.3;
-
-            // Point fish in swimming direction
-            fishData.mesh.rotation.y = fishData.angle + Math.PI / 2;
-
-            // Add slight tilt based on vertical movement
-            const verticalVelocity = Math.cos(time * fishData.verticalSpeed + fishData.verticalOffset);
-            fishData.mesh.rotation.x = verticalVelocity * 0.2;
-
-            // Wag tail
-            fishData.tail.rotation.y = Math.sin(time * 3 + fishData.tailPhase) * 0.4;
-        });
-
-        // Animate bouncing ball
-        if (this.bouncingBall && this.model) {
-            this.ballAnimation.time = (this.ballAnimation.time + 0.016) % this.ballAnimation.duration;
-            const t = this.ballAnimation.time / this.ballAnimation.duration; // 0 to 1
-
-            // Get blob's current floating position
-            const blobY = this.model.position.y;
-            const landingHeight = blobY + 2.0; // Land 2 units above blob center
-
-            if (t < 0.3) {
-                // Phase 1: Falling onto blob (0 to 0.3)
-                const fallT = t / 0.3;
-                const easeInQuad = fallT * fallT;
-                const startY = 8;
-                this.bouncingBall.position.y = startY - easeInQuad * (startY - landingHeight);
-                this.bouncingBall.position.x = 2 - fallT * 2;
-                this.bouncingBall.position.z = -1;
-
-                // Squish blob on impact
-                if (this.model && fallT > 0.95) {
-                    const squishAmount = (fallT - 0.95) / 0.05;
-                    this.model.scale.y = this.baseScale * (1 - squishAmount * 0.12);
-                    this.model.scale.x = this.baseScale * (1 + squishAmount * 0.06);
-                    this.model.scale.z = this.baseScale * (1 + squishAmount * 0.06);
-                }
-            } else if (t < 0.45) {
-                // Phase 2: Bouncing up from blob (0.3 to 0.45)
-                const bounceT = (t - 0.3) / 0.15;
-                const easeOutQuad = 1 - (1 - bounceT) * (1 - bounceT);
-                this.bouncingBall.position.y = landingHeight + easeOutQuad * 3.5;
-                this.bouncingBall.position.x = 0 - bounceT * 2;
-                this.bouncingBall.position.z = -1 + bounceT * 2; // Move away from blob
-
-                // Restore blob shape
-                if (this.model) {
-                    const restoreAmount = bounceT;
-                    this.model.scale.y = this.baseScale * (0.88 + restoreAmount * 0.12);
-                    this.model.scale.x = this.baseScale * (1.06 - restoreAmount * 0.06);
-                    this.model.scale.z = this.baseScale * (1.06 - restoreAmount * 0.06);
-                }
-            } else if (t < 0.7) {
-                // Phase 3: Falling into water (0.45 to 0.7)
-                const fallT = (t - 0.45) / 0.25;
-                const easeInCubic = fallT * fallT * fallT;
-                const bounceApex = landingHeight + 3.5;
-                this.bouncingBall.position.y = bounceApex - easeInCubic * (bounceApex + 0.8);
-                this.bouncingBall.position.x = -2 - fallT * 2; // Arc away from blob
-                this.bouncingBall.position.z = 1 + fallT * 1; // Continue away
-
-                // Create splash when entering water
-                if (fallT > 0.7 && fallT < 0.75 && this.ballAnimation.splashParticles.length === 0) {
-                    this.createWaterSplash();
-                }
-            } else {
-                // Phase 4: Reset and wait (0.7 to 1.0)
-                const resetT = (t - 0.7) / 0.3;
-                if (resetT < 0.1) {
-                    // Sink into water
-                    this.bouncingBall.position.y = -0.8 - resetT * 2;
-                    this.bouncingBall.position.x = -4;
-                    this.bouncingBall.position.z = 2;
-                } else {
-                    // Teleport back to start for next loop
-                    this.bouncingBall.position.set(2, 8, -1);
-
-                    // Clear splash particles
-                    this.ballAnimation.splashParticles.forEach(p => {
-                        this.scene.remove(p);
-                        p.geometry.dispose();
-                        p.material.dispose();
-                    });
-                    this.ballAnimation.splashParticles = [];
-                }
-
-                // Make sure blob is back to normal
-                if (this.model) {
-                    this.model.scale.setScalar(this.baseScale);
-                }
-            }
-
-            // Update splash particles
-            this.ballAnimation.splashParticles.forEach((particle, index) => {
-                if (particle.userData.velocity) {
-                    particle.position.add(particle.userData.velocity);
-                    particle.userData.velocity.y -= 0.02; // Gravity
-                    particle.material.opacity -= 0.015;
-
-                    if (particle.material.opacity <= 0) {
-                        this.scene.remove(particle);
-                        particle.geometry.dispose();
-                        particle.material.dispose();
-                        this.ballAnimation.splashParticles.splice(index, 1);
-                    }
-                }
-            });
-        }
 
         // Animate water pool with realistic waves
         if (this.waterPool && this.waterVertices) {
