@@ -106,7 +106,7 @@ class BlobViewer {
         // Camera - responsive positioning
         const isMobile = window.innerWidth <= 768;
         const fov = isMobile ? 60 : 50; // Wider FOV on mobile
-        const cameraDistance = isMobile ? 8 : 6; // Further back on mobile
+        const cameraDistance = isMobile ? 9 : 7; // Further back on mobile, zoomed out slightly
 
         this.camera = new THREE.PerspectiveCamera(
             fov,
@@ -393,7 +393,7 @@ class BlobViewer {
 
         // Position the water below the blob
         this.waterPool.rotation.x = -Math.PI / 2; // Make it horizontal
-        this.waterPool.position.y = -0.8;
+        this.waterPool.position.y = -1.2; // Lowered from -0.8
 
         this.scene.add(this.waterPool);
     }
@@ -486,7 +486,7 @@ class BlobViewer {
 
         this.waterShadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
         this.waterShadow.rotation.x = -Math.PI / 2;
-        this.waterShadow.position.y = -0.75;
+        this.waterShadow.position.y = -1.15; // Adjusted to match lowered water level
 
         this.scene.add(this.waterShadow);
     }
@@ -494,7 +494,7 @@ class BlobViewer {
     addReflectedLight() {
         // Add upward-facing cyan light to simulate water reflection
         const reflectedLight = new THREE.PointLight(0x00AAFF, this.isMobile ? 0.8 : 1.2, 8);
-        reflectedLight.position.set(0, -0.5, 0);
+        reflectedLight.position.set(0, -0.9, 0); // Adjusted for lowered water level
         this.scene.add(reflectedLight);
         this.reflectedLight = reflectedLight;
     }
@@ -761,7 +761,7 @@ class BlobViewer {
         const isSmallMobile = this.isLowEnd;
 
         this.camera.fov = isMobile ? 60 : 50;
-        this.camera.position.z = isMobile ? 8 : 6;
+        this.camera.position.z = isMobile ? 9 : 7;
         this.camera.updateProjectionMatrix();
 
         // Rescale model based on screen size
