@@ -33,6 +33,8 @@ class BlobViewer {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
         this.baseScale = 1;
+        this.lastHoverCheck = 0;
+        this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -92,8 +94,8 @@ class BlobViewer {
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // Disable shadows for better performance
+        this.renderer.shadowMap.enabled = false;
         this.container.appendChild(this.renderer.domElement);
 
         // Lights
@@ -136,35 +138,25 @@ class BlobViewer {
 
     setupLights() {
         // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         this.scene.add(ambientLight);
 
-        // Main directional light (key light)
-        const keyLight = new THREE.DirectionalLight(0x0066FF, 1.5);
+        // Main directional light (key light) - no shadows for performance
+        const keyLight = new THREE.DirectionalLight(0x0066FF, 1.2);
         keyLight.position.set(5, 10, 5);
-        keyLight.castShadow = true;
-        keyLight.shadow.mapSize.width = 2048;
-        keyLight.shadow.mapSize.height = 2048;
-        keyLight.shadow.camera.near = 0.5;
-        keyLight.shadow.camera.far = 50;
         this.scene.add(keyLight);
 
         // Fill light (cyan/blue)
-        const fillLight = new THREE.DirectionalLight(0x00E5FF, 0.8);
+        const fillLight = new THREE.DirectionalLight(0x00E5FF, 0.7);
         fillLight.position.set(-5, 3, -5);
         this.scene.add(fillLight);
 
-        // Rim light (purple)
-        const rimLight = new THREE.DirectionalLight(0x7C3AED, 0.6);
-        rimLight.position.set(0, -5, -8);
-        this.scene.add(rimLight);
-
-        // Point lights for extra sparkle
-        const pointLight1 = new THREE.PointLight(0x00E5FF, 1, 20);
+        // Point lights for extra sparkle (reduced count)
+        const pointLight1 = new THREE.PointLight(0x00E5FF, 0.8, 20);
         pointLight1.position.set(-3, 2, 3);
         this.scene.add(pointLight1);
 
-        const pointLight2 = new THREE.PointLight(0xEC4899, 0.8, 20);
+        const pointLight2 = new THREE.PointLight(0xEC4899, 0.6, 20);
         pointLight2.position.set(3, 2, -3);
         this.scene.add(pointLight2);
 
@@ -176,12 +168,12 @@ class BlobViewer {
         // Render pass
         const renderPass = new RenderPass(this.scene, this.camera);
 
-        // Bloom pass for glow effect
+        // Bloom pass for glow effect - reduced for performance
         const bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.7,  // strength
-            0.4,  // radius
-            0.85  // threshold
+            0.4,  // strength - reduced from 0.7
+            0.3,  // radius - reduced from 0.4
+            0.9   // threshold - increased from 0.85
         );
 
         // Composer
@@ -219,23 +211,18 @@ class BlobViewer {
                 this.model.position.sub(center.multiplyScalar(scale));
                 this.model.position.y = 0; // Center vertically
 
-                // Enhanced materials
+                // Enhanced materials (optimized)
                 this.model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-
+                    if (child.isMesh && child.material) {
                         // Make material more reflective and glossy
-                        if (child.material) {
-                            child.material.metalness = 0.4;
-                            child.material.roughness = 0.15;
-                            child.material.envMapIntensity = 2.0;
+                        child.material.metalness = 0.3;
+                        child.material.roughness = 0.2;
+                        child.material.envMapIntensity = 1.5;
 
-                            // Add emissive glow - enhanced for showcase
-                            if (child.material.color) {
-                                child.material.emissive = child.material.color.clone();
-                                child.material.emissiveIntensity = 0.3;
-                            }
+                        // Add emissive glow
+                        if (child.material.color) {
+                            child.material.emissive = child.material.color.clone();
+                            child.material.emissiveIntensity = 0.25;
                         }
                     }
                 });
@@ -284,12 +271,9 @@ class BlobViewer {
             this.mouseX = (event.clientX / window.innerWidth) * 2 - 1;
             this.mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
 
-            // Update mouse position for raycasting
+            // Update mouse position for raycasting (throttled in animate loop)
             this.mouse.x = this.mouseX;
             this.mouse.y = this.mouseY;
-
-            // Check for hover
-            this.checkHover();
         });
 
         // Click to make blob squish and splash
@@ -303,6 +287,13 @@ class BlobViewer {
 
     checkHover() {
         if (!this.model) return;
+
+        // Throttled hover check for performance
+        const now = Date.now();
+        if (now - this.lastHoverCheck < this.hoverCheckInterval) {
+            return;
+        }
+        this.lastHoverCheck = now;
 
         this.raycaster.setFromCamera(this.mouse, this.camera);
         const intersects = this.raycaster.intersectObject(this.model, true);
@@ -320,22 +311,25 @@ class BlobViewer {
         // Create particle splash
         this.createSplash(event);
 
-        // Make blob glow briefly
+        // Make blob glow briefly (optimized - less intense)
         this.model.traverse((child) => {
-            if (child.isMesh && child.material) {
-                const originalIntensity = child.material.emissiveIntensity;
-                child.material.emissiveIntensity = 0.8;
+            if (child.isMesh && child.material && child.material.emissive) {
+                const originalIntensity = child.material.emissiveIntensity || 0.25;
+                child.material.emissiveIntensity = 0.6;
 
                 setTimeout(() => {
                     child.material.emissiveIntensity = originalIntensity;
-                }, 300);
+                }, 250);
             }
         });
     }
 
     createSplash(event) {
-        const particleCount = 30;
-        const geometry = new THREE.SphereGeometry(0.05, 8, 8);
+        // Limit particles to reduce lag
+        const particleCount = 15; // Reduced from 30
+
+        // Simpler geometry for better performance
+        const geometry = new THREE.SphereGeometry(0.06, 4, 4); // Reduced segments
         const material = new THREE.MeshBasicMaterial({
             color: 0x00E5FF,
             transparent: true,
@@ -347,22 +341,22 @@ class BlobViewer {
 
             // Position near the model
             const angle = (Math.PI * 2 * i) / particleCount;
-            const radius = 2 + Math.random() * 2;
+            const radius = 2 + Math.random() * 1.5;
             particle.position.set(
                 Math.cos(angle) * radius,
-                Math.random() * 2 - 1,
+                Math.random() * 1.5 - 0.5,
                 Math.sin(angle) * radius
             );
 
             // Random velocity
             particle.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 0.3,
-                Math.random() * 0.3 + 0.2,
-                (Math.random() - 0.5) * 0.3
+                (Math.random() - 0.5) * 0.25,
+                Math.random() * 0.25 + 0.15,
+                (Math.random() - 0.5) * 0.25
             );
 
             particle.life = 1.0;
-            particle.decay = 0.02 + Math.random() * 0.02;
+            particle.decay = 0.03 + Math.random() * 0.02; // Faster decay
 
             this.scene.add(particle);
             this.particles.push(particle);
@@ -415,6 +409,9 @@ class BlobViewer {
 
         const time = Date.now() * 0.001;
 
+        // Check hover (throttled)
+        this.checkHover();
+
         // Update particles
         this.updateParticles();
 
@@ -437,7 +434,7 @@ class BlobViewer {
             // Squish animation on click
             if (this.squishAmount > 0) {
                 const timeSinceClick = (Date.now() - this.clickTime) / 1000;
-                const squishDuration = 0.5;
+                const squishDuration = 0.4; // Slightly faster
 
                 if (timeSinceClick < squishDuration) {
                     // Squish and bounce back
@@ -445,9 +442,9 @@ class BlobViewer {
                     const easeOut = 1 - Math.pow(1 - progress, 3);
                     const squish = Math.sin(progress * Math.PI * 2) * (1 - easeOut);
 
-                    this.model.scale.y = this.baseScale * (1 - squish * 0.3);
-                    this.model.scale.x = this.baseScale * (1 + squish * 0.15);
-                    this.model.scale.z = this.baseScale * (1 + squish * 0.15);
+                    this.model.scale.y = this.baseScale * (1 - squish * 0.25);
+                    this.model.scale.x = this.baseScale * (1 + squish * 0.125);
+                    this.model.scale.z = this.baseScale * (1 + squish * 0.125);
                 } else {
                     // Reset scale
                     this.model.scale.setScalar(this.baseScale);
@@ -463,41 +460,22 @@ class BlobViewer {
                 0.1
             );
 
-            // Apply hover effects to materials
-            if (this.hoverIntensity > 0.01) {
-                this.model.traverse((child) => {
-                    if (child.isMesh && child.material && child.material.emissive) {
-                        const baseIntensity = 0.3;
-                        child.material.emissiveIntensity = baseIntensity + (this.hoverIntensity * 0.4);
-                    }
-                });
-            }
-
-            // Wobble on hover
+            // Wobble on hover (simplified - no material updates every frame)
             if (this.isHovering) {
-                const wobble = Math.sin(time * 3) * 0.02;
+                const wobble = Math.sin(time * 3) * 0.015; // Reduced wobble
                 this.model.rotation.z = wobble;
             } else {
                 this.model.rotation.z = THREE.MathUtils.lerp(this.model.rotation.z, 0, 0.1);
             }
         }
 
-        // Animate point lights
+        // Animate point lights (simplified)
         if (this.animatedLights) {
             this.animatedLights[0].position.x = Math.sin(time * 0.7) * 4;
             this.animatedLights[0].position.z = Math.cos(time * 0.7) * 4;
 
             this.animatedLights[1].position.x = Math.sin(time * 0.5 + Math.PI) * 4;
             this.animatedLights[1].position.z = Math.cos(time * 0.5 + Math.PI) * 4;
-
-            // Pulse lights on hover
-            if (this.hoverIntensity > 0.01) {
-                this.animatedLights[0].intensity = 1 + this.hoverIntensity * 0.5;
-                this.animatedLights[1].intensity = 0.8 + this.hoverIntensity * 0.4;
-            } else {
-                this.animatedLights[0].intensity = 1;
-                this.animatedLights[1].intensity = 0.8;
-            }
         }
 
         // Update controls
