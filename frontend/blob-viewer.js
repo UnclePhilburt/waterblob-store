@@ -39,6 +39,12 @@ class BlobViewer {
         this.fish = [];
         this.isMobile = window.innerWidth <= 768;
         this.isLowEnd = window.innerWidth <= 480;
+        this.bouncingBall = null;
+        this.ballAnimation = {
+            time: 0,
+            duration: 4, // 4 second loop
+            splashParticles: []
+        };
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -130,6 +136,9 @@ class BlobViewer {
 
         // Create swimming fish
         this.createFish();
+
+        // Create bouncing ball
+        this.createBouncingBall();
 
         // Load model
         this.loadModel();
@@ -433,6 +442,37 @@ class BlobViewer {
         }
     }
 
+    createBouncingBall() {
+        // Create a colorful bouncing ball
+        const ballRadius = 0.3;
+        const segments = this.isMobile ? 16 : 32;
+        const ballGeometry = new THREE.SphereGeometry(ballRadius, segments, segments);
+
+        // Bright colorful ball material
+        const ballMaterial = this.isMobile
+            ? new THREE.MeshLambertMaterial({
+                color: 0xFF6B35,
+                emissive: 0xFF6B35,
+                emissiveIntensity: 0.2
+            })
+            : new THREE.MeshPhysicalMaterial({
+                color: 0xFF6B35,
+                metalness: 0.1,
+                roughness: 0.3,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                emissive: 0xFF6B35,
+                emissiveIntensity: 0.1
+            });
+
+        this.bouncingBall = new THREE.Mesh(ballGeometry, ballMaterial);
+
+        // Start position above the blob
+        this.bouncingBall.position.set(2, 8, 0);
+
+        this.scene.add(this.bouncingBall);
+    }
+
     loadModel() {
         const loader = new GLTFLoader();
 
@@ -629,6 +669,42 @@ class BlobViewer {
         }
     }
 
+    createWaterSplash() {
+        // Create water splash when ball hits water
+        const particleCount = this.isLowEnd ? 8 : (this.isMobile ? 12 : 20);
+        const segments = this.isMobile ? 3 : 4;
+        const geometry = new THREE.SphereGeometry(0.1, segments, segments);
+
+        for (let i = 0; i < particleCount; i++) {
+            const material = new THREE.MeshBasicMaterial({
+                color: 0x0099DD,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const particle = new THREE.Mesh(geometry, material);
+
+            // Position at water impact location
+            particle.position.set(
+                this.bouncingBall.position.x,
+                -0.8,
+                this.bouncingBall.position.z
+            );
+
+            // Random velocity radiating outward
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const speed = 0.1 + Math.random() * 0.15;
+            particle.userData.velocity = new THREE.Vector3(
+                Math.cos(angle) * speed,
+                0.3 + Math.random() * 0.4, // Upward
+                Math.sin(angle) * speed
+            );
+
+            this.scene.add(particle);
+            this.ballAnimation.splashParticles.push(particle);
+        }
+    }
+
     updateParticles() {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const particle = this.particles[i];
@@ -757,6 +833,97 @@ class BlobViewer {
             // Wag tail
             fishData.tail.rotation.y = Math.sin(time * 3 + fishData.tailPhase) * 0.4;
         });
+
+        // Animate bouncing ball
+        if (this.bouncingBall) {
+            this.ballAnimation.time = (this.ballAnimation.time + 0.016) % this.ballAnimation.duration;
+            const t = this.ballAnimation.time / this.ballAnimation.duration; // 0 to 1
+
+            if (t < 0.3) {
+                // Phase 1: Falling onto blob (0 to 0.3)
+                const fallT = t / 0.3;
+                const easeInQuad = fallT * fallT;
+                this.bouncingBall.position.y = 8 - easeInQuad * 8.5;
+                this.bouncingBall.position.x = 2 - fallT * 2;
+                this.bouncingBall.position.z = 0;
+
+                // Squish blob on impact
+                if (this.model && fallT > 0.95) {
+                    const squishAmount = (fallT - 0.95) / 0.05;
+                    this.model.scale.y = this.baseScale * (1 - squishAmount * 0.15);
+                    this.model.scale.x = this.baseScale * (1 + squishAmount * 0.075);
+                    this.model.scale.z = this.baseScale * (1 + squishAmount * 0.075);
+                }
+            } else if (t < 0.45) {
+                // Phase 2: Bouncing up from blob (0.3 to 0.45)
+                const bounceT = (t - 0.3) / 0.15;
+                const easeOutQuad = 1 - (1 - bounceT) * (1 - bounceT);
+                this.bouncingBall.position.y = -0.5 + easeOutQuad * 3;
+                this.bouncingBall.position.x = -0.5;
+                this.bouncingBall.position.z = 0;
+
+                // Restore blob shape
+                if (this.model) {
+                    const restoreAmount = bounceT;
+                    this.model.scale.y = this.baseScale * (0.85 + restoreAmount * 0.15);
+                    this.model.scale.x = this.baseScale * (1.075 - restoreAmount * 0.075);
+                    this.model.scale.z = this.baseScale * (1.075 - restoreAmount * 0.075);
+                }
+            } else if (t < 0.7) {
+                // Phase 3: Falling into water (0.45 to 0.7)
+                const fallT = (t - 0.45) / 0.25;
+                const easeInCubic = fallT * fallT * fallT;
+                this.bouncingBall.position.y = 2.5 - easeInCubic * 4;
+                this.bouncingBall.position.x = -0.5 - fallT * 1.5;
+                this.bouncingBall.position.z = 0;
+
+                // Create splash when entering water
+                if (fallT > 0.7 && fallT < 0.75 && this.ballAnimation.splashParticles.length === 0) {
+                    this.createWaterSplash();
+                }
+            } else {
+                // Phase 4: Reset and wait (0.7 to 1.0)
+                const resetT = (t - 0.7) / 0.3;
+                if (resetT < 0.1) {
+                    // Sink into water
+                    this.bouncingBall.position.y = -1.5 - resetT * 2;
+                    this.bouncingBall.position.x = -2;
+                    this.bouncingBall.position.z = 0;
+                } else {
+                    // Teleport back to start for next loop
+                    this.bouncingBall.position.set(2, 8, 0);
+
+                    // Clear splash particles
+                    this.ballAnimation.splashParticles.forEach(p => {
+                        this.scene.remove(p);
+                        p.geometry.dispose();
+                        p.material.dispose();
+                    });
+                    this.ballAnimation.splashParticles = [];
+                }
+
+                // Make sure blob is back to normal
+                if (this.model) {
+                    this.model.scale.setScalar(this.baseScale);
+                }
+            }
+
+            // Update splash particles
+            this.ballAnimation.splashParticles.forEach((particle, index) => {
+                if (particle.userData.velocity) {
+                    particle.position.add(particle.userData.velocity);
+                    particle.userData.velocity.y -= 0.02; // Gravity
+                    particle.material.opacity -= 0.015;
+
+                    if (particle.material.opacity <= 0) {
+                        this.scene.remove(particle);
+                        particle.geometry.dispose();
+                        particle.material.dispose();
+                        this.ballAnimation.splashParticles.splice(index, 1);
+                    }
+                }
+            });
+        }
 
         // Animate water pool with realistic waves
         if (this.waterPool && this.waterVertices) {
