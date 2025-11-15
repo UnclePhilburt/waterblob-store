@@ -37,6 +37,8 @@ class BlobViewer {
         this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
         this.waterPool = null;
         this.fish = [];
+        this.isMobile = window.innerWidth <= 768;
+        this.isLowEnd = window.innerWidth <= 480;
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -90,14 +92,16 @@ class BlobViewer {
         );
         this.camera.position.set(0, 1, cameraDistance);
 
-        // Renderer
+        // Renderer - optimized for mobile
         this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
+            antialias: !this.isMobile, // Disable antialiasing on mobile
             alpha: true,
             powerPreference: "high-performance"
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // Lower pixel ratio on mobile for better performance
+        const pixelRatio = this.isMobile ? 1 : Math.min(window.devicePixelRatio, 2);
+        this.renderer.setPixelRatio(pixelRatio);
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.2;
         // Disable shadows for better performance
@@ -154,73 +158,91 @@ class BlobViewer {
     }
 
     setupLights() {
-        // Ambient light
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        // Ambient light - increased on mobile to reduce need for other lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, this.isMobile ? 1.0 : 0.7);
         this.scene.add(ambientLight);
 
         // Main directional light (key light) - no shadows for performance
-        const keyLight = new THREE.DirectionalLight(0x0066FF, 1.2);
+        const keyLight = new THREE.DirectionalLight(0x0066FF, this.isMobile ? 0.8 : 1.2);
         keyLight.position.set(5, 10, 5);
         this.scene.add(keyLight);
 
-        // Fill light (cyan/blue)
-        const fillLight = new THREE.DirectionalLight(0x00E5FF, 0.7);
-        fillLight.position.set(-5, 3, -5);
-        this.scene.add(fillLight);
+        if (!this.isMobile) {
+            // Fill light (cyan/blue) - desktop only
+            const fillLight = new THREE.DirectionalLight(0x00E5FF, 0.7);
+            fillLight.position.set(-5, 3, -5);
+            this.scene.add(fillLight);
+        }
 
-        // Point lights for extra sparkle (reduced count)
-        const pointLight1 = new THREE.PointLight(0x00E5FF, 0.8, 20);
-        pointLight1.position.set(-3, 2, 3);
-        this.scene.add(pointLight1);
+        // Point lights for extra sparkle - desktop only or reduced on mobile
+        if (!this.isLowEnd) {
+            const pointLight1 = new THREE.PointLight(0x00E5FF, this.isMobile ? 0.4 : 0.8, 20);
+            pointLight1.position.set(-3, 2, 3);
+            this.scene.add(pointLight1);
 
-        const pointLight2 = new THREE.PointLight(0xEC4899, 0.6, 20);
-        pointLight2.position.set(3, 2, -3);
-        this.scene.add(pointLight2);
+            if (!this.isMobile) {
+                const pointLight2 = new THREE.PointLight(0xEC4899, 0.6, 20);
+                pointLight2.position.set(3, 2, -3);
+                this.scene.add(pointLight2);
 
-        // Animated lights
-        this.animatedLights = [pointLight1, pointLight2];
+                // Animated lights
+                this.animatedLights = [pointLight1, pointLight2];
+            } else {
+                this.animatedLights = [pointLight1];
+            }
+        } else {
+            this.animatedLights = [];
+        }
     }
 
     setupPostProcessing() {
         // Render pass
         const renderPass = new RenderPass(this.scene, this.camera);
 
-        // Bloom pass for glow effect - reduced for performance
-        const bloomPass = new UnrealBloomPass(
-            new THREE.Vector2(window.innerWidth, window.innerHeight),
-            0.4,  // strength - reduced from 0.7
-            0.3,  // radius - reduced from 0.4
-            0.9   // threshold - increased from 0.85
-        );
-
         // Composer
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(renderPass);
-        this.composer.addPass(bloomPass);
+
+        // Bloom pass for glow effect - disabled on mobile for performance
+        if (!this.isMobile) {
+            const bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                0.4,  // strength - reduced from 0.7
+                0.3,  // radius - reduced from 0.4
+                0.9   // threshold - increased from 0.85
+            );
+            this.composer.addPass(bloomPass);
+        }
     }
 
     createWaterPool() {
         // Create a realistic water surface below the blob
-        const waterGeometry = new THREE.PlaneGeometry(30, 30, 128, 128);
+        // Reduce geometry complexity on mobile for better performance
+        const segments = this.isLowEnd ? 32 : (this.isMobile ? 64 : 128);
+        const waterGeometry = new THREE.PlaneGeometry(30, 30, segments, segments);
 
         // Create vertices array for wave animation
         this.waterVertices = waterGeometry.attributes.position.array;
 
         // Create procedural water normal map for texture with realistic patterns
+        // Reduce texture size on mobile for better performance
+        const texSize = this.isLowEnd ? 256 : (this.isMobile ? 384 : 512);
         const canvas = document.createElement('canvas');
-        canvas.width = 512;
-        canvas.height = 512;
+        canvas.width = texSize;
+        canvas.height = texSize;
         const ctx = canvas.getContext('2d');
 
         // Fill with base blue-gray color
         ctx.fillStyle = '#7799BB';
-        ctx.fillRect(0, 0, 512, 512);
+        ctx.fillRect(0, 0, texSize, texSize);
 
         // Create realistic water ripple patterns using Perlin-like noise simulation
+        // Reduce pattern complexity on mobile
+        const patternCount1 = this.isLowEnd ? 30 : (this.isMobile ? 60 : 100);
         // Layer 1: Large wave patterns
-        for (let i = 0; i < 100; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 512;
+        for (let i = 0; i < patternCount1; i++) {
+            const x = Math.random() * texSize;
+            const y = Math.random() * texSize;
             const radius = Math.random() * 50 + 30;
             const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
             gradient.addColorStop(0, 'rgba(150, 180, 220, 0.4)');
@@ -233,10 +255,11 @@ class BlobViewer {
         }
 
         // Layer 2: Medium ripples for detail
+        const patternCount2 = this.isLowEnd ? 50 : (this.isMobile ? 100 : 150);
         ctx.globalCompositeOperation = 'overlay';
-        for (let i = 0; i < 150; i++) {
-            const x = Math.random() * 512;
-            const y = Math.random() * 512;
+        for (let i = 0; i < patternCount2; i++) {
+            const x = Math.random() * texSize;
+            const y = Math.random() * texSize;
             const radius = Math.random() * 20 + 8;
             const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
             gradient.addColorStop(0, 'rgba(200, 220, 255, 0.5)');
@@ -248,26 +271,29 @@ class BlobViewer {
             ctx.fill();
         }
 
-        // Layer 3: Fine detail noise
-        ctx.globalCompositeOperation = 'soft-light';
-        const imageData = ctx.getImageData(0, 0, 512, 512);
-        const data = imageData.data;
-        for (let i = 0; i < data.length; i += 4) {
-            const noise = (Math.random() - 0.5) * 30;
-            data[i] += noise;     // R
-            data[i + 1] += noise; // G
-            data[i + 2] += noise; // B
+        // Layer 3: Fine detail noise - skip on low-end mobile
+        if (!this.isLowEnd) {
+            ctx.globalCompositeOperation = 'soft-light';
+            const imageData = ctx.getImageData(0, 0, texSize, texSize);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * 30;
+                data[i] += noise;     // R
+                data[i + 1] += noise; // G
+                data[i + 2] += noise; // B
+            }
+            ctx.putImageData(imageData, 0, 0);
         }
-        ctx.putImageData(imageData, 0, 0);
 
-        // Layer 4: Flowing water streaks
+        // Layer 4: Flowing water streaks - reduced on mobile
+        const patternCount4 = this.isLowEnd ? 15 : (this.isMobile ? 25 : 40);
         ctx.globalCompositeOperation = 'screen';
         ctx.strokeStyle = 'rgba(180, 210, 255, 0.15)';
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < patternCount4; i++) {
             ctx.lineWidth = Math.random() * 3 + 1;
             ctx.beginPath();
-            const startX = Math.random() * 512;
-            const startY = Math.random() * 512;
+            const startX = Math.random() * texSize;
+            const startY = Math.random() * texSize;
             const angle = Math.random() * Math.PI * 2;
             const length = Math.random() * 80 + 40;
             ctx.moveTo(startX, startY);
@@ -314,38 +340,57 @@ class BlobViewer {
 
     createFish() {
         // Create several small fish swimming around in the water
-        const fishCount = 12;
+        // Reduce fish count on mobile for better performance
+        const fishCount = this.isLowEnd ? 4 : (this.isMobile ? 6 : 12);
         const colors = [0xFF6B35, 0xF7931E, 0xFDC830, 0x00E5FF, 0x0077BE, 0xEC4899];
 
         for (let i = 0; i < fishCount; i++) {
             // Create fish body (elongated ellipsoid)
-            const bodyGeometry = new THREE.SphereGeometry(0.08, 8, 6);
+            // Reduce geometry detail on mobile
+            const segments = this.isMobile ? 6 : 8;
+            const bodyGeometry = new THREE.SphereGeometry(0.08, segments, segments - 2);
             bodyGeometry.scale(1.5, 0.7, 0.6); // Make it fish-shaped
 
             // Random color for each fish
             const fishColor = colors[Math.floor(Math.random() * colors.length)];
-            const bodyMaterial = new THREE.MeshPhysicalMaterial({
-                color: fishColor,
-                metalness: 0.3,
-                roughness: 0.4,
-                transparent: true,
-                opacity: 0.9,
-                emissive: fishColor,
-                emissiveIntensity: 0.2
-            });
+
+            // Use simpler materials on mobile for better performance
+            const bodyMaterial = this.isMobile
+                ? new THREE.MeshLambertMaterial({
+                    color: fishColor,
+                    transparent: true,
+                    opacity: 0.9,
+                    emissive: fishColor,
+                    emissiveIntensity: 0.15
+                })
+                : new THREE.MeshPhysicalMaterial({
+                    color: fishColor,
+                    metalness: 0.3,
+                    roughness: 0.4,
+                    transparent: true,
+                    opacity: 0.9,
+                    emissive: fishColor,
+                    emissiveIntensity: 0.2
+                });
 
             const fishBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
 
             // Create tail (triangle)
             const tailGeometry = new THREE.ConeGeometry(0.05, 0.12, 3);
             tailGeometry.rotateZ(Math.PI / 2);
-            const tailMaterial = new THREE.MeshPhysicalMaterial({
-                color: fishColor,
-                metalness: 0.2,
-                roughness: 0.5,
-                transparent: true,
-                opacity: 0.85
-            });
+            const tailMaterial = this.isMobile
+                ? new THREE.MeshLambertMaterial({
+                    color: fishColor,
+                    transparent: true,
+                    opacity: 0.85
+                })
+                : new THREE.MeshPhysicalMaterial({
+                    color: fishColor,
+                    metalness: 0.2,
+                    roughness: 0.5,
+                    transparent: true,
+                    opacity: 0.85
+                });
             const tail = new THREE.Mesh(tailGeometry, tailMaterial);
             tail.position.x = -0.12;
             fishBody.add(tail);
@@ -545,11 +590,12 @@ class BlobViewer {
     }
 
     createSplash(event) {
-        // Limit particles to reduce lag
-        const particleCount = 15; // Reduced from 30
+        // Limit particles to reduce lag - even less on mobile
+        const particleCount = this.isLowEnd ? 5 : (this.isMobile ? 10 : 15);
 
         // Simpler geometry for better performance
-        const geometry = new THREE.SphereGeometry(0.06, 4, 4); // Reduced segments
+        const segments = this.isMobile ? 3 : 4;
+        const geometry = new THREE.SphereGeometry(0.06, segments, segments);
         const material = new THREE.MeshBasicMaterial({
             color: 0x00E5FF,
             transparent: true,
@@ -630,13 +676,17 @@ class BlobViewer {
         const width = window.innerWidth;
         const height = window.innerHeight;
 
+        // Update mobile flags
+        this.isMobile = width <= 768;
+        this.isLowEnd = width <= 480;
+
         // Update camera aspect ratio
         this.camera.aspect = width / height;
         this.camera.updateProjectionMatrix();
 
         // Adjust camera FOV and position for mobile
-        const isMobile = width <= 768;
-        const isSmallMobile = width <= 480;
+        const isMobile = this.isMobile;
+        const isSmallMobile = this.isLowEnd;
 
         this.camera.fov = isMobile ? 60 : 50;
         this.camera.position.z = isMobile ? 8 : 6;
@@ -716,34 +766,45 @@ class BlobViewer {
                 const x = positions.getX(i);
                 const y = positions.getY(i);
 
-                // Distance from center for radial waves
-                const dist = Math.sqrt(x * x + y * y);
+                // Simplified wave calculation on mobile
+                if (this.isMobile) {
+                    // Just 4 wave layers on mobile for performance
+                    const wave1 = Math.sin(x * 0.4 + time * 0.5) * 0.25;
+                    const wave2 = Math.sin(y * 0.35 + time * 0.6) * 0.2;
+                    const wave3 = Math.sin((x + y) * 0.6 + time * 0.8) * 0.15;
+                    const dist = Math.sqrt(x * x + y * y);
+                    const ripple1 = Math.sin(dist * 0.4 - time * 1.2) * 0.18;
 
-                // Create multiple wave layers for realistic water motion
-                // Large slow waves
-                const wave1 = Math.sin(x * 0.4 + time * 0.5) * 0.25;
-                const wave2 = Math.sin(y * 0.35 + time * 0.6) * 0.2;
+                    positions.setZ(i, wave1 + wave2 + wave3 + ripple1);
+                } else {
+                    // Full wave layers on desktop
+                    const dist = Math.sqrt(x * x + y * y);
 
-                // Medium frequency waves at different angles
-                const wave3 = Math.sin((x + y) * 0.6 + time * 0.8) * 0.15;
-                const wave4 = Math.sin((x - y) * 0.5 + time * 0.7) * 0.12;
+                    // Large slow waves
+                    const wave1 = Math.sin(x * 0.4 + time * 0.5) * 0.25;
+                    const wave2 = Math.sin(y * 0.35 + time * 0.6) * 0.2;
 
-                // Radial ripples from center
-                const ripple1 = Math.sin(dist * 0.4 - time * 1.2) * 0.18;
-                const ripple2 = Math.sin(dist * 0.6 - time * 0.9) * 0.1;
+                    // Medium frequency waves at different angles
+                    const wave3 = Math.sin((x + y) * 0.6 + time * 0.8) * 0.15;
+                    const wave4 = Math.sin((x - y) * 0.5 + time * 0.7) * 0.12;
 
-                // High frequency detail waves
-                const detail1 = Math.sin(x * 1.2 + y * 0.8 + time * 1.5) * 0.08;
-                const detail2 = Math.sin(x * 0.9 - y * 1.1 + time * 1.3) * 0.06;
+                    // Radial ripples from center
+                    const ripple1 = Math.sin(dist * 0.4 - time * 1.2) * 0.18;
+                    const ripple2 = Math.sin(dist * 0.6 - time * 0.9) * 0.1;
 
-                // Circular interference pattern
-                const interference = Math.sin((x * x + y * y) * 0.05 + time * 0.4) * 0.1;
+                    // High frequency detail waves
+                    const detail1 = Math.sin(x * 1.2 + y * 0.8 + time * 1.5) * 0.08;
+                    const detail2 = Math.sin(x * 0.9 - y * 1.1 + time * 1.3) * 0.06;
 
-                // Combine all waves
-                const height = wave1 + wave2 + wave3 + wave4 +
-                              ripple1 + ripple2 + detail1 + detail2 + interference;
+                    // Circular interference pattern
+                    const interference = Math.sin((x * x + y * y) * 0.05 + time * 0.4) * 0.1;
 
-                positions.setZ(i, height);
+                    // Combine all waves
+                    const height = wave1 + wave2 + wave3 + wave4 +
+                                  ripple1 + ripple2 + detail1 + detail2 + interference;
+
+                    positions.setZ(i, height);
+                }
             }
 
             positions.needsUpdate = true;
@@ -810,13 +871,15 @@ class BlobViewer {
             }
         }
 
-        // Animate point lights (simplified)
-        if (this.animatedLights) {
+        // Animate point lights (simplified) - skip on low-end mobile
+        if (!this.isLowEnd && this.animatedLights && this.animatedLights.length > 0) {
             this.animatedLights[0].position.x = Math.sin(time * 0.7) * 4;
             this.animatedLights[0].position.z = Math.cos(time * 0.7) * 4;
 
-            this.animatedLights[1].position.x = Math.sin(time * 0.5 + Math.PI) * 4;
-            this.animatedLights[1].position.z = Math.cos(time * 0.5 + Math.PI) * 4;
+            if (this.animatedLights[1]) {
+                this.animatedLights[1].position.x = Math.sin(time * 0.5 + Math.PI) * 4;
+                this.animatedLights[1].position.z = Math.cos(time * 0.5 + Math.PI) * 4;
+            }
         }
 
         // Update controls
