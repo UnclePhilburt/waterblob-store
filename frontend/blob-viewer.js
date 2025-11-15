@@ -35,6 +35,7 @@ class BlobViewer {
         this.baseScale = 1;
         this.lastHoverCheck = 0;
         this.hoverCheckInterval = 100; // Check hover every 100ms instead of every frame
+        this.waterPool = null;
 
         // Check if running from file:// protocol
         if (window.location.protocol === 'file:') {
@@ -115,6 +116,9 @@ class BlobViewer {
         // Post-processing
         this.setupPostProcessing();
 
+        // Create water pool
+        this.createWaterPool();
+
         // Load model
         this.loadModel();
 
@@ -180,6 +184,37 @@ class BlobViewer {
         this.composer = new EffectComposer(this.renderer);
         this.composer.addPass(renderPass);
         this.composer.addPass(bloomPass);
+    }
+
+    createWaterPool() {
+        // Create a realistic water surface below the blob
+        const waterGeometry = new THREE.PlaneGeometry(30, 30, 64, 64);
+
+        // Create vertices array for wave animation
+        this.waterVertices = waterGeometry.attributes.position.array;
+
+        // Water material with realistic properties
+        const waterMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x0077BE,
+            metalness: 0.1,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.7,
+            transmission: 0.5,
+            thickness: 0.5,
+            envMapIntensity: 1.5,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            side: THREE.DoubleSide
+        });
+
+        this.waterPool = new THREE.Mesh(waterGeometry, waterMaterial);
+
+        // Position the water below the blob
+        this.waterPool.rotation.x = -Math.PI / 2; // Make it horizontal
+        this.waterPool.position.y = -3;
+
+        this.scene.add(this.waterPool);
     }
 
     loadModel() {
@@ -392,8 +427,16 @@ class BlobViewer {
 
         if (isDark) {
             this.scene.fog = new THREE.Fog(0x000000, 10, 50);
+            // Darker water for dark theme
+            if (this.waterPool) {
+                this.waterPool.material.color.setHex(0x004466);
+            }
         } else {
             this.scene.fog = new THREE.Fog(0xFAFAFA, 10, 50);
+            // Brighter water for light theme
+            if (this.waterPool) {
+                this.waterPool.material.color.setHex(0x0099DD);
+            }
         }
     }
 
@@ -414,6 +457,27 @@ class BlobViewer {
 
         // Update particles
         this.updateParticles();
+
+        // Animate water pool with realistic waves
+        if (this.waterPool && this.waterVertices) {
+            const positions = this.waterPool.geometry.attributes.position;
+
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+
+                // Create multiple wave layers for realistic water motion
+                const wave1 = Math.sin(x * 0.5 + time * 0.5) * 0.15;
+                const wave2 = Math.sin(y * 0.3 + time * 0.7) * 0.1;
+                const wave3 = Math.sin((x + y) * 0.4 + time * 0.3) * 0.08;
+                const ripple = Math.sin(Math.sqrt(x * x + y * y) * 0.3 - time) * 0.05;
+
+                positions.setZ(i, wave1 + wave2 + wave3 + ripple);
+            }
+
+            positions.needsUpdate = true;
+            this.waterPool.geometry.computeVertexNormals();
+        }
 
         // Smooth mouse parallax
         if (this.model) {
