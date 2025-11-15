@@ -212,7 +212,7 @@ class BlobViewer {
 
         // Position the water below the blob
         this.waterPool.rotation.x = -Math.PI / 2; // Make it horizontal
-        this.waterPool.position.y = -3;
+        this.waterPool.position.y = -1.2;
 
         this.scene.add(this.waterPool);
     }
