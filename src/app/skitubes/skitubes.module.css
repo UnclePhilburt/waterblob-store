@@ -1,0 +1,405 @@
+/* ==========================================================================
+   Ski Tubes Product Page -- Water Blob(R)
+   ========================================================================== */
+
+/* ---------- Page Container ---------- */
+.tubePage {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 2rem;
+}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin-bottom: 2rem;
+}
+
+.breadcrumbLink {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.breadcrumbLink:hover {
+  opacity: 0.8;
+}
+
+.breadcrumbSep {
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+/* ---------- Header ---------- */
+.tubeHeader {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.tubeHeader h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+
+.tubeHeaderSubtitle {
+  font-size: 1.05rem;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+
+/* ---------- Product Grid (side-by-side) ---------- */
+.tubeProduct {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
+
+.viewerColumn {
+  position: sticky;
+  top: 5rem;
+}
+
+/* ---------- 3D Viewer ---------- */
+.tubeViewer {
+  position: relative;
+  width: 100%;
+  height: 500px;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+/* ---------- Product Details ---------- */
+.tubeDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tubeProductName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tubeProductPrice {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent-blue);
+}
+
+.tubeProductDesc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ---------- Spec Chips ---------- */
+.tubeSpecs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.specChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 100px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.specChip svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ---------- Purchase Controls ---------- */
+.tubePurchase {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.tubeQty {
+  display: flex;
+  border: 1px solid var(--border-medium);
+  border-radius: 0.625rem;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.tubeQtyBtn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+}
+
+.tubeQtyBtn:hover {
+  background: var(--bg-elevated);
+}
+
+.tubeQtyInput {
+  width: 2.5rem;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--border-medium);
+  border-right: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+
+.tubeQtyInput::-webkit-outer-spin-button,
+.tubeQtyInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tubeCartBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  font-family: inherit;
+}
+
+.tubeCartBtn:hover {
+  background: #0094d0;
+  transform: translateY(-1px);
+}
+
+.tubeCartBtn:active {
+  transform: translateY(0);
+}
+
+.tubeCartBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tubeCartBtnAdded {
+  background: #16a34a;
+}
+
+.tubeCartBtnAdded:hover {
+  background: #15803d;
+}
+
+/* ---------- Call for Quote ---------- */
+.callForQuote {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.callForQuote a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.callForQuote a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Help Card ---------- */
+.helpCard {
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+}
+
+.helpCard h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.helpCard p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.helpCardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--accent-blue);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: background 0.2s ease;
+}
+
+.helpCardLink:hover {
+  background: #0094d0;
+}
+
+/* ---------- Gallery Section ---------- */
+.tubeGallerySection {
+  margin-bottom: 2rem;
+}
+
+.tubeGalleryLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 0.75rem;
+}
+
+.tubeGallery {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+  padding-bottom: 0.5rem;
+}
+
+.tubeGallery::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tubeGallery::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tubeGallery::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+}
+
+.tubeGalleryItem {
+  position: relative;
+  flex-shrink: 0;
+  width: 260px;
+  height: 180px;
+  scroll-snap-align: start;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.tubeGalleryItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.tubeGalleryItem:hover img {
+  transform: scale(1.05);
+}
+
+/* ---------- Loading ---------- */
+.tubeLoading {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+}
+
+/* ---------- Responsive: Tablet ---------- */
+@media (max-width: 900px) {
+  .tubeProduct {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .viewerColumn {
+    position: static;
+  }
+
+  .tubeViewer {
+    height: 480px;
+  }
+}
+
+/* ---------- Responsive: Mobile ---------- */
+@media (max-width: 768px) {
+  .tubePage {
+    padding: 3rem 1rem 2rem;
+  }
+
+  .tubeViewer {
+    height: 400px;
+  }
+
+  .tubePurchase {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .tubeViewer {
+    height: 320px;
+  }
+
+  .tubeHeader h1 {
+    font-size: 1.75rem;
+  }
+
+  .tubeProductName {
+    font-size: 1.25rem;
+  }
+
+  .tubeProductPrice {
+    font-size: 1.5rem;
+  }
+
+  .tubeGalleryItem {
+    width: 220px;
+    height: 150px;
+  }
+}

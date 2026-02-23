@@ -1,0 +1,384 @@
+/* ==========================================================================
+   Waterslides Editorial Showcase Page — Water Blob(R)
+   ========================================================================== */
+
+/* ---------- Hero Section ---------- */
+.slideHero {
+  position: relative;
+  width: 100%;
+  height: 90vh;
+  min-height: 500px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slideHeroBg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  z-index: 0;
+}
+
+.slideHero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.35) 40%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+.slideHeroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 0 2rem 5rem;
+  max-width: 700px;
+}
+
+.slideHeroContent h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+}
+
+.slideHeroContent p {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+.quoteBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.875rem 2.25rem;
+  background: #fff;
+  color: #0A2540;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.quoteBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.quoteBtnDark {
+  background: var(--accent-blue);
+  color: #fff;
+}
+
+.quoteBtnDark:hover {
+  box-shadow: 0 8px 24px rgba(0, 168, 232, 0.35);
+}
+
+/* ---------- Feature Blocks Section ---------- */
+.slideFeatures {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 6rem 2rem;
+}
+
+.featureBlock {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  margin-bottom: 5rem;
+}
+
+.featureBlock:last-child {
+  margin-bottom: 0;
+}
+
+.reverse {
+  direction: rtl;
+}
+
+.reverse > * {
+  direction: ltr;
+}
+
+.featureMedia img {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  border-radius: 1.25rem;
+  display: block;
+}
+
+.featureText h2 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.featureText p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+/* ---------- Statement Section ---------- */
+.slideStatement {
+  text-align: center;
+  padding: 5rem 2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.slideStatement p {
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.muted {
+  color: var(--text-tertiary);
+  font-weight: 800;
+}
+
+/* ---------- Full-Width Break Image ---------- */
+.fullImage {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.fullImage img {
+  width: 100%;
+  height: 440px;
+  object-fit: cover;
+  border-radius: 1.25rem;
+  display: block;
+}
+
+/* ---------- Gallery Strip ---------- */
+.galleryStrip {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4rem 2rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-medium) transparent;
+}
+
+.galleryStrip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.galleryStrip::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.galleryStrip::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 3px;
+}
+
+.galleryStripItem {
+  position: relative;
+  flex-shrink: 0;
+  width: 340px;
+  height: 240px;
+  scroll-snap-align: start;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.galleryStripItem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.galleryStripItem:hover img {
+  transform: scale(1.05);
+}
+
+/* ---------- Closing CTA Section ---------- */
+.closingCta {
+  text-align: center;
+  padding: 4rem 2rem 6rem;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.closingCta h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+.closingCta p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin-bottom: 2rem;
+}
+
+/* ---------- Bottom CTA Section ---------- */
+.bottomCta {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.bottomCta p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.25rem;
+}
+
+.bottomCta a {
+  font-weight: 700;
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: opacity 0.2s ease;
+}
+
+.bottomCta a:hover {
+  opacity: 0.8;
+}
+
+/* ---------- Responsive: 768px ---------- */
+@media (max-width: 768px) {
+  .slideHero {
+    height: 75vh;
+  }
+
+  .slideHeroContent {
+    padding-bottom: 3.5rem;
+  }
+
+  .slideFeatures {
+    padding: 4rem 1.5rem;
+  }
+
+  .featureBlock {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 4rem;
+  }
+
+  .reverse {
+    direction: ltr;
+  }
+
+  .featureMedia img {
+    height: 280px;
+  }
+
+  .slideStatement {
+    padding: 3.5rem 1.5rem;
+  }
+
+  .fullImage {
+    padding: 0 1.5rem;
+  }
+
+  .fullImage img {
+    height: 300px;
+  }
+
+  .galleryStrip {
+    padding: 3rem 1.5rem;
+  }
+
+  .galleryStripItem {
+    width: 280px;
+    height: 200px;
+  }
+
+  .closingCta {
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .bottomCta {
+    padding: 3rem 1.5rem;
+  }
+}
+
+/* ---------- Responsive: 480px ---------- */
+@media (max-width: 480px) {
+  .slideHero {
+    height: 65vh;
+  }
+
+  .slideHeroContent {
+    padding-bottom: 2.5rem;
+  }
+
+  .slideFeatures {
+    padding: 3rem 1rem;
+  }
+
+  .featureBlock {
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .featureMedia img {
+    height: 220px;
+  }
+
+  .slideStatement {
+    padding: 2.5rem 1rem;
+  }
+
+  .fullImage {
+    padding: 0 1rem;
+  }
+
+  .fullImage img {
+    height: 220px;
+  }
+
+  .galleryStrip {
+    padding: 2rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .galleryStripItem {
+    width: 240px;
+    height: 170px;
+  }
+
+  .closingCta {
+    padding: 2.5rem 1rem 3.5rem;
+  }
+
+  .quoteBtn {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+  }
+}

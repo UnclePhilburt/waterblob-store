@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Product Management - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .header-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .header-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+        }
+
+        /* Products Grid View */
+        .view-toggle {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .toggle-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: var(--bg-secondary);
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-price {
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .product-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.625rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-secondary);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        /* Table View */
+        .products-table {
+            display: none;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .products-table.active {
+            display: block;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .product-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .inventory-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .inventory-low {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .inventory-ok {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .view-toggle {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle > div {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .view-toggle input,
+            .view-toggle select {
+                width: 100% !important;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="header-left">
+                <a href="/admin/hub.html">← Back to Hub</a>
+                <h1>Product Management</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-danger" onclick="resetProducts()" id="reset-btn" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white;">Reset Products</button>
+                <button class="btn btn-import" onclick="importFromSquare()" id="import-btn" style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: white;">Import from Square</button>
+                <button class="btn btn-square" onclick="syncToSquare()" id="sync-btn" style="background: linear-gradient(135deg, #00a86b, #00d68f); color: white;">Sync to Square</button>
+                <button class="btn btn-primary" onclick="window.location.href='/admin/product-add.html'">+ Add Product</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/admin/hub.html'">Logout</button>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <div class="toggle-btns">
+                <button class="toggle-btn active" onclick="switchView('grid')">Grid View</button>
+                <button class="toggle-btn" onclick="switchView('table')">Table View</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="text" id="searchProducts" placeholder="🔍 Search products..." 
+                       style="padding: 0.625rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); width: 250px;"
+                       oninput="filterProducts()" />
+                <select id="categoryFilter" onchange="filterProducts()" 
+                        style="padding: 0.625rem 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary);">
+                    <option value="">All Categories</option>
+                    <option value="blob">Water Blob®</option>
+                    <option value="slide">Water Slide</option>
+                    <option value="tube">Ski Tube</option>
+                    <option value="accessory">Accessories</option>
+                </select>
+                <span><span id="productCount">0</span> Products</span>
+                <button class="btn btn-secondary" onclick="exportProducts()" style="padding: 0.625rem 1.25rem;">📥 Export</button>
+                <button class="btn btn-primary" onclick="window.location.href='/admin/product-add.html'" style="padding: 0.625rem 1.25rem;">+ Add Product</button>
+            </div>
+        </div>
+
+        <!-- Grid View -->
+        <div class="products-grid" id="productsGrid">
+            <p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Loading products...</p>
+        </div>
+
+        <!-- Table View -->
+        <div class="products-table" id="productsTable">
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Inventory</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="6" style="text-align: center;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-auth.js"></script>
+
+    <script>
+        // API_BASE is defined in admin-auth.js
+        let currentView = 'grid';
+        let allProducts = [];
+
+        // Reset products to real Water Blob® products
+        async function resetProducts() {
+            if (!confirm('⚠️ This will DELETE all existing products and replace them with the real Water Blob®, Ski Tube, and Water Slide products.\n\nAre you sure?')) {
+                return;
+            }
+
+            const btn = document.getElementById('reset-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Resetting...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/reset-products`, { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Success! ${data.message}\n\nProducts are now ready. Click "Sync to Square" to add them to your Square catalog.`);
+                    loadProducts(); // Refresh the product list
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to reset products'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Import products FROM Square into database
+        async function importFromSquare() {
+            const btn = document.getElementById('import-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Importing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/square/import-products`, { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Success! ${data.message}\n\nImported: ${data.imported}\nUpdated: ${data.updated}\nFailed: ${data.failed}`);
+                    loadProducts(); // Refresh the product list
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to import'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Sync all products to Square
+        async function syncToSquare() {
+            const btn = document.getElementById('sync-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Syncing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/square/sync-products`, { method: 'POST' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`Success! Synced ${data.synced} products to Square.\n${data.failed > 0 ? `${data.failed} failed.` : ''}`);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to sync'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'grid') {
+                document.getElementById('productsGrid').style.display = 'grid';
+                document.getElementById('productsTable').classList.remove('active');
+            } else {
+                document.getElementById('productsGrid').style.display = 'none';
+                document.getElementById('productsTable').classList.add('active');
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/api/products`);
+
+                if (!response.ok) {
+                    console.warn('Products API error, using empty array');
+                    allProducts = [];
+                } else {
+                    const data = await response.json();
+                    // Ensure it's an array
+                    allProducts = Array.isArray(data) ? data : [];
+                }
+
+                filterProducts();
+            } catch (error) {
+                console.error('Error:', error);
+                allProducts = [];
+                document.getElementById('productsGrid').innerHTML =
+                    '<p style="text-align: center; color: var(--danger); grid-column: 1/-1;">Error loading products. Database may not be configured.</p>';
+            }
+        }
+
+        function filterProducts() {
+            // Safety check
+            if (!Array.isArray(allProducts)) {
+                allProducts = [];
+            }
+
+            const searchTerm = document.getElementById('searchProducts')?.value.toLowerCase() || '';
+            const categoryFilter = document.getElementById('categoryFilter')?.value || '';
+
+            let filtered = allProducts.filter(product => {
+                const matchesSearch = !searchTerm || 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    (product.description && product.description.toLowerCase().includes(searchTerm));
+                
+                const matchesCategory = !categoryFilter || product.category === categoryFilter;
+
+                return matchesSearch && matchesCategory;
+            });
+
+            document.getElementById('productCount').textContent = filtered.length;
+            displayGridView(filtered);
+            displayTableView(filtered);
+        }
+
+        function displayGridView(products = allProducts) {
+            const grid = document.getElementById('productsGrid');
+            
+            if (products.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">No products found</p>';
+                return;
+            }
+
+            grid.innerHTML = products.map(product => {
+                const stockCount = product.stock || product.inventory || 0;
+                const inventoryClass = stockCount < 10 ? 'inventory-low' : 'inventory-ok';
+                const has3DModel = !!product.model_url;
+                const imageUrl = product.image_url || 'https://via.placeholder.com/300x200?text=No+Image';
+                return `
+                    <div class="product-card">
+                        <div class="product-media" style="position: relative; background: var(--bg-secondary); min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                            ${has3DModel ? `
+                                <div style="text-align: center; padding: 2rem;">
+                                    <div style="font-size: 3rem;">🎮</div>
+                                    <div style="color: var(--accent-primary); font-size: 0.85rem; margin-top: 0.5rem;">3D Model</div>
+                                    <div style="color: var(--text-secondary); font-size: 0.75rem;">${product.model_url.split('/').pop()}</div>
+                                </div>
+                            ` : `
+                                <img src="${imageUrl}"
+                                     alt="${product.name}"
+                                     class="product-image"
+                                     style="width: 100%; height: 150px; object-fit: cover;"
+                                     onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'" />
+                            `}
+                            ${has3DModel && product.image_url ? '<span style="position: absolute; top: 8px; right: 8px; background: var(--accent-primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">+IMG</span>' : ''}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-price">$${parseFloat(product.price || 0).toFixed(2)}</div>
+                            <div class="product-stats">
+                                <span class="inventory-badge ${inventoryClass}">
+                                    Stock: ${stockCount}
+                                </span>
+                                <span>${product.active !== false ? '✅ Active' : '❌ Inactive'}</span>
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn-action btn-edit" onclick="editProduct(${product.id})">Edit</button>
+                                <button class="btn-action" style="background: var(--warning); color: white;" onclick="duplicateProduct(${product.id})">Duplicate</button>
+                                <button class="btn-action btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayTableView(products = allProducts) {
+            const tbody = document.getElementById('productsTableBody');
+            
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No products found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => {
+                const stockCount = product.stock || product.inventory || 0;
+                const inventoryClass = stockCount < 10 ? 'inventory-low' : 'inventory-ok';
+                const has3DModel = !!product.model_url;
+                return `
+                    <tr>
+                        <td>${has3DModel ? '<span style="font-size: 1.5rem;">🎮</span>' : `<img src="${product.image_url || 'https://via.placeholder.com/50'}"
+                                 class="product-thumb"
+                                 onerror="this.src='https://via.placeholder.com/50'" />`}</td>
+                        <td>${product.name} ${has3DModel ? '<span style="background: var(--accent-primary); color: white; padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; margin-left: 4px;">3D</span>' : ''}</td>
+                        <td>$${parseFloat(product.price || 0).toFixed(2)}</td>
+                        <td><span class="inventory-badge ${inventoryClass}">${stockCount}</span></td>
+                        <td>${product.active !== false ? '✅' : '❌'}</td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editProduct(${product.id})">Edit</button>
+                            <button class="btn-action btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportProducts() {
+            const csv = [
+                ['ID', 'Name', 'Price', 'Inventory', 'Status'],
+                ...allProducts.map(p => [
+                    p.id,
+                    p.name,
+                    p.price,
+                    p.inventory || 0,
+                    p.active !== false ? 'Active' : 'Inactive'
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `products-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function editProduct(id) {
+            window.location.href = `/admin/product-add.html?id=${id}`;
+        }
+
+        function duplicateProduct(id) {
+            if (confirm('Create a duplicate of this product?')) {
+                window.location.href = `/admin/product-add.html?duplicate=${id}`;
+            }
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Are you sure you want to delete this product? It will be deactivated and hidden from the store.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/products/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Product deleted successfully');
+                    loadProducts(); // Refresh the list
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete product'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        document.getElementById('productModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'productModal') closeProductModal();
+        });
+
+        loadProducts();
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>

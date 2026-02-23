@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Employee Hub - Water Blob® Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --hover-bg: rgba(139, 92, 246, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            background-image:
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-logo p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Hub Screen */
+        #hubScreen {
+            display: none;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hub-header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .hub-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-tertiary);
+            padding: 0.5rem;
+            border-radius: 10px;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .logout-btn {
+            padding: 0.7rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .work-orders-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .work-order-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .work-order-card:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.2);
+        }
+
+        .work-order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .work-order-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .order-number {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-incomplete {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .status-complete {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .work-order-details {
+            margin-bottom: 1rem;
+        }
+
+        .detail-section {
+            margin-bottom: 1rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .items-list {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 0.5rem;
+        }
+
+        .item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .item-details {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .work-order-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .complete-btn {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .complete-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .incomplete-btn {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            color: white;
+        }
+
+        .incomplete-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            #hubScreen {
+                padding: 1rem;
+            }
+
+            .hub-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .work-order-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <h1>Employee Hub</h1>
+                <p>Water Blob® Store</p>
+            </div>
+
+            <div class="error-message" id="loginError"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                    <input type="checkbox" id="rememberMe" style="width: auto; margin-right: 0.5rem;">
+                    <label for="rememberMe" style="margin-bottom: 0; font-weight: 400; cursor: pointer;">Remember me</label>
+                </div>
+
+                <button type="submit" class="login-btn">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hub Screen -->
+    <div id="hubScreen">
+        <div class="hub-header">
+            <h1>Work Orders</h1>
+            <div class="header-actions">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="incomplete">Incomplete</button>
+                    <button class="filter-btn" data-filter="complete">Complete</button>
+                </div>
+                <button class="logout-btn" onclick="createTestWorkOrder()" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); border-color: var(--accent-primary);">
+                    + Test Order
+                </button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">Total Work Orders</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Incomplete</div>
+                <div class="stat-value" id="incompleteCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completed</div>
+                <div class="stat-value" id="completeCount">0</div>
+            </div>
+        </div>
+
+        <div class="work-orders-grid" id="workOrdersContainer">
+            <!-- Work orders will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';
+        let authToken = localStorage.getItem('employeeToken');
+        let currentFilter = 'all';
+        let allWorkOrders = [];
+
+        // Load saved credentials if available
+        const savedUsername = localStorage.getItem('employeeUsername');
+        const savedPassword = localStorage.getItem('employeePassword');
+        if (savedUsername && savedPassword) {
+            document.getElementById('username').value = savedUsername;
+            document.getElementById('password').value = savedPassword;
+            document.getElementById('rememberMe').checked = true;
+        }
+
+        // Check if already logged in
+        if (authToken) {
+            showHub();
+            loadWorkOrders();
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const errorEl = document.getElementById('loginError');
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    localStorage.setItem('employeeToken', authToken);
+
+                    // Save credentials if "Remember me" is checked
+                    if (rememberMe) {
+                        localStorage.setItem('employeeUsername', username);
+                        localStorage.setItem('employeePassword', password);
+                    } else {
+                        localStorage.removeItem('employeeUsername');
+                        localStorage.removeItem('employeePassword');
+                    }
+
+                    showHub();
+                    loadWorkOrders();
+                } else {
+                    errorEl.textContent = data.error || 'Invalid credentials';
+                    errorEl.style.display = 'block';
+                }
+            } catch (error) {
+                errorEl.textContent = 'Login failed. Please try again.';
+                errorEl.style.display = 'block';
+            }
+        });
+
+        function showHub() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('hubScreen').style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.removeItem('employeeToken');
+            localStorage.removeItem('employeeUsername');
+            localStorage.removeItem('employeePassword');
+            authToken = null;
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('hubScreen').style.display = 'none';
+            // Clear form fields
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('rememberMe').checked = false;
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderWorkOrders();
+            });
+        });
+
+        async function loadWorkOrders() {
+            try {
+                const response = await fetch(`${API_URL}/api/work-orders`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allWorkOrders = data.workOrders || [];
+                    renderWorkOrders();
+                    updateStats();
+                } else if (response.status === 401) {
+                    logout();
+                } else {
+                    console.error('Failed to load work orders');
+                }
+            } catch (error) {
+                console.error('Error loading work orders:', error);
+            }
+        }
+
+        function renderWorkOrders() {
+            const container = document.getElementById('workOrdersContainer');
+
+            let filteredOrders = allWorkOrders;
+            if (currentFilter !== 'all') {
+                filteredOrders = allWorkOrders.filter(wo => wo.status === currentFilter);
+            }
+
+            if (filteredOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No work orders found</h3>
+                        <p>There are no ${currentFilter === 'all' ? '' : currentFilter} work orders at this time.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(wo => {
+                const items = typeof wo.items === 'string' ? JSON.parse(wo.items) : wo.items;
+                const address = wo.shipping_address ?
+                    (typeof wo.shipping_address === 'string' ? JSON.parse(wo.shipping_address) : wo.shipping_address)
+                    : null;
+
+                return `
+                    <div class="work-order-card">
+                        <div class="work-order-header">
+                            <div>
+                                <div class="work-order-number">${wo.work_order_number}</div>
+                                <div class="order-number">Order: ${wo.order_number}</div>
+                            </div>
+                            <span class="status-badge status-${wo.status}">${wo.status}</span>
+                        </div>
+
+                        <div class="work-order-details">
+                            <div class="detail-section">
+                                <div class="detail-label">Customer</div>
+                                <div class="detail-value">
+                                    ${wo.customer_name || 'N/A'}<br>
+                                    ${wo.customer_email}<br>
+                                    ${wo.customer_phone || 'No phone'}
+                                </div>
+                            </div>
+
+                            ${address ? `
+                                <div class="detail-section">
+                                    <div class="detail-label">Shipping Address</div>
+                                    <div class="detail-value">
+                                        ${address.street || ''}<br>
+                                        ${address.city || ''}, ${address.state || ''} ${address.zip || ''}<br>
+                                        ${address.country || ''}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            <div class="detail-section">
+                                <div class="detail-label">Items</div>
+                                <div class="items-list">
+                                    ${items.map(item => {
+                                        const hasCustomization = item.customization && Object.keys(item.customization).length > 0;
+                                        return `
+                                        <div class="item">
+                                            <div class="item-name">${item.name}</div>
+                                            <div class="item-details">
+                                                Quantity: ${item.quantity || 1} |
+                                                Price: $${(item.price || 0).toFixed(2)}
+                                                ${item.size ? ` | Size: ${item.size}` : ''}
+                                                ${item.color ? ` | Color: ${item.color}` : ''}
+                                            </div>
+                                            ${hasCustomization ? `
+                                                <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(139, 92, 246, 0.1); border-radius: 5px; border-left: 3px solid var(--accent-primary);">
+                                                    <div style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 600; margin-bottom: 0.25rem;">COLOR CUSTOMIZATION:</div>
+                                                    ${Object.entries(item.customization).map(([part, color]) => {
+                                                        const partName = part.charAt(0).toUpperCase() + part.slice(1).replace(/([A-Z])/g, ' $1');
+                                                        return `
+                                                            <div style="display: flex; align-items: center; gap: 0.5rem; margin: 0.25rem 0;">
+                                                                <div style="width: 20px; height: 20px; border-radius: 3px; background: ${color}; border: 2px solid rgba(255,255,255,0.3);"></div>
+                                                                <span style="font-size: 0.75rem;">${partName}: ${color}</span>
+                                                            </div>
+                                                        `;
+                                                    }).join('')}
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    `}).join('')}
+                                </div>
+                            </div>
+
+                            ${wo.notes ? `
+                                <div class="detail-section">
+                                    <div class="detail-label">Notes</div>
+                                    <div class="detail-value">${wo.notes}</div>
+                                </div>
+                            ` : ''}
+
+                            ${wo.pdf_path ? `
+                                <div class="detail-section">
+                                    <div class="detail-label">Work Order PDF</div>
+                                    <iframe
+                                        src="${wo.pdf_path}"
+                                        style="width: 100%; height: 600px; border: 1px solid var(--border-color); border-radius: 10px; margin-top: 0.5rem;"
+                                        title="Work Order PDF">
+                                    </iframe>
+                                    <a href="${wo.pdf_path}" target="_blank" download style="display: inline-block; margin-top: 0.5rem; color: var(--accent-primary); text-decoration: none; font-size: 0.9rem;">
+                                        📄 Download PDF
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="work-order-actions">
+                            ${wo.status === 'incomplete' ? `
+                                <button class="action-btn complete-btn" onclick="updateStatus(${wo.id}, 'complete')">
+                                    Mark Complete
+                                </button>
+                            ` : `
+                                <button class="action-btn incomplete-btn" onclick="updateStatus(${wo.id}, 'incomplete')">
+                                    Mark Incomplete
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateStats() {
+            const total = allWorkOrders.length;
+            const incomplete = allWorkOrders.filter(wo => wo.status === 'incomplete').length;
+            const complete = allWorkOrders.filter(wo => wo.status === 'complete').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('incompleteCount').textContent = incomplete;
+            document.getElementById('completeCount').textContent = complete;
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                const response = await fetch(`${API_URL}/api/work-orders/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (response.ok) {
+                    await loadWorkOrders();
+                } else if (response.status === 401) {
+                    logout();
+                } else {
+                    alert('Failed to update work order status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Failed to update work order status');
+            }
+        }
+
+        async function createTestWorkOrder() {
+            try {
+                const response = await fetch(`${API_URL}/api/work-orders/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    await loadWorkOrders();
+                    alert(`Test work order created: ${data.workOrder.work_order_number}`);
+                } else if (response.status === 401) {
+                    logout();
+                } else {
+                    alert('Failed to create test work order');
+                }
+            } catch (error) {
+                console.error('Error creating test work order:', error);
+                alert('Failed to create test work order');
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            if (authToken) {
+                loadWorkOrders();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+/* Homepage-specific styles (CSS Module) */
+/* Most styles come from globals.css; this file handles only extras */
+
+.videoThumbnailImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.videoCardThumbnailImg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.videoPlayOverlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    transition: background 0.3s ease;
+}
+
+.videoPlayOverlay:hover {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.jsonLd {
+    display: none;
+}
+
+/* Featured video info bar below thumbnail */
+.featuredVideoInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 0.5rem 0;
+}
+
+.featuredVideoTitle {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.featuredVideoLabel {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: linear-gradient(135deg, var(--accent-sun), var(--accent-purple));
+    color: white;
+    border-radius: 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(255, 179, 71, 0.4);
+}
+
+/* Ensure video card thumbnail is relative for absolute img */
+.videoCardThumbWrap {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+}

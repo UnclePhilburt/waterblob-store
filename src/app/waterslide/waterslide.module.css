@@ -1,0 +1,4 @@
+.thumbnailActive {
+  border: 2px solid var(--accent-blue);
+  opacity: 1;
+}

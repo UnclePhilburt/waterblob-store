@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Video Management - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image:
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .header {
+            max-width: 1400px;
+            margin: 0 auto 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stats-grid {
+            max-width: 1400px;
+            margin: 0 auto 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .filters {
+            max-width: 1400px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.625rem 1.25rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        .video-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .video-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .video-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: var(--bg-secondary);
+            overflow: hidden;
+        }
+
+        .video-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-status {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: var(--warning);
+            color: #1a1a1a;
+        }
+
+        .status-approved {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-rejected {
+            background: var(--danger);
+            color: white;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #1a1a1a;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .video-info {
+            padding: 1.25rem;
+        }
+
+        .video-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .video-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .video-submitter {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-reject {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-feature {
+            background: #FFD700;
+            color: #1a1a1a;
+        }
+
+        .btn-view {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Video Player Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .modal-player {
+            aspect-ratio: 16/9;
+            background: #000;
+        }
+
+        .modal-player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .modal-info {
+            padding: 1.5rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📹 Video Management</h1>
+        <div class="header-actions">
+            <a href="/admin/hub.html" class="btn btn-secondary">← Back to Hub</a>
+            <a href="videos.html" class="btn btn-primary" target="_blank">View Public Wall</a>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="stats">
+        <div class="stat-card">
+            <div class="stat-label">Total Videos</div>
+            <div class="stat-value" id="total-videos">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Pending</div>
+            <div class="stat-value" id="pending-videos">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Approved</div>
+            <div class="stat-value" id="approved-videos">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Views</div>
+            <div class="stat-value" id="total-views">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total Likes</div>
+            <div class="stat-value" id="total-likes">0</div>
+        </div>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">All Videos</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+        <button class="filter-btn" data-filter="approved">Approved</button>
+        <button class="filter-btn" data-filter="featured">Featured</button>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Loading videos...</p>
+    </div>
+
+    <div class="video-grid" id="video-grid"></div>
+
+    <div class="empty-state" id="empty-state" style="display: none;">
+        <div class="empty-state-icon">🎬</div>
+        <h3>No videos found</h3>
+        <p>No videos match the current filter.</p>
+    </div>
+
+    <!-- Video Player Modal -->
+    <div class="modal" id="video-modal">
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <div class="modal-content">
+            <div class="modal-player" id="modal-player"></div>
+            <div class="modal-info" id="modal-info"></div>
+        </div>
+    </div>
+
+    <script>
+        let allVideos = [];
+        let currentFilter = 'all';
+
+        // Check authentication
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/admin/hub.html';
+        }
+
+        // Load videos
+        async function loadVideos() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('video-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            loading.style.display = 'block';
+            grid.innerHTML = '';
+            emptyState.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/admin/videos', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch videos');
+
+                allVideos = await response.json();
+                updateStats();
+                filterVideos(currentFilter);
+
+            } catch (error) {
+                console.error('Error loading videos:', error);
+                loading.style.display = 'none';
+                grid.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger);">Failed to load videos. Please try again.</div>';
+            }
+        }
+
+        function updateStats() {
+            const pending = allVideos.filter(v => !v.approved).length;
+            const approved = allVideos.filter(v => v.approved).length;
+            const totalViews = allVideos.reduce((sum, v) => sum + (v.views || 0), 0);
+            const totalLikes = allVideos.reduce((sum, v) => sum + (v.likes || 0), 0);
+
+            document.getElementById('total-videos').textContent = allVideos.length;
+            document.getElementById('pending-videos').textContent = pending;
+            document.getElementById('approved-videos').textContent = approved;
+            document.getElementById('total-views').textContent = formatNumber(totalViews);
+            document.getElementById('total-likes').textContent = formatNumber(totalLikes);
+        }
+
+        function filterVideos(filter) {
+            currentFilter = filter;
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('video-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            let filtered = [...allVideos];
+
+            if (filter === 'pending') {
+                filtered = filtered.filter(v => !v.approved);
+            } else if (filter === 'approved') {
+                filtered = filtered.filter(v => v.approved);
+            } else if (filter === 'featured') {
+                filtered = filtered.filter(v => v.featured);
+            }
+
+            loading.style.display = 'none';
+
+            if (filtered.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            grid.innerHTML = '';
+            filtered.forEach(video => {
+                grid.appendChild(createVideoCard(video));
+            });
+        }
+
+        function createVideoCard(video) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+
+            const statusClass = video.approved ? 'status-approved' : 'status-pending';
+            const statusText = video.approved ? 'Approved' : 'Pending';
+
+            card.innerHTML = `
+                <div class="video-thumbnail">
+                    <img src="${video.thumbnail_url || 'assets/homepage/logo.png'}"
+                         alt="${escapeHtml(video.title)}"
+                         onerror="this.src='assets/homepage/logo.png'">
+                    <div class="video-status ${statusClass}">${statusText}</div>
+                    ${video.featured ? '<div class="featured-badge">⭐ Featured</div>' : ''}
+                </div>
+                <div class="video-info">
+                    <h3 class="video-title">${escapeHtml(video.title)}</h3>
+                    ${video.description ? `<p style="color: var(--text-secondary); margin-bottom: 0.75rem; font-size: 0.875rem;">${escapeHtml(video.description)}</p>` : ''}
+                    <div class="video-meta">
+                        <span>👁 ${formatNumber(video.views || 0)}</span>
+                        <span>❤️ ${formatNumber(video.likes || 0)}</span>
+                        ${video.location ? `<span>📍 ${escapeHtml(video.location)}</span>` : ''}
+                    </div>
+                    <div class="video-submitter">
+                        By ${escapeHtml(video.submitter_name)} (${escapeHtml(video.submitter_email)})
+                    </div>
+                    <div class="video-actions">
+                        <button class="btn-small btn-view" onclick="viewVideo(${video.id})">▶️ View</button>
+                        ${!video.approved ? `<button class="btn-small btn-approve" onclick="approveVideo(${video.id})">✓ Approve</button>` : ''}
+                        ${video.approved && !video.featured ? `<button class="btn-small btn-feature" onclick="toggleFeatured(${video.id}, true)">⭐ Feature</button>` : ''}
+                        ${video.featured ? `<button class="btn-small btn-view" onclick="toggleFeatured(${video.id}, false)">Remove Feature</button>` : ''}
+                        <button class="btn-small btn-delete" onclick="deleteVideo(${video.id})">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        async function approveVideo(id) {
+            if (!confirm('Approve this video?')) return;
+
+            try {
+                const response = await fetch(`/api/admin/videos/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ approved: true, featured: false })
+                });
+
+                if (response.ok) {
+                    await loadVideos();
+                } else {
+                    alert('Failed to approve video');
+                }
+            } catch (error) {
+                console.error('Error approving video:', error);
+                alert('Failed to approve video');
+            }
+        }
+
+        async function toggleFeatured(id, featured) {
+            const action = featured ? 'feature' : 'unfeature';
+            if (!confirm(`${featured ? 'Feature' : 'Remove feature from'} this video?`)) return;
+
+            try {
+                const response = await fetch(`/api/admin/videos/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ approved: true, featured })
+                });
+
+                if (response.ok) {
+                    await loadVideos();
+                } else {
+                    alert(`Failed to ${action} video`);
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing video:`, error);
+                alert(`Failed to ${action} video`);
+            }
+        }
+
+        async function deleteVideo(id) {
+            if (!confirm('Are you sure you want to delete this video? This cannot be undone.')) return;
+
+            try {
+                const response = await fetch(`/api/admin/videos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    await loadVideos();
+                } else {
+                    alert('Failed to delete video');
+                }
+            } catch (error) {
+                console.error('Error deleting video:', error);
+                alert('Failed to delete video');
+            }
+        }
+
+        function viewVideo(id) {
+            const video = allVideos.find(v => v.id === id);
+            if (!video) return;
+
+            const modal = document.getElementById('video-modal');
+            const player = document.getElementById('modal-player');
+            const info = document.getElementById('modal-info');
+
+            // Extract YouTube video ID
+            const videoIdMatch = video.video_url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (videoIdMatch) {
+                player.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoIdMatch[1]}" allow="fullscreen" allowfullscreen></iframe>`;
+            }
+
+            info.innerHTML = `
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">${escapeHtml(video.title)}</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">${escapeHtml(video.description || '')}</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
+                    <span>By ${escapeHtml(video.submitter_name)}</span>
+                    ${video.location ? `<span>📍 ${escapeHtml(video.location)}</span>` : ''}
+                    <span>👁 ${formatNumber(video.views || 0)} views</span>
+                    <span>❤️ ${formatNumber(video.likes || 0)} likes</span>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('video-modal');
+            const player = document.getElementById('modal-player');
+            modal.classList.remove('active');
+            player.innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterVideos(btn.dataset.filter);
+            });
+        });
+
+        // Utility functions
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // Close modal on backdrop click
+        document.getElementById('video-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'video-modal') closeModal();
+        });
+
+        // Initialize
+        loadVideos();
+    </script>
+</body>
+</html>

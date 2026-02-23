@@ -1,0 +1,252 @@
+/* =============================================
+   Blog Listing Page Styles
+   ============================================= */
+
+/* Hero Section */
+.hero {
+  padding: 8rem 0 4rem;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    var(--bg-secondary) 0%,
+    var(--bg-primary) 100%
+  );
+}
+
+.heroContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.heroSubtitle {
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  color: var(--text-secondary);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Posts Grid */
+.postsSection {
+  padding: 3rem 0 6rem;
+}
+
+.postsContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
+}
+
+.postsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+/* Blog Card */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Image Placeholder */
+.cardImageWrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(
+    135deg,
+    var(--bg-secondary) 0%,
+    var(--bg-elevated) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cardImage {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  opacity: 0.35;
+}
+
+/* Card Body */
+.cardBody {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.categoryBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 168, 232, 0.12) 0%,
+    rgba(0, 217, 255, 0.08) 100%
+  );
+  color: var(--accent-blue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 2rem;
+  border: 1px solid rgba(0, 168, 232, 0.2);
+}
+
+[data-theme='dark'] .categoryBadge {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 217, 255, 0.15) 0%,
+    rgba(0, 168, 232, 0.1) 100%
+  );
+  color: var(--accent-cyan);
+  border-color: rgba(0, 217, 255, 0.25);
+}
+
+.cardDate {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+}
+
+.cardTitleLink {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.cardTitleLink:hover {
+  color: var(--accent-blue);
+}
+
+.cardExcerpt {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.readMore {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+  text-decoration: none;
+  transition: gap 0.2s ease;
+}
+
+.readMore:hover {
+  gap: 0.6rem;
+}
+
+.readMoreArrow {
+  transition: transform 0.2s ease;
+  font-size: 1.1em;
+}
+
+.readMore:hover .readMoreArrow {
+  transform: translateX(3px);
+}
+
+.readTime {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 6rem 2rem;
+}
+
+.emptyTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.emptyText {
+  font-size: 1rem;
+  color: var(--text-secondary);
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+
+@media (max-width: 1024px) {
+  .postsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding: 7rem 0 3rem;
+  }
+
+  .postsGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .cardBody {
+    padding: 1.25rem;
+  }
+
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+}

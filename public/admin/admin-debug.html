@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard - Water Blob®</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(-45deg, #0a0e1a, #1a1f2e, #162447, #1f2937);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            color: #f8fafc;
+            min-height: 100vh;
+            padding: 32px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* macOS-style blur backdrop */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* macOS-style glassmorphism header */
+        .header {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .header:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.5),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+        }
+
+        .header h1 {
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 24px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .status-online {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .status-online::before {
+            background: #34d399;
+        }
+
+        .status-offline {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .status-offline::before {
+            background: #fca5a5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.25),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card h3 {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 28px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-group label {
+            font-size: 10px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        .filter-btn, select, input {
+            padding: 10px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            color: #f8fafc;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .filter-btn:hover, select:hover, input:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-btn:active, select:active, input:active {
+            transform: translateY(0);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: #10b981;
+            color: white;
+            margin-left: auto;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .refresh-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-color: #ef4444;
+            color: white;
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .clear-btn:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+        }
+
+        .logs-container {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .log-entry {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .log-entry::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .log-entry.severity-critical {
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .log-entry.severity-critical::before {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+        }
+
+        .log-entry.severity-error {
+            background: rgba(245, 158, 11, 0.06);
+        }
+
+        .log-entry.severity-error::before {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+        }
+
+        .log-entry.severity-warning::before {
+            background: linear-gradient(180deg, #eab308 0%, #ca8a04 100%);
+            box-shadow: 0 0 12px rgba(234, 179, 8, 0.4);
+        }
+
+        .log-entry.severity-info::before {
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .log-type {
+            font-weight: 600;
+            color: #0078ff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-time {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .log-message {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .log-details {
+            display: none;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .log-entry.expanded .log-details {
+            display: block;
+        }
+
+        .log-details-row {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .log-details-label {
+            color: #94a3b8;
+        }
+
+        .log-details-value {
+            color: #e2e8f0;
+            word-break: break-all;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .health-check {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .health-status {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .health-item {
+            flex: 1;
+            min-width: 200px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .health-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 32px;
+            right: 32px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #f8fafc;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            z-index: 100;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        /* Tabs - macOS style segmented control */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 28px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            width: fit-content;
+        }
+
+        .tab {
+            padding: 10px 24px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.05);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tab:hover::before {
+            opacity: 1;
+        }
+
+        .tab:hover {
+            color: #e2e8f0;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            color: #f8fafc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .tab.active::before {
+            opacity: 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Checkout specific */
+        .checkout-session {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .checkout-session.has-error {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .checkout-session.completed {
+            border-left: 4px solid #10b981;
+        }
+
+        .checkout-timeline {
+            margin-top: 12px;
+            padding-left: 20px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .checkout-step {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .checkout-step.status-error {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .checkout-step.status-success {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .checkout-step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .refresh-btn {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/admin/hub.html" class="back-btn">← Back to Admin</a>
+
+    <div class="container">
+        <div class="header">
+            <h1>
+                🐛 Debug Dashboard
+                <span id="statusBadge" class="status-badge status-online">CHECKING...</span>
+            </h1>
+            <p style="color: #94a3b8; margin-top: 8px;">Real-time error logging and system health monitoring</p>
+        </div>
+
+        <div class="health-check">
+            <h2 style="margin-bottom: 16px; font-size: 18px;">System Health</h2>
+            <div class="health-status" id="healthStatus">
+                <div class="health-item">
+                    <span>Backend API</span>
+                    <span id="apiHealth">⏳ Checking...</span>
+                </div>
+                <div class="health-item">
+                    <span>Database</span>
+                    <span id="dbHealth">⏳ Checking...</span>
+                </div>
+                <div class="health-item">
+                    <span>Response Time</span>
+                    <span id="responseTime">⏳ Checking...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Errors</h3>
+                <div class="value" id="totalErrors">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Critical</h3>
+                <div class="value" style="color: #ef4444;" id="criticalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Errors</h3>
+                <div class="value" style="color: #f59e0b;" id="errorCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Warnings</h3>
+                <div class="value" style="color: #eab308;" id="warningCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Sessions</h3>
+                <div class="value" style="color: #10b981;" id="sessionCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unique Visitors</h3>
+                <div class="value" style="color: #8b5cf6;" id="visitorCount">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('errors')">🐛 Error Logs</button>
+            <button class="tab" onclick="switchTab('checkout')">🛒 Checkout Debug</button>
+            <button class="tab" onclick="switchTab('chatbot')">💬 Chatbot Logs</button>
+            <button class="tab" onclick="switchTab('security')">🔒 Security</button>
+            <button class="tab" onclick="switchTab('heatmap')">🗺️ Heatmap</button>
+        </div>
+
+        <!-- Error Logs Tab -->
+        <div id="errorsTab" class="tab-content active">
+        <div class="filters">
+            <div class="filter-group">
+                <label>Severity</label>
+                <select id="severityFilter">
+                    <option value="all">All Severities</option>
+                    <option value="critical">Critical</option>
+                    <option value="error">Error</option>
+                    <option value="warning">Warning</option>
+                    <option value="info">Info</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Type</label>
+                <select id="typeFilter">
+                    <option value="all">All Types</option>
+                    <option value="javascript_error">JavaScript Errors</option>
+                    <option value="api_error">API Errors</option>
+                    <option value="network_error">Network Errors</option>
+                    <option value="page_load">Page Loads</option>
+                    <option value="page_exit">Page Exits</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Time Range</label>
+                <select id="timeFilter">
+                    <option value="all">All Time</option>
+                    <option value="1h">Last Hour</option>
+                    <option value="24h">Last 24 Hours</option>
+                    <option value="7d">Last 7 Days</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Search logs...">
+            </div>
+
+            <button class="filter-btn refresh-btn" onclick="loadLogs()">🔄 Refresh</button>
+            <button class="filter-btn clear-btn" onclick="clearLogs()">🗑️ Clear All Logs</button>
+        </div>
+
+        <div class="logs-container" id="logsContainer">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <p>Loading error logs...</p>
+            </div>
+        </div>
+        </div>
+        <!-- End Error Logs Tab -->
+
+        <!-- Checkout Debug Tab -->
+        <div id="checkoutTab" class="tab-content">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="checkoutStatusFilter">
+                        <option value="all">All Sessions</option>
+                        <option value="error">Failed Checkouts</option>
+                        <option value="success">Completed</option>
+                        <option value="abandoned">Abandoned</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Time Range</label>
+                    <select id="checkoutTimeFilter">
+                        <option value="all">All Time</option>
+                        <option value="1h">Last Hour</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="checkoutSearchInput" placeholder="Search sessions...">
+                </div>
+
+                <button class="filter-btn refresh-btn" onclick="loadCheckoutLogs()">🔄 Refresh</button>
+                <button class="filter-btn clear-btn" onclick="clearCheckoutLogs()">🗑️ Clear Logs</button>
+            </div>
+
+            <div id="checkoutContainer">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    <p>Loading checkout sessions...</p>
+                </div>
+            </div>
+        </div>
+        <!-- End Checkout Debug Tab -->
+
+        <!-- Chatbot Logs Tab -->
+        <div id="chatbotTab" class="tab-content">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="chatbotSearchInput" placeholder="Search conversations...">
+                </div>
+
+                <button class="filter-btn refresh-btn" onclick="loadChatbotLogs()">🔄 Refresh</button>
+                <button class="filter-btn clear-btn" onclick="clearChatbotLogs()">🗑️ Clear All Logs</button>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="chatbotTotalConversations">0</div>
+                    <div class="stat-label">Total Conversations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="chatbotUniqueSessions">0</div>
+                    <div class="stat-label">Unique Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="chatbotToday">0</div>
+                    <div class="stat-label">Today</div>
+                </div>
+            </div>
+
+            <div class="logs-container" id="chatbotLogsContainer">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                        <line x1="9" y1="9" x2="9.01" y2="9"/>
+                        <line x1="15" y1="9" x2="15.01" y2="9"/>
+                    </svg>
+                    <p>Loading chatbot conversations...</p>
+                </div>
+            </div>
+        </div>
+        <!-- End Chatbot Logs Tab -->
+
+        <!-- Security Tab -->
+        <div id="securityTab" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="securityTotalAbuse">0</div>
+                    <div class="stat-label">Total Abuse Attempts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="securityTodayAbuse">0</div>
+                    <div class="stat-label">Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="securityBlockedIps">0</div>
+                    <div class="stat-label">Blocked IPs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="securityCriticalCount">0</div>
+                    <div class="stat-label">Critical Threats</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-bottom: 24px;">
+                <button class="filter-btn refresh-btn" onclick="loadSecurityLogs()">🔄 Refresh</button>
+                <button class="filter-btn clear-btn" onclick="clearAbuseLogs()">🗑️ Clear Logs</button>
+                <button class="filter-btn" onclick="showBlockIpModal()">🚫 Block IP</button>
+            </div>
+
+            <h3 style="margin-bottom: 16px;">🚨 Recent Abuse Attempts</h3>
+            <div class="logs-container" id="securityAbuseLogs">
+                <p style="text-align: center; color: #94a3b8;">Loading security logs...</p>
+            </div>
+
+            <h3 style="margin: 32px 0 16px;">🚫 Blocked IP Addresses</h3>
+            <div class="logs-container" id="securityBlockedIps">
+                <p style="text-align: center; color: #94a3b8;">Loading blocked IPs...</p>
+            </div>
+        </div>
+        <!-- End Security Tab -->
+
+        <!-- Heatmap Tab -->
+        <div id="heatmapTab" class="tab-content">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Page</label>
+                    <select id="heatmapPageFilter">
+                        <option value="all">All Pages</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Data Type</label>
+                    <select id="heatmapTypeFilter">
+                        <option value="click">Clicks</option>
+                        <option value="scroll">Scroll Depth</option>
+                        <option value="mousemove">Mouse Movement</option>
+                        <option value="form_interaction">Form Interactions</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Time Range</label>
+                    <select id="heatmapTimeFilter">
+                        <option value="1h">Last Hour</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+
+                <button class="filter-btn refresh-btn" onclick="loadHeatmapData()">🔄 Refresh</button>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 12px;">Heatmap Stats</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                    <div>
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Total Clicks</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #0078ff;" id="totalClicks">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Total Scrolls</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #10b981;" id="totalScrolls">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Avg Scroll Depth</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #8b5cf6;" id="avgScrollDepth">0%</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Form Interactions</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #f59e0b;" id="totalForms">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="heatmapContainer">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <p>Loading heatmap data...</p>
+                </div>
+            </div>
+        </div>
+        <!-- End Heatmap Tab -->
+    </div>
+
+    <script>
+        const API_BASE = '';
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        let allLogs = [];
+        let filteredLogs = [];
+
+        // Check system health
+        async function checkHealth() {
+            const startTime = Date.now();
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const responseTime = Date.now() - startTime;
+                const data = await response.json();
+
+                document.getElementById('statusBadge').textContent = 'ONLINE';
+                document.getElementById('statusBadge').className = 'status-badge status-online';
+
+                document.getElementById('apiHealth').textContent = '✅ Online';
+                document.getElementById('dbHealth').textContent = data.database ? '✅ Connected' : '⚠️ Disconnected';
+                document.getElementById('responseTime').textContent = `${responseTime}ms`;
+            } catch (error) {
+                document.getElementById('statusBadge').textContent = 'OFFLINE';
+                document.getElementById('statusBadge').className = 'status-badge status-offline';
+
+                document.getElementById('apiHealth').textContent = '❌ Offline';
+                document.getElementById('dbHealth').textContent = '❌ Offline';
+                document.getElementById('responseTime').textContent = 'N/A';
+            }
+        }
+
+        // Load error logs
+        async function loadLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/error-logs`);
+                const data = await response.json();
+
+                allLogs = data.logs || [];
+                applyFilters();
+                updateStats();
+            } catch (error) {
+                console.error('Failed to load logs:', error);
+                document.getElementById('logsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ef4444;">Failed to load logs. Backend may be offline.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const severityFilter = document.getElementById('severityFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredLogs = allLogs.filter(log => {
+                // Severity filter
+                if (severityFilter !== 'all' && log.severity !== severityFilter) return false;
+
+                // Type filter
+                if (typeFilter !== 'all' && log.type !== typeFilter) return false;
+
+                // Time filter
+                if (timeFilter !== 'all') {
+                    const logTime = new Date(log.timestamp).getTime();
+                    const now = Date.now();
+                    const timeRanges = {
+                        '1h': 60 * 60 * 1000,
+                        '24h': 24 * 60 * 60 * 1000,
+                        '7d': 7 * 24 * 60 * 60 * 1000
+                    };
+                    if (now - logTime > timeRanges[timeFilter]) return false;
+                }
+
+                // Search filter
+                if (searchQuery && !JSON.stringify(log).toLowerCase().includes(searchQuery)) return false;
+
+                return true;
+            });
+
+            renderLogs();
+        }
+
+        // Render logs
+        function renderLogs() {
+            const container = document.getElementById('logsContainer');
+
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                        <p>No logs found matching filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredLogs.map(log => `
+                <div class="log-entry severity-${log.severity}" onclick="toggleLogDetails(this)">
+                    <div class="log-header">
+                        <span class="log-type">${log.type.replace(/_/g, ' ')}</span>
+                        <span class="log-time">${new Date(log.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div class="log-message">${log.message}</div>
+                    <div class="log-details">
+                        ${log.url ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">URL:</span>
+                                <span class="log-details-value">${log.url}</span>
+                            </div>
+                        ` : ''}
+                        ${log.sessionId ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Session ID:</span>
+                                <span class="log-details-value">${log.sessionId}</span>
+                            </div>
+                        ` : ''}
+                        ${log.visitorId ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Visitor ID:</span>
+                                <span class="log-details-value">${log.visitorId}</span>
+                            </div>
+                        ` : ''}
+                        ${log.isReturning !== undefined ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Visitor Status:</span>
+                                <span class="log-details-value">${log.isReturning ? `Returning (Visit #${log.visitCount})` : 'First-time visitor'}</span>
+                            </div>
+                        ` : ''}
+                        ${log.firstVisit ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">First Visit:</span>
+                                <span class="log-details-value">${new Date(log.firstVisit).toLocaleString()}</span>
+                            </div>
+                        ` : ''}
+                        ${log.userAgent ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">User Agent:</span>
+                                <span class="log-details-value">${log.userAgent}</span>
+                            </div>
+                        ` : ''}
+                        ${log.screenSize ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Screen Size:</span>
+                                <span class="log-details-value">${log.screenSize}</span>
+                            </div>
+                        ` : ''}
+                        ${log.viewport ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Viewport:</span>
+                                <span class="log-details-value">${log.viewport}</span>
+                            </div>
+                        ` : ''}
+                        ${log.stack ? `
+                            <div class="log-details-row">
+                                <span class="log-details-label">Stack Trace:</span>
+                                <span class="log-details-value">${log.stack}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Toggle log details
+        function toggleLogDetails(element) {
+            element.classList.toggle('expanded');
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('totalErrors').textContent = allLogs.length;
+
+            const criticalCount = allLogs.filter(log => log.severity === 'critical').length;
+            const errorCount = allLogs.filter(log => log.severity === 'error').length;
+            const warningCount = allLogs.filter(log => log.severity === 'warning').length;
+
+            document.getElementById('criticalCount').textContent = criticalCount;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('warningCount').textContent = warningCount;
+
+            // Count unique sessions
+            const uniqueSessions = new Set(allLogs.map(log => log.sessionId).filter(id => id)).size;
+            document.getElementById('sessionCount').textContent = uniqueSessions;
+
+            // Count unique visitors
+            const uniqueVisitors = new Set(allLogs.map(log => log.visitorId).filter(id => id)).size;
+            document.getElementById('visitorCount').textContent = uniqueVisitors;
+        }
+
+        // Clear all logs
+        async function clearLogs() {
+            if (!confirm('Are you sure you want to delete all error logs?')) return;
+
+            try {
+                await fetch(`${API_BASE}/api/error-logs`, { method: 'DELETE' });
+                allLogs = [];
+                applyFilters();
+                updateStats();
+            } catch (error) {
+                alert('Failed to clear logs');
+            }
+        }
+
+        // Add event listeners for filters
+        document.getElementById('severityFilter').addEventListener('change', applyFilters);
+        document.getElementById('typeFilter').addEventListener('change', applyFilters);
+        document.getElementById('timeFilter').addEventListener('change', applyFilters);
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        // ========================================
+        // CHECKOUT DEBUG TAB
+        // ========================================
+
+        let checkoutLogs = [];
+        let checkoutSessions = {};
+
+        // Switch tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.getElementById('errorsTab').classList.toggle('active', tabName === 'errors');
+            document.getElementById('checkoutTab').classList.toggle('active', tabName === 'checkout');
+            document.getElementById('chatbotTab').classList.toggle('active', tabName === 'chatbot');
+            document.getElementById('securityTab').classList.toggle('active', tabName === 'security');
+            document.getElementById('heatmapTab').classList.toggle('active', tabName === 'heatmap');
+
+            if (tabName === 'checkout') {
+                loadCheckoutLogs();
+            } else if (tabName === 'chatbot') {
+                loadChatbotLogs();
+            } else if (tabName === 'security') {
+                loadSecurityLogs();
+            } else if (tabName === 'heatmap') {
+                loadHeatmapData();
+            }
+        }
+
+        // Load checkout logs
+        async function loadCheckoutLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/checkout-logs`);
+                const data = await response.json();
+
+                checkoutLogs = data.logs || [];
+                groupCheckoutSessions();
+                renderCheckoutSessions();
+            } catch (error) {
+                console.error('Failed to load checkout logs:', error);
+                document.getElementById('checkoutContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ef4444;">Failed to load checkout data.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Group checkout events by session
+        function groupCheckoutSessions() {
+            checkoutSessions = {};
+
+            checkoutLogs.forEach(log => {
+                const sessionId = log.checkoutSessionId || 'unknown';
+                if (!checkoutSessions[sessionId]) {
+                    checkoutSessions[sessionId] = {
+                        id: sessionId,
+                        events: [],
+                        startTime: log.timestamp,
+                        lastTime: log.timestamp,
+                        hasError: false,
+                        completed: false
+                    };
+                }
+
+                checkoutSessions[sessionId].events.push(log);
+                checkoutSessions[sessionId].lastTime = log.timestamp;
+
+                if (log.status === 'error') {
+                    checkoutSessions[sessionId].hasError = true;
+                }
+                if (log.step === 'payment_success') {
+                    checkoutSessions[sessionId].completed = true;
+                }
+            });
+        }
+
+        // Render checkout sessions
+        function renderCheckoutSessions() {
+            const container = document.getElementById('checkoutContainer');
+            const sessions = Object.values(checkoutSessions);
+
+            if (sessions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                        <p>No checkout sessions found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => {
+                const statusClass = session.hasError ? 'has-error' : (session.completed ? 'completed' : '');
+                const statusEmoji = session.hasError ? '❌' : (session.completed ? '✅' : '⏳');
+
+                return `
+                    <div class="checkout-session ${statusClass}">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <div>
+                                <strong>${statusEmoji} Session ${session.id.slice(-8)}</strong>
+                                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">
+                                    Started: ${new Date(session.startTime).toLocaleString()}
+                                </div>
+                            </div>
+                            <div style="text-align: right; font-size: 12px; color: #94a3b8;">
+                                ${session.events.length} events
+                            </div>
+                        </div>
+
+                        <div class="checkout-timeline">
+                            ${session.events.map(event => {
+                                const stepEmoji = {
+                                    'started': '▶️',
+                                    'success': '✅',
+                                    'error': '❌',
+                                    'warning': '⚠️'
+                                }[event.status] || '📝';
+
+                                return `
+                                    <div class="checkout-step status-${event.status}">
+                                        <div class="checkout-step-header">
+                                            <span>${stepEmoji} ${event.step.replace(/_/g, ' ')}</span>
+                                            <span style="font-size: 11px; color: #94a3b8;">
+                                                ${new Date(event.timestamp).toLocaleTimeString()}
+                                            </span>
+                                        </div>
+                                        ${event.error ? `<div style="color: #ef4444; font-size: 12px; margin-top: 4px;">${event.error}</div>` : ''}
+                                        ${event.amount ? `<div style="font-size: 12px; margin-top: 4px;">Amount: $${event.amount}</div>` : ''}
+                                        ${event.method ? `<div style="font-size: 12px; margin-top: 4px;">Method: ${event.method}</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Clear checkout logs
+        async function clearCheckoutLogs() {
+            if (!confirm('Are you sure you want to delete all checkout logs?')) return;
+
+            try {
+                await fetch(`${API_BASE}/api/checkout-logs`, { method: 'DELETE' });
+                checkoutLogs = [];
+                checkoutSessions = {};
+                renderCheckoutSessions();
+            } catch (error) {
+                alert('Failed to clear checkout logs');
+            }
+        }
+
+        // ========================================
+        // CHATBOT TAB
+        // ========================================
+
+        let chatbotLogs = [];
+
+        async function loadChatbotLogs() {
+            try {
+                const response = await fetch(`${API_BASE}/api/chatbot-logs`);
+                const data = await response.json();
+
+                chatbotLogs = data.logs || [];
+                renderChatbotLogs();
+                updateChatbotStats();
+            } catch (error) {
+                console.error('Failed to load chatbot logs:', error);
+                document.getElementById('chatbotLogsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="12"/>
+                            <line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p>Failed to load chatbot conversations</p>
+                    </div>
+                `;
+            }
+        }
+
+        function updateChatbotStats() {
+            document.getElementById('chatbotTotalConversations').textContent = chatbotLogs.length;
+
+            const uniqueSessions = new Set(chatbotLogs.map(log => log.session_id)).size;
+            document.getElementById('chatbotUniqueSessions').textContent = uniqueSessions;
+
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = chatbotLogs.filter(log => log.created_at.startsWith(today)).length;
+            document.getElementById('chatbotToday').textContent = todayCount;
+        }
+
+        function renderChatbotLogs() {
+            const container = document.getElementById('chatbotLogsContainer');
+            const searchTerm = document.getElementById('chatbotSearchInput')?.value.toLowerCase() || '';
+
+            let filtered = chatbotLogs;
+            if (searchTerm) {
+                filtered = chatbotLogs.filter(log =>
+                    log.user_message?.toLowerCase().includes(searchTerm) ||
+                    log.ai_response?.toLowerCase().includes(searchTerm) ||
+                    log.session_id?.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                            <line x1="9" y1="9" x2="9.01" y2="9"/>
+                            <line x1="15" y1="9" x2="15.01" y2="9"/>
+                        </svg>
+                        <p>No chatbot conversations yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sessions = {};
+            filtered.forEach(log => {
+                if (!sessions[log.session_id]) {
+                    sessions[log.session_id] = [];
+                }
+                sessions[log.session_id].push(log);
+            });
+
+            container.innerHTML = Object.entries(sessions).map(([sessionId, logs]) => {
+                const firstLog = logs[0];
+                const date = new Date(firstLog.created_at).toLocaleString();
+
+                const messagesHtml = logs.map(log => `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+                        <div style="margin-bottom: 10px;">
+                            <div style="font-weight: 600; color: #93c5fd; margin-bottom: 5px;">👤 Customer:</div>
+                            <div style="color: rgba(255,255,255,0.8); padding-left: 20px;">${escapeHtml(log.user_message)}</div>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: #8b5cf6; margin-bottom: 5px;">🤖 AI Assistant:</div>
+                            <div style="color: rgba(255,255,255,0.7); padding-left: 20px; white-space: pre-wrap;">${escapeHtml(log.ai_response)}</div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.4);">
+                            ${new Date(log.created_at).toLocaleString()}
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="log-entry" style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div>
+                                <span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                    Session: ${sessionId.substring(0, 12)}...
+                                </span>
+                                <span style="color: rgba(255,255,255,0.5); font-size: 12px; margin-left: 10px;">
+                                    ${logs.length} message${logs.length > 1 ? 's' : ''}
+                                </span>
+                            </div>
+                            <span style="color: rgba(255,255,255,0.5); font-size: 12px;">${date}</span>
+                        </div>
+                        ${firstLog.page_url ? `<div style="font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 10px;">🔗 ${escapeHtml(firstLog.page_url)}</div>` : ''}
+                        ${messagesHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function clearChatbotLogs() {
+            if (!confirm('Are you sure you want to delete all chatbot logs?')) return;
+
+            try {
+                await fetch(`${API_BASE}/api/chatbot-logs`, { method: 'DELETE' });
+                chatbotLogs = [];
+                renderChatbotLogs();
+                updateChatbotStats();
+            } catch (error) {
+                alert('Failed to clear chatbot logs');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatbotSearch = document.getElementById('chatbotSearchInput');
+            if (chatbotSearch) {
+                chatbotSearch.addEventListener('input', renderChatbotLogs);
+            }
+        });
+
+        // ========================================
+        // SECURITY TAB
+        // ========================================
+
+        let securityLogs = [];
+        let blockedIps = [];
+
+        // Load security logs
+        async function loadSecurityLogs() {
+            try {
+                const [logsResponse, ipsResponse, statsResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/abuse-logs`),
+                    fetch(`${API_BASE}/api/blocked-ips`),
+                    fetch(`${API_BASE}/api/abuse-stats`)
+                ]);
+
+                const logsData = await logsResponse.json();
+                const ipsData = await ipsResponse.json();
+                const statsData = await statsResponse.json();
+
+                securityLogs = logsData.logs || [];
+                blockedIps = ipsData.blockedIps || [];
+
+                // Update stats
+                document.getElementById('securityTotalAbuse').textContent = statsData.totalAbuse || 0;
+                document.getElementById('securityTodayAbuse').textContent = statsData.today || 0;
+                document.getElementById('securityBlockedIps').textContent = statsData.blockedIps || 0;
+
+                const criticalCount = statsData.bySeverity?.find(s => s.severity === 'critical')?.count || 0;
+                document.getElementById('securityCriticalCount').textContent = criticalCount;
+
+                renderSecurityLogs();
+                renderBlockedIps();
+            } catch (error) {
+                console.error('Failed to load security logs:', error);
+                document.getElementById('securityAbuseLogs').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ef4444;">Failed to load security logs.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render security abuse logs
+        function renderSecurityLogs() {
+            const container = document.getElementById('securityAbuseLogs');
+
+            if (securityLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No abuse attempts detected. Your site is secure! 🛡️</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const getSeverityColor = (severity) => {
+                switch(severity) {
+                    case 'critical': return '#ef4444';
+                    case 'high': return '#f97316';
+                    case 'medium': return '#f59e0b';
+                    case 'low': return '#eab308';
+                    default: return '#94a3b8';
+                }
+            };
+
+            const getAbuseIcon = (type) => {
+                switch(type) {
+                    case 'sql_injection_attempt': return '💉';
+                    case 'xss_attempt': return '🔴';
+                    case 'rapid_requests': return '⚡';
+                    case 'endpoint_spraying': return '🎯';
+                    case 'large_payload': return '📦';
+                    default: return '⚠️';
+                }
+            };
+
+            container.innerHTML = securityLogs.slice(0, 100).map(log => {
+                const date = new Date(log.created_at).toLocaleString();
+                const color = getSeverityColor(log.severity);
+                const icon = getAbuseIcon(log.abuse_type);
+
+                return `
+                    <div class="log-entry" style="border-left: 4px solid ${color};">
+                        <div class="log-header">
+                            <span class="log-severity" style="color: ${color};">${icon} ${log.severity.toUpperCase()}</span>
+                            <span class="log-time">${date}</span>
+                        </div>
+                        <div class="log-message">
+                            <strong>${log.abuse_type.replace(/_/g, ' ').toUpperCase()}</strong>
+                        </div>
+                        <div class="log-meta">
+                            <span>IP: <code>${escapeHtml(log.ip_address)}</code></span>
+                            <span>Endpoint: <code>${escapeHtml(log.method)} ${escapeHtml(log.endpoint)}</code></span>
+                            ${log.request_data ? `<span>Count: ${JSON.parse(log.request_data).count || 1}</span>` : ''}
+                        </div>
+                        ${log.user_agent ? `<div class="log-meta"><small>${escapeHtml(log.user_agent)}</small></div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render blocked IPs
+        function renderBlockedIps() {
+            const container = document.getElementById('securityBlockedIps');
+
+            if (blockedIps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No blocked IPs. All traffic is currently allowed. ✅</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = blockedIps.map(ip => {
+                const blockedAt = new Date(ip.blocked_at).toLocaleString();
+                const expiresAt = ip.expires_at ? new Date(ip.expires_at).toLocaleString() : 'Never';
+
+                return `
+                    <div class="log-entry" style="border-left: 4px solid #ef4444;">
+                        <div class="log-header">
+                            <span style="font-weight: 600;">🚫 ${escapeHtml(ip.ip_address)}</span>
+                            <button class="filter-btn" onclick="unblockIp('${escapeHtml(ip.ip_address)}')" style="padding: 4px 12px; font-size: 12px;">Unblock</button>
+                        </div>
+                        <div class="log-message">
+                            <strong>Reason:</strong> ${escapeHtml(ip.reason || 'Not specified')}
+                        </div>
+                        <div class="log-meta">
+                            <span>Blocked: ${blockedAt}</span>
+                            <span>Expires: ${ip.permanent ? '<strong>PERMANENT</strong>' : expiresAt}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Unblock an IP
+        async function unblockIp(ip) {
+            if (!confirm(`Are you sure you want to unblock ${ip}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/blocked-ips/${encodeURIComponent(ip)}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert(`IP ${ip} has been unblocked successfully.`);
+                    loadSecurityLogs();
+                } else {
+                    alert('Failed to unblock IP.');
+                }
+            } catch (error) {
+                console.error('Failed to unblock IP:', error);
+                alert('Failed to unblock IP.');
+            }
+        }
+
+        // Show block IP modal
+        function showBlockIpModal() {
+            const ip = prompt('Enter the IP address to block:');
+            if (!ip) return;
+
+            const reason = prompt('Reason for blocking (optional):');
+            const permanent = confirm('Block permanently? (Click Cancel for 24 hour block)');
+
+            blockIp(ip, reason, permanent);
+        }
+
+        // Block an IP
+        async function blockIp(ip, reason, permanent = false) {
+            try {
+                const response = await fetch(`${API_BASE}/api/blocked-ips`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ip_address: ip,
+                        reason: reason || 'Manually blocked',
+                        permanent: permanent,
+                        durationHours: 24
+                    })
+                });
+
+                if (response.ok) {
+                    alert(`IP ${ip} has been blocked successfully.`);
+                    loadSecurityLogs();
+                } else {
+                    alert('Failed to block IP.');
+                }
+            } catch (error) {
+                console.error('Failed to block IP:', error);
+                alert('Failed to block IP.');
+            }
+        }
+
+        // Clear abuse logs
+        async function clearAbuseLogs() {
+            if (!confirm('Are you sure you want to clear all abuse logs? This cannot be undone.')) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/abuse-logs`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Abuse logs cleared successfully.');
+                    loadSecurityLogs();
+                } else {
+                    alert('Failed to clear abuse logs.');
+                }
+            } catch (error) {
+                console.error('Failed to clear abuse logs:', error);
+                alert('Failed to clear abuse logs.');
+            }
+        }
+
+        // ========================================
+        // HEATMAP TAB
+        // ========================================
+
+        let heatmapData = [];
+
+        // Load heatmap data
+        async function loadHeatmapData() {
+            try {
+                const response = await fetch(`${API_BASE}/api/heatmap-data`);
+                const data = await response.json();
+
+                heatmapData = data.data || [];
+                updateHeatmapStats();
+                renderHeatmapData();
+                populatePageFilter();
+            } catch (error) {
+                console.error('Failed to load heatmap data:', error);
+                document.getElementById('heatmapContainer').innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ef4444;">Failed to load heatmap data.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Populate page filter dropdown
+        function populatePageFilter() {
+            const pageFilter = document.getElementById('heatmapPageFilter');
+            const pages = [...new Set(heatmapData.map(d => d.page))];
+
+            pageFilter.innerHTML = '<option value="all">All Pages</option>' +
+                pages.map(page => `<option value="${page}">${page}</option>`).join('');
+        }
+
+        // Update heatmap stats
+        function updateHeatmapStats() {
+            const clicks = heatmapData.filter(d => d.type === 'click').length;
+            const scrolls = heatmapData.filter(d => d.type === 'scroll').length;
+            const forms = heatmapData.filter(d => d.type === 'form_interaction').length;
+
+            document.getElementById('totalClicks').textContent = clicks;
+            document.getElementById('totalScrolls').textContent = scrolls;
+            document.getElementById('totalForms').textContent = forms;
+
+            // Calculate average scroll depth
+            const scrollDepths = heatmapData
+                .filter(d => d.type === 'scroll' && d.scrollDepth)
+                .map(d => d.scrollDepth);
+
+            const avgDepth = scrollDepths.length > 0
+                ? Math.round(scrollDepths.reduce((a, b) => a + b, 0) / scrollDepths.length)
+                : 0;
+
+            document.getElementById('avgScrollDepth').textContent = avgDepth + '%';
+        }
+
+        // Render heatmap data
+        function renderHeatmapData() {
+            const container = document.getElementById('heatmapContainer');
+            const pageFilter = document.getElementById('heatmapPageFilter').value;
+            const typeFilter = document.getElementById('heatmapTypeFilter').value;
+            const timeFilter = document.getElementById('heatmapTimeFilter').value;
+
+            // Apply filters
+            let filtered = heatmapData.filter(d => {
+                if (pageFilter !== 'all' && d.page !== pageFilter) return false;
+                if (typeFilter !== 'all' && d.type !== typeFilter) return false;
+
+                // Time filter
+                if (timeFilter !== 'all') {
+                    const dataTime = new Date(d.timestamp).getTime();
+                    const now = Date.now();
+                    const timeRanges = {
+                        '1h': 60 * 60 * 1000,
+                        '24h': 24 * 60 * 60 * 1000,
+                        '7d': 7 * 24 * 60 * 60 * 1000
+                    };
+                    if (now - dataTime > timeRanges[timeFilter]) return false;
+                }
+
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No heatmap data found for selected filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Group by page
+            const byPage = {};
+            filtered.forEach(d => {
+                if (!byPage[d.page]) byPage[d.page] = [];
+                byPage[d.page].push(d);
+            });
+
+            // Render data table
+            container.innerHTML = Object.entries(byPage).map(([page, data]) => {
+                const clickData = data.filter(d => d.type === 'click');
+                const scrollData = data.filter(d => d.type === 'scroll');
+                const formData = data.filter(d => d.type === 'form_interaction');
+
+                return `
+                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                        <h3 style="margin-bottom: 16px; color: #0078ff;">📄 ${page}</h3>
+
+                        ${typeFilter === 'click' || typeFilter === 'all' ? `
+                        <div style="margin-bottom: 16px;">
+                            <h4 style="font-size: 14px; color: #94a3b8; margin-bottom: 8px;">🖱️ Click Heatmap (${clickData.length} clicks)</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto;">
+                                ${clickData.slice(0, 50).map(c => `
+                                    <div style="background: rgba(0, 120, 255, 0.1); border: 1px solid rgba(0, 120, 255, 0.3); border-radius: 6px; padding: 8px; font-size: 11px;">
+                                        <div><strong>${c.elementTag || 'unknown'}</strong>${c.elementText ? ': ' + c.elementText.substring(0, 20) : ''}</div>
+                                        <div style="color: #94a3b8; margin-top: 4px;">Position: ${c.x}, ${c.y}</div>
+                                        <div style="color: #94a3b8;">${new Date(c.timestamp).toLocaleTimeString()}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${typeFilter === 'scroll' || typeFilter === 'all' ? `
+                        <div style="margin-bottom: 16px;">
+                            <h4 style="font-size: 14px; color: #94a3b8; margin-bottom: 8px;">📊 Scroll Depth (${scrollData.length} events)</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px;">
+                                ${scrollData.slice(0, 20).map(s => `
+                                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 8px; font-size: 11px;">
+                                        <div><strong>${s.scrollDepth}%</strong> depth</div>
+                                        <div style="color: #94a3b8; margin-top: 4px;">${new Date(s.timestamp).toLocaleTimeString()}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        ${typeFilter === 'form_interaction' || typeFilter === 'all' ? `
+                        <div>
+                            <h4 style="font-size: 14px; color: #94a3b8; margin-bottom: 8px;">📝 Form Interactions (${formData.length} events)</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px;">
+                                ${formData.slice(0, 20).map(f => `
+                                    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px; font-size: 11px;">
+                                        <div><strong>${f.fieldType || f.action}</strong></div>
+                                        <div style="color: #94a3b8; margin-top: 4px;">${f.fieldId || f.fieldName || 'unnamed'}</div>
+                                        <div style="color: #94a3b8;">${new Date(f.timestamp).toLocaleTimeString()}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Add event listeners for heatmap filters
+        document.getElementById('heatmapPageFilter').addEventListener('change', renderHeatmapData);
+        document.getElementById('heatmapTypeFilter').addEventListener('change', renderHeatmapData);
+        document.getElementById('heatmapTimeFilter').addEventListener('change', renderHeatmapData);
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadLogs, 30000);
+        setInterval(loadCheckoutLogs, 30000);
+
+        // Initial load
+        checkHealth();
+        loadLogs();
+    </script>
+</body>
+</html>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<!-- VERSION 2.0 - Multi-select with quantities -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Supply Alert</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 24px 100px;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+        }
+
+        .page.hidden-left {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .page.hidden-right {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        /* Weight Buttons */
+        .weight-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .weight-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px 24px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .weight-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .weight-btn:active {
+            transform: scale(0.97);
+            background: rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+        }
+
+        .weight-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+
+        .weight-label {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Color Grid */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .color-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .color-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .color-btn.selected {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: #3b82f6;
+        }
+
+        .color-btn:active {
+            transform: scale(0.95);
+        }
+
+        .swatch {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin-bottom: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 2px 6px rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+
+        .color-btn.selected .swatch::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E");
+            background-size: 16px;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .color-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Quantity Controls - hidden by default, shown when color is selected */
+        .qty-controls {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .color-btn.selected .qty-controls {
+            display: flex;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .qty-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .qty-btn:active {
+            transform: scale(0.9);
+        }
+
+        .qty-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .qty-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Submit Button */
+        .submit-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 24px;
+            background: linear-gradient(to top, rgba(15, 15, 26, 1) 0%, rgba(15, 15, 26, 0.95) 80%, transparent 100%);
+        }
+
+        .submit-btn {
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            display: block;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            border-radius: 16px;
+            padding: 18px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .submit-btn.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .submit-btn.active:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+        }
+
+        .submit-btn.active:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Selected Summary */
+        .selected-summary {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        /* Success Page */
+        .success-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 50px rgba(16, 185, 129, 0.4);
+            animation: pop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-icon svg {
+            width: 60px;
+            height: 60px;
+            stroke: white;
+            stroke-width: 3;
+        }
+
+        .success-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .success-text {
+            font-size: 17px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .success-details {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 32px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .success-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .success-item:last-child {
+            border-bottom: none;
+        }
+
+        .success-item-color {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .success-item-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .success-item-name {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .success-item-qty {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .again-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 14px;
+            padding: 16px 48px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .again-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .again-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Back button */
+        .back-btn {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        /* Colors */
+        .bg-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+        .bg-red { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+        .bg-yellow { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .bg-green { background: linear-gradient(135deg, #16a34a, #15803d); }
+        .bg-orange { background: linear-gradient(135deg, #ea580c, #c2410c); }
+        .bg-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+        .bg-pink { background: linear-gradient(135deg, #db2777, #be185d); }
+        .bg-white { background: linear-gradient(135deg, #f8fafc, #e2e8f0); }
+        .bg-black { background: linear-gradient(135deg, #374151, #1f2937); }
+        .bg-teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+        .bg-navy { background: linear-gradient(135deg, #1e3a8a, #1e40af); }
+        .bg-gray { background: linear-gradient(135deg, #6b7280, #4b5563); }
+
+        /* Loading state */
+        .loading .color-btn { pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body>
+    <!-- Page 1: Select Weight -->
+    <div class="page" id="page1">
+        <h1>Low on Vinyl?</h1>
+        <p class="subtitle">Tap the weight you need</p>
+        <div class="weight-options">
+            <div class="weight-btn" onclick="selectWeight('22oz')">
+                <div class="weight-value">22oz</div>
+                <div class="weight-label">Original</div>
+            </div>
+            <div class="weight-btn" onclick="selectWeight('18oz')">
+                <div class="weight-value">18oz</div>
+                <div class="weight-label">Weekender</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page 2: Select Colors & Quantities -->
+    <div class="page hidden-right" id="page2">
+        <button class="back-btn" onclick="goBack()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <h1 id="colorPageTitle">Select Colors</h1>
+        <p class="subtitle">Tap colors to select, set quantity for each</p>
+        <div class="color-grid" id="colorGrid">
+            <div class="color-btn" data-color="Blue" onclick="toggleColor(this)">
+                <div class="swatch bg-blue"></div>
+                <span class="color-name">Blue</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Red" onclick="toggleColor(this)">
+                <div class="swatch bg-red"></div>
+                <span class="color-name">Red</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Yellow" onclick="toggleColor(this)">
+                <div class="swatch bg-yellow"></div>
+                <span class="color-name">Yellow</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Green" onclick="toggleColor(this)">
+                <div class="swatch bg-green"></div>
+                <span class="color-name">Green</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Orange" onclick="toggleColor(this)">
+                <div class="swatch bg-orange"></div>
+                <span class="color-name">Orange</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Purple" onclick="toggleColor(this)">
+                <div class="swatch bg-purple"></div>
+                <span class="color-name">Purple</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Pink" onclick="toggleColor(this)">
+                <div class="swatch bg-pink"></div>
+                <span class="color-name">Pink</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="White" onclick="toggleColor(this)">
+                <div class="swatch bg-white"></div>
+                <span class="color-name">White</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Black" onclick="toggleColor(this)">
+                <div class="swatch bg-black"></div>
+                <span class="color-name">Black</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Teal" onclick="toggleColor(this)">
+                <div class="swatch bg-teal"></div>
+                <span class="color-name">Teal</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Navy" onclick="toggleColor(this)">
+                <div class="swatch bg-navy"></div>
+                <span class="color-name">Navy</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+            <div class="color-btn" data-color="Gray" onclick="toggleColor(this)">
+                <div class="swatch bg-gray"></div>
+                <span class="color-name">Gray</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="adjustQty(event, this, -1)">−</button>
+                    <div>
+                        <div class="qty-value">1</div>
+                        <div class="qty-label">rolls</div>
+                    </div>
+                    <button class="qty-btn" onclick="adjustQty(event, this, 1)">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="submit-container">
+            <p class="selected-summary" id="selectedSummary">Select at least one color</p>
+            <button class="submit-btn" id="submitBtn" onclick="submitRequest()">Send Request</button>
+        </div>
+    </div>
+
+    <!-- Page 3: Success -->
+    <div class="page hidden-right" id="page3">
+        <div class="success-icon">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <div class="success-title">Sent!</div>
+        <p class="success-text">The office has been notified</p>
+        <div class="success-details" id="successDetails"></div>
+        <button class="again-btn" onclick="reset()">Send Another</button>
+    </div>
+
+    <script>
+        let selectedWeight = null;
+        let selectedColors = {}; // { color: quantity }
+
+        function selectWeight(weight) {
+            selectedWeight = weight;
+            document.getElementById('colorPageTitle').textContent = `Select Colors (${weight})`;
+            document.getElementById('page1').classList.add('hidden-left');
+            document.getElementById('page2').classList.remove('hidden-right');
+        }
+
+        function goBack() {
+            document.getElementById('page1').classList.remove('hidden-left');
+            document.getElementById('page2').classList.add('hidden-right');
+        }
+
+        function toggleColor(btn) {
+            const color = btn.dataset.color;
+
+            if (btn.classList.contains('selected')) {
+                btn.classList.remove('selected');
+                delete selectedColors[color];
+            } else {
+                btn.classList.add('selected');
+                const qtyValue = btn.querySelector('.qty-value');
+                selectedColors[color] = parseInt(qtyValue.textContent) || 1;
+            }
+
+            updateSubmitButton();
+        }
+
+        function adjustQty(event, btn, delta) {
+            event.stopPropagation(); // Prevent triggering toggleColor
+
+            const colorBtn = btn.closest('.color-btn');
+            const qtyValue = colorBtn.querySelector('.qty-value');
+            let qty = parseInt(qtyValue.textContent) || 1;
+            qty = Math.max(1, Math.min(99, qty + delta));
+            qtyValue.textContent = qty;
+
+            // Update selected colors if this color is selected
+            const color = colorBtn.dataset.color;
+            if (selectedColors[color] !== undefined) {
+                selectedColors[color] = qty;
+            }
+
+            updateSubmitButton();
+        }
+
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            const summary = document.getElementById('selectedSummary');
+            const count = Object.keys(selectedColors).length;
+            const totalRolls = Object.values(selectedColors).reduce((a, b) => a + b, 0);
+
+            if (count > 0) {
+                submitBtn.classList.add('active');
+                summary.textContent = `${count} color${count > 1 ? 's' : ''} selected (${totalRolls} roll${totalRolls > 1 ? 's' : ''} total)`;
+            } else {
+                submitBtn.classList.remove('active');
+                summary.textContent = 'Select at least one color';
+            }
+        }
+
+        async function submitRequest() {
+            const submitBtn = document.getElementById('submitBtn');
+            if (!submitBtn.classList.contains('active')) return;
+
+            submitBtn.classList.add('loading');
+            submitBtn.textContent = 'Sending...';
+
+            try {
+                const items = Object.entries(selectedColors).map(([color, quantity]) => ({
+                    color,
+                    quantity
+                }));
+
+                const res = await fetch('/api/supply-alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        weight: selectedWeight,
+                        items: items
+                    })
+                });
+
+                if (res.ok) {
+                    // Build success details
+                    const detailsHtml = items.map(item => `
+                        <div class="success-item">
+                            <div class="success-item-color">
+                                <div class="success-item-swatch bg-${item.color.toLowerCase()}"></div>
+                                <span class="success-item-name">${item.color}</span>
+                            </div>
+                            <span class="success-item-qty">${item.quantity} roll${item.quantity > 1 ? 's' : ''}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('successDetails').innerHTML = detailsHtml;
+
+                    document.getElementById('page2').classList.add('hidden-left');
+                    document.getElementById('page3').classList.remove('hidden-right');
+                } else {
+                    alert('Error sending alert');
+                    submitBtn.classList.remove('loading');
+                    submitBtn.textContent = 'Send Request';
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Send Request';
+            }
+        }
+
+        function reset() {
+            selectedWeight = null;
+            selectedColors = {};
+
+            // Reset all color buttons
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('selected');
+                btn.querySelector('.qty-value').textContent = '1';
+            });
+
+            // Reset submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.classList.remove('active', 'loading');
+            submitBtn.textContent = 'Send Request';
+
+            // Reset summary
+            document.getElementById('selectedSummary').textContent = 'Select at least one color';
+
+            // Reset pages
+            document.getElementById('page1').classList.remove('hidden-left');
+            document.getElementById('page2').classList.add('hidden-right');
+            document.getElementById('page2').classList.remove('hidden-left');
+            document.getElementById('page3').classList.add('hidden-right');
+        }
+    </script>
+</body>
+</html>

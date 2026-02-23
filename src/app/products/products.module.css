@@ -1,0 +1,413 @@
+/* ==========================================================================
+   Products Page -- Water Blob
+   ========================================================================== */
+
+/* ---------- Page Container ---------- */
+.productsPage {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem 6rem;
+}
+
+/* ---------- Breadcrumb ---------- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin-bottom: 2rem;
+}
+
+.breadcrumbLink {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+
+.breadcrumbLink:hover {
+  opacity: 0.8;
+}
+
+.breadcrumbSeparator {
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+/* ---------- Header ---------- */
+.productsHeader {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.productsHeader h1 {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+
+.productsHeaderSubtitle {
+  font-size: 1.05rem;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
+
+/* ---------- Product Layout (side-by-side) ---------- */
+.productLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.viewerColumn {
+  position: sticky;
+  top: 5rem;
+}
+
+/* ---------- 3D Viewer Area ---------- */
+.viewerArea {
+  width: 100%;
+  height: 500px;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---------- Info Column ---------- */
+.infoColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ---------- Size Tabs ---------- */
+.sizeTabs {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.tabGroupLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.tabGroupPills {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.sizeTab {
+  padding: 0.5rem 1.25rem;
+  border-radius: 100px;
+  border: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.sizeTab:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.sizeTab.active {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+}
+
+/* ---------- Product Info ---------- */
+.productInfoRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.productInfoName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.productInfoPrice {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--accent-blue);
+}
+
+.productInfoDesc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ---------- Spec Chips ---------- */
+.productInfoSpecs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.specChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 100px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.specChip svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ---------- Purchase Row ---------- */
+.purchaseRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.quantityControls {
+  display: flex;
+  border: 1px solid var(--border-medium);
+  border-radius: 0.625rem;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.quantityBtn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  font-family: inherit;
+}
+
+.quantityBtn:hover {
+  background: var(--bg-elevated);
+}
+
+.quantityInput {
+  width: 2.5rem;
+  text-align: center;
+  border: none;
+  border-left: 1px solid var(--border-medium);
+  border-right: 1px solid var(--border-medium);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+
+.quantityInput::-webkit-outer-spin-button,
+.quantityInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.addToCartBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  border-radius: 0.625rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+  font-family: inherit;
+}
+
+.addToCartBtn:hover {
+  background: #0094d0;
+  transform: translateY(-1px);
+}
+
+.addToCartBtn:active {
+  transform: translateY(0);
+}
+
+.addToCartBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ---------- Added-to-cart feedback ---------- */
+.addedFeedback {
+  background: #16a34a;
+}
+
+/* ---------- Call for Quote ---------- */
+.callForQuote {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.callForQuote a {
+  color: var(--accent-blue);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.callForQuote a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Help Card ---------- */
+.helpCard {
+  margin-top: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1rem;
+}
+
+.helpCard h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.helpCard p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.helpCardLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.25rem;
+  background: var(--accent-blue);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 100px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: background 0.2s ease;
+}
+
+.helpCardLink:hover {
+  background: #0094d0;
+}
+
+/* ---------- Loading & Error ---------- */
+.loading {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+}
+
+.error {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--accent-purple);
+  font-size: 1rem;
+}
+
+/* ---------- Responsive: Tablet ---------- */
+@media (max-width: 900px) {
+  .productLayout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .viewerColumn {
+    position: static;
+  }
+
+  .viewerArea {
+    height: 480px;
+  }
+}
+
+/* ---------- Responsive: Mobile ---------- */
+@media (max-width: 768px) {
+  .productsPage {
+    padding: 3rem 1rem 4rem;
+  }
+
+  .viewerArea {
+    height: 400px;
+  }
+
+  .purchaseRow {
+    flex-direction: column;
+  }
+
+  .sizeTabs {
+    gap: 1rem;
+  }
+
+  .productInfoName {
+    font-size: 1.25rem;
+  }
+
+  .productInfoPrice {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .viewerArea {
+    height: 320px;
+  }
+
+  .productsHeader h1 {
+    font-size: 1.75rem;
+  }
+
+  .sizeTab {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+  }
+}

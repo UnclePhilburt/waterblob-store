@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Dashboard - Water Blob® Store</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --hover-bg: rgba(139, 92, 246, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Login Screen */
+        #loginScreen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-logo p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .login-btn, .btn-primary {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .login-btn:hover, .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        /* Dashboard */
+        #dashboardContent {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #dashboardContent.authenticated {
+            display: block;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .admin-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logout-btn {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.625rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 0.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            padding: 0.875rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: var(--hover-bg);
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            padding: 1.75rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-card h3 {
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 600;
+        }
+
+        .stat-card .value {
+            font-size: 2.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Data Table */
+        .table-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .data-table {
+            width: 100%;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--hover-bg);
+        }
+
+        /* Buttons */
+        .btn-add {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        /* Badges */
+        .badge {
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-content h2 {
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .form-actions button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Settings */
+        .settings-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-section h3 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-tabs {
+                flex-wrap: wrap;
+            }
+
+            .data-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <h1>💧 Water Blob®</h1>
+                <p>Admin Dashboard</p>
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">Password</label>
+                <input type="password" id="adminPassword" placeholder="Enter admin password" onkeypress="if(event.key === 'Enter') login()" />
+            </div>
+            <button class="login-btn" onclick="login()">Sign In</button>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div id="dashboardContent">
+        <div class="admin-container">
+            <div class="admin-header">
+                <div>
+                    <a href="/admin/hub.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; display: block; margin-bottom: 0.5rem; transition: color 0.3s;" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">← Back to Hub</a>
+                    <h1>💧 Water Blob® Admin Dashboard</h1>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="admin-tabs">
+                <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+                <button class="tab-btn" onclick="window.location.href='/admin/products.html'">Products</button>
+                <button class="tab-btn" onclick="window.location.href='/admin/orders.html'">Orders</button>
+                <button class="tab-btn" onclick="window.location.href='/admin/analytics.html'">Analytics</button>
+                <button class="tab-btn" onclick="window.location.href='/admin/settings.html'">Settings</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overviewTab" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Orders</h3>
+                        <div class="value" id="totalOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Revenue</h3>
+                        <div class="value" id="totalRevenue">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending Orders</h3>
+                        <div class="value" id="pendingOrders">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Products</h3>
+                        <div class="value" id="totalProducts">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Tab -->
+            <div id="productsTab" class="tab-content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>Products</h2>
+                        <button class="btn-add" onclick="showProductModal()">+ Add Product</button>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Price</th>
+                                    <th>Inventory</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsTableBody">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Tab -->
+            <div id="ordersTab" class="tab-content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h2>Orders</h2>
+                    </div>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">Click to load orders</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content">
+                <div class="settings-section">
+                    <h3>System Status</h3>
+                    <div class="form-group">
+                        <label>Database Connection</label>
+                        <input type="text" id="dbStatus" value="Checking..." readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Stripe Integration</label>
+                        <input type="text" id="stripeStatus" value="Not configured" readonly />
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Security</h3>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password" />
+                    </div>
+                    <button class="btn-primary" onclick="changePassword()">Update Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Add Product</h2>
+            <form id="productForm">
+                <div class="form-group">
+                    <label>Product Name</label>
+                    <input type="text" id="productName" required />
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="productDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Price ($)</label>
+                    <input type="number" id="productPrice" step="0.01" required />
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <input type="text" id="productCategory" required />
+                </div>
+                <div class="form-group">
+                    <label>Image URL</label>
+                    <input type="text" id="productImageUrl" required />
+                </div>
+                <div class="form-group">
+                    <label>Inventory</label>
+                    <input type="number" id="productInventory" required />
+                </div>
+                <div class="form-group">
+                    <label>Active</label>
+                    <select id="productActive">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-delete" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn-edit">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script>
+        // API_BASE is defined in admin-auth.js
+        // Auth is handled by admin-auth.js now
+        // This page requires authentication via admin-hub.html
+
+        // Load dashboard on page load
+        (async function() {
+            const token = localStorage.getItem('authToken');
+            if (token) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboardContent').classList.add('authenticated');
+                loadDashboard();
+            }
+        })();
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+
+            if (tabName === 'orders') loadOrders();
+            if (tabName === 'settings') loadSettings();
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            await loadProducts();
+            await loadStats();
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/stats`);
+                const data = await response.json();
+
+                document.getElementById('totalOrders').textContent = data.totalOrders;
+                document.getElementById('totalRevenue').textContent = '$' + data.totalRevenue.toFixed(2);
+                document.getElementById('pendingOrders').textContent = data.pendingOrders;
+                document.getElementById('totalProducts').textContent = data.totalProducts;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('totalOrders').textContent = 'Error';
+                document.getElementById('totalRevenue').textContent = 'Error';
+                document.getElementById('pendingOrders').textContent = 'Error';
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_BASE}/api/products`);
+                const products = await response.json();
+
+                document.getElementById('totalProducts').textContent = products.length;
+
+                const tbody = document.getElementById('productsTableBody');
+                if (products.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No products found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = products.map(product => `
+                    <tr>
+                        <td>${product.id}</td>
+                        <td>${product.name}</td>
+                        <td>$${product.price.toFixed(2)}</td>
+                        <td>${product.inventory || 'N/A'}</td>
+                        <td>${product.active !== false ? '✅' : '❌'}</td>
+                        <td>
+                            <button class="btn-action btn-edit" onclick="editProduct(${product.id})">Edit</button>
+                            <button class="btn-action btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsTableBody').innerHTML =
+                    '<tr><td colspan="6" style="text-align: center; color: red;">Error loading products</td></tr>';
+            }
+        }
+
+        async function loadOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            try {
+                const response = await fetch(`${API_BASE}/api/orders`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+
+                const orders = await response.json();
+
+                if (orders.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No orders found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = orders.map(order => {
+                    const date = new Date(order.created_at).toLocaleDateString();
+                    const statusBadge = order.status === 'completed' ? 'badge-completed' :
+                                       order.status === 'pending' ? 'badge-pending' : 'badge-cancelled';
+
+                    return `
+                        <tr>
+                            <td>#${order.id}</td>
+                            <td>${order.customer_email}</td>
+                            <td>$${parseFloat(order.amount).toFixed(2)}</td>
+                            <td><span class="badge ${statusBadge}">${order.status}</span></td>
+                            <td>${date}</td>
+                            <td>
+                                <button class="btn-action btn-edit" onclick="viewOrder(${order.id})">View</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: red;">Database not configured</td></tr>';
+            }
+        }
+
+        function viewOrder(orderId) {
+            alert('Order details view coming soon. Order ID: ' + orderId);
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+
+                document.getElementById('dbStatus').value = data.database === 'connected' ? 'Connected ✅' : 'Not configured ⚠️';
+                document.getElementById('stripeStatus').value = 'Not configured ⚠️'; // Would check from API
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Product management
+        let editingProductId = null;
+
+        function showProductModal(productId = null) {
+            editingProductId = productId;
+            const modal = document.getElementById('productModal');
+            modal.classList.add('active');
+
+            if (productId) {
+                document.getElementById('modalTitle').textContent = 'Edit Product';
+                // Load product data (would fetch from API)
+            } else {
+                document.getElementById('modalTitle').textContent = 'Add Product';
+                document.getElementById('productForm').reset();
+            }
+        }
+
+        function closeProductModal() {
+            document.getElementById('productModal').classList.remove('active');
+            editingProductId = null;
+        }
+
+        function editProduct(id) {
+            showProductModal(id);
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm('Are you sure you want to delete this product? It will be deactivated and hidden from the store.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Product deleted successfully');
+                    loadProducts(); // Refresh the list
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete product'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function changePassword() {
+            const newPass = document.getElementById('newPassword').value;
+            if (newPass.length < 8) {
+                alert('Password must be at least 8 characters');
+                return;
+            }
+            alert('Password change requires backend implementation. Current password in code: waterblob2024');
+        }
+
+        // Form submission
+        document.getElementById('productForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('Product save functionality requires database connection');
+            closeProductModal();
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('productModal').addEventListener('click', (e) => {
+            if (e.target.id === 'productModal') {
+                closeProductModal();
+            }
+        });
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>

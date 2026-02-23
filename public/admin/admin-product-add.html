@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Add Product - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .header-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .header-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .form-section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Image Upload */
+        .image-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-secondary);
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--accent-primary);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .image-upload-area.drag-over {
+            border-color: var(--accent-primary);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .image-previews {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-preview-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .image-preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .image-remove-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Variants */
+        .variant-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .variant-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .variant-item input {
+            background: var(--bg-tertiary);
+        }
+
+        .btn-remove-variant {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-add-variant {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Tags Input */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            min-height: 50px;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .tag-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            outline: none;
+            min-width: 100px;
+        }
+
+        /* Action Buttons */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: var(--bg-tertiary);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent-primary);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .variant-item {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="header-left">
+                <a href="/admin/products.html">← Back to Products</a>
+                <h1>Add New Product</h1>
+            </div>
+        </div>
+
+        <form id="productForm" class="form-container">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h2>📦 Basic Information</h2>
+                <div class="form-grid">
+                    <div class="form-group form-grid-full">
+                        <label>Product Name *</label>
+                        <input type="text" id="productName" placeholder="e.g. Water Blob® XL" required />
+                    </div>
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="text" id="productSku" placeholder="WB-XL-001" />
+                        <div class="form-hint">Stock Keeping Unit (auto-generated if empty)</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Category *</label>
+                        <select id="productCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="blob">Water Blob®</option>
+                            <option value="slide">Water Slide</option>
+                            <option value="tube">Ski Tube</option>
+                            <option value="accessory">Accessories</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>Description *</label>
+                        <textarea id="productDescription" placeholder="Detailed product description..." required></textarea>
+                        <div class="form-hint">Include features, materials, and specifications</div>
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>Short Description</label>
+                        <textarea id="productShortDescription" placeholder="Brief description for listings..." style="min-height: 60px;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Inventory -->
+            <div class="form-section">
+                <h2>💰 Pricing & Inventory</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Price *</label>
+                        <input type="number" id="productPrice" step="0.01" placeholder="0.00" required />
+                    </div>
+                    <div class="form-group">
+                        <label>Compare at Price</label>
+                        <input type="number" id="productComparePrice" step="0.01" placeholder="0.00" />
+                        <div class="form-hint">Show as "was" price for discounts</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost per Item</label>
+                        <input type="number" id="productCost" step="0.01" placeholder="0.00" />
+                        <div class="form-hint">Your cost (for profit tracking)</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Inventory Quantity *</label>
+                        <input type="number" id="productInventory" placeholder="0" required />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="form-section">
+                <h2>🖼️ Product Images</h2>
+                <div class="form-group">
+                    <div class="image-upload-area" id="imageUploadArea">
+                        <div class="upload-icon">📸</div>
+                        <p><strong>Drag & drop images here</strong></p>
+                        <p style="color: var(--text-secondary); margin-top: 0.5rem;">or click to browse</p>
+                        <input type="file" id="imageInput" accept="image/*" multiple style="display: none;" />
+                    </div>
+                    <div class="form-hint">Upload up to 10 images. First image will be the main product image.</div>
+                </div>
+                <div class="form-group">
+                    <label>Or enter image URL</label>
+                    <input type="text" id="imageUrl" placeholder="https://example.com/image.jpg" />
+                    <button type="button" class="btn btn-secondary" onclick="addImageFromUrl()" style="margin-top: 0.5rem;">Add Image</button>
+                </div>
+                <div class="image-previews" id="imagePreviews"></div>
+            </div>
+
+            <!-- 3D Model -->
+            <div class="form-section">
+                <h2>🎮 3D Model (Optional)</h2>
+                <div class="form-group">
+                    <label>3D Model URL (.glb file)</label>
+                    <select id="productModel" style="width: 100%;">
+                        <option value="">No 3D Model</option>
+                        <option value="/assets/blob.glb">Water Blob - Standard</option>
+                        <option value="/assets/blob30.glb">Water Blob - 30ft</option>
+                        <option value="/assets/blob35.glb">Water Blob - 35ft</option>
+                        <option value="/assets/weekender.glb">Weekender</option>
+                        <option value="/assets/skitube3dmodel/skitube.glb">Ski Tube</option>
+                    </select>
+                    <div class="form-hint">Select a pre-uploaded 3D model or enter a custom URL below</div>
+                </div>
+                <div class="form-group">
+                    <label>Or enter custom 3D model URL</label>
+                    <input type="text" id="customModelUrl" placeholder="https://example.com/model.glb" />
+                    <div class="form-hint">Supports .glb format (GLTF Binary)</div>
+                </div>
+                <div id="modelPreview" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                    <p style="color: var(--success);">✓ 3D Model Selected</p>
+                    <p id="modelPreviewName" style="color: var(--text-secondary); font-size: 0.9rem;"></p>
+                </div>
+            </div>
+
+            <!-- Product Variants -->
+            <div class="form-section">
+                <h2>🎨 Product Variants (Optional)</h2>
+                <div class="variant-list" id="variantList">
+                    <div class="variant-item">
+                        <input type="text" placeholder="Option (e.g., Size, Color)" />
+                        <input type="text" placeholder="Value (e.g., Large, Blue)" />
+                        <input type="number" placeholder="Price adjustment" step="0.01" />
+                        <button type="button" class="btn-remove-variant" onclick="removeVariant(this)">✕</button>
+                    </div>
+                </div>
+                <button type="button" class="btn-add-variant" onclick="addVariant()">+ Add Variant</button>
+            </div>
+
+            <!-- SEO & Tags -->
+            <div class="form-section">
+                <h2>🔍 SEO & Tags</h2>
+                <div class="form-grid">
+                    <div class="form-group form-grid-full">
+                        <label>Tags</label>
+                        <div class="tags-container" id="tagsContainer">
+                            <input type="text" class="tag-input" id="tagInput" placeholder="Type and press Enter..." />
+                        </div>
+                        <div class="form-hint">Press Enter to add tags (e.g., waterblob, summer, fun)</div>
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>SEO Title</label>
+                        <input type="text" id="seoTitle" placeholder="Optimized title for search engines" />
+                    </div>
+                    <div class="form-group form-grid-full">
+                        <label>SEO Description</label>
+                        <textarea id="seoDescription" placeholder="Meta description for search results..." style="min-height: 80px;"></textarea>
+                        <div class="form-hint"><span id="seoCharCount">0</span>/160 characters</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping & Additional -->
+            <div class="form-section">
+                <h2>📦 Shipping & Additional Info</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Weight (lbs)</label>
+                        <input type="number" id="productWeight" step="0.1" placeholder="0.0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Dimensions (L × W × H)</label>
+                        <input type="text" id="productDimensions" placeholder="12 × 8 × 4 inches" />
+                    </div>
+                    <div class="form-group">
+                        <label>Requires Shipping</label>
+                        <select id="requiresShipping">
+                            <option value="true">Yes</option>
+                            <option value="false">No (Digital product)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Status</label>
+                        <select id="productStatus">
+                            <option value="active">Active</option>
+                            <option value="draft">Draft</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">Save as Draft</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/products.html'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Publish Product</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script>
+        // API_BASE is defined in admin-auth.js
+        let uploadedImages = [];
+        let productTags = [];
+        let editingProductId = null;
+
+        // Check if we're editing an existing product
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        const duplicateId = urlParams.get('duplicate');
+
+        if (productId) {
+            editingProductId = productId;
+            document.title = 'Edit Product - Water Blob® Admin';
+            document.querySelector('.admin-header h1').textContent = 'Edit Product';
+            document.querySelector('.btn-primary[type="submit"]').textContent = 'Update Product';
+            loadProductForEdit(productId);
+        } else if (duplicateId) {
+            loadProductForEdit(duplicateId, true);
+        }
+
+        async function loadProductForEdit(id, isDuplicate = false) {
+            try {
+                const response = await fetch(`${API_BASE}/api/products/${id}`);
+                if (!response.ok) throw new Error('Product not found');
+
+                const product = await response.json();
+
+                // Populate form fields
+                document.getElementById('productName').value = isDuplicate ? product.name + ' (Copy)' : product.name;
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productPrice').value = product.price || '';
+                document.getElementById('productCategory').value = product.category || '';
+                document.getElementById('productInventory').value = product.stock || 0;
+                document.getElementById('productStatus').value = product.active ? 'active' : 'draft';
+
+                // Load image if exists
+                if (product.image_url) {
+                    uploadedImages = [product.image_url];
+                    renderImagePreviews();
+                }
+
+                // Load 3D model if exists
+                if (product.model_url) {
+                    const modelSelect = document.getElementById('productModel');
+                    const customModelInput = document.getElementById('customModelUrl');
+                    const modelPreview = document.getElementById('modelPreview');
+                    const modelPreviewName = document.getElementById('modelPreviewName');
+
+                    // Check if it matches a preset option
+                    let foundPreset = false;
+                    for (let option of modelSelect.options) {
+                        if (option.value === product.model_url) {
+                            modelSelect.value = product.model_url;
+                            foundPreset = true;
+                            break;
+                        }
+                    }
+
+                    // If not a preset, put it in the custom URL field
+                    if (!foundPreset) {
+                        customModelInput.value = product.model_url;
+                    }
+
+                    // Show preview
+                    modelPreview.style.display = 'block';
+                    modelPreviewName.textContent = product.model_url;
+                }
+
+                // Load SEO fields if they exist
+                if (product.seo_title) document.getElementById('seoTitle').value = product.seo_title;
+                if (product.seo_description) document.getElementById('seoDescription').value = product.seo_description;
+
+            } catch (error) {
+                console.error('Error loading product:', error);
+                alert('Failed to load product for editing');
+            }
+        }
+
+        // Image Upload
+        const uploadArea = document.getElementById('imageUploadArea');
+        const imageInput = document.getElementById('imageInput');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        uploadedImages.push(e.target.result);
+                        renderImagePreviews();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function addImageFromUrl() {
+            const url = document.getElementById('imageUrl').value;
+            if (url) {
+                uploadedImages.push(url);
+                renderImagePreviews();
+                document.getElementById('imageUrl').value = '';
+            }
+        }
+
+        // 3D Model Preview
+        function updateModelPreview() {
+            const modelSelect = document.getElementById('productModel').value;
+            const customModel = document.getElementById('customModelUrl').value.trim();
+            const modelUrl = customModel || modelSelect;
+            const modelPreview = document.getElementById('modelPreview');
+            const modelPreviewName = document.getElementById('modelPreviewName');
+
+            if (modelUrl) {
+                modelPreview.style.display = 'block';
+                modelPreviewName.textContent = modelUrl;
+            } else {
+                modelPreview.style.display = 'none';
+            }
+        }
+
+        document.getElementById('productModel').addEventListener('change', updateModelPreview);
+        document.getElementById('customModelUrl').addEventListener('input', updateModelPreview);
+
+        function renderImagePreviews() {
+            const container = document.getElementById('imagePreviews');
+            container.innerHTML = uploadedImages.map((img, index) => `
+                <div class="image-preview-item">
+                    <img src="${img}" alt="Preview ${index + 1}" />
+                    <button type="button" class="image-remove-btn" onclick="removeImage(${index})">✕</button>
+                    ${index === 0 ? '<div style="position:absolute; bottom:0; left:0; right:0; background:var(--accent-primary); color:white; padding:0.25rem; text-align:center; font-size:0.75rem;">Main Image</div>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function removeImage(index) {
+            uploadedImages.splice(index, 1);
+            renderImagePreviews();
+        }
+
+        // Variants
+        function addVariant() {
+            const list = document.getElementById('variantList');
+            const item = document.createElement('div');
+            item.className = 'variant-item';
+            item.innerHTML = `
+                <input type="text" placeholder="Option (e.g., Size, Color)" />
+                <input type="text" placeholder="Value (e.g., Large, Blue)" />
+                <input type="number" placeholder="Price adjustment" step="0.01" />
+                <button type="button" class="btn-remove-variant" onclick="removeVariant(this)">✕</button>
+            `;
+            list.appendChild(item);
+        }
+
+        function removeVariant(btn) {
+            btn.parentElement.remove();
+        }
+
+        // Tags
+        const tagInput = document.getElementById('tagInput');
+        tagInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && tagInput.value.trim()) {
+                e.preventDefault();
+                addTag(tagInput.value.trim());
+                tagInput.value = '';
+            }
+        });
+
+        function addTag(tag) {
+            if (!productTags.includes(tag)) {
+                productTags.push(tag);
+                renderTags();
+            }
+        }
+
+        function removeTag(tag) {
+            productTags = productTags.filter(t => t !== tag);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            const tagElements = productTags.map(tag => `
+                <span class="tag">
+                    ${tag}
+                    <span class="tag-remove" onclick="removeTag('${tag}')">×</span>
+                </span>
+            `).join('');
+            container.innerHTML = tagElements + '<input type="text" class="tag-input" id="tagInput" placeholder="Type and press Enter..." />';
+            
+            // Re-attach event listener
+            const newInput = document.getElementById('tagInput');
+            newInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && newInput.value.trim()) {
+                    e.preventDefault();
+                    addTag(newInput.value.trim());
+                    newInput.value = '';
+                }
+            });
+        }
+
+        // SEO Character Count
+        document.getElementById('seoDescription').addEventListener('input', (e) => {
+            document.getElementById('seoCharCount').textContent = e.target.value.length;
+        });
+
+        // Form Submission
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Get model URL from dropdown or custom input
+            const modelSelect = document.getElementById('productModel').value;
+            const customModel = document.getElementById('customModelUrl').value.trim();
+            const model_url = customModel || modelSelect || null;
+
+            const formData = {
+                name: document.getElementById('productName').value,
+                description: document.getElementById('productDescription').value,
+                price: parseFloat(document.getElementById('productPrice').value),
+                image_url: uploadedImages[0] || '/images/waterblob-action.jpg',
+                model_url: model_url,
+                category: document.getElementById('productCategory').value,
+                stock: parseInt(document.getElementById('productInventory').value) || 0,
+                active: document.getElementById('productStatus').value === 'active'
+            };
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const isEditing = !!editingProductId;
+                const url = isEditing
+                    ? `${API_BASE}/api/products/${editingProductId}`
+                    : `${API_BASE}/api/products`;
+                const method = isEditing ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(isEditing ? 'Product updated successfully!' : 'Product created successfully!');
+                    window.location.href = '/admin/products.html';
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save product. Check console for details.');
+            }
+        });
+
+        function saveDraft() {
+            document.getElementById('productStatus').value = 'draft';
+            document.getElementById('productForm').dispatchEvent(new Event('submit'));
+        }
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>

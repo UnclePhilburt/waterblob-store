@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Hub - Water Blob® Store</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .login-logo h2 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .login-logo p {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .error-message {
+            color: #ef4444;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Admin Hub */
+        .admin-hub {
+            display: none;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-hub.authenticated {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .hub-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .hub-header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .hub-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 0.75rem 1.5rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .logout-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            transform: translateY(-1px);
+        }
+
+        /* Stats Overview */
+        .stats-overview {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-overview h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1));
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-primary);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Admin Grid */
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .admin-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .admin-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-primary);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 20px var(--accent-glow));
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .card-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .card-badge.coming-soon {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+        }
+
+        /* Live Monitoring Stats */
+        .stats-expanded {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-expanded h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .health-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            vertical-align: middle;
+        }
+
+        .health-indicator.green {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .health-indicator.yellow {
+            background: #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+        }
+
+        .health-indicator.red {
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        /* Live Feed Section */
+        .live-feed-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .live-feed-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .live-feed-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(16, 185, 129, 0.6); }
+            50% { opacity: 0.5; box-shadow: 0 0 12px rgba(16, 185, 129, 0.8); }
+        }
+
+        .live-indicator.paused .live-dot {
+            background: #f59e0b;
+            animation: none;
+        }
+
+        .live-indicator.paused {
+            color: #f59e0b;
+        }
+
+        .feed-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .feed-filter-btn {
+            width: auto !important;
+            padding: 0.4rem 0.9rem !important;
+            font-size: 0.8rem;
+            border-radius: 20px !important;
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: none !important;
+            font-weight: 500;
+        }
+
+        .feed-filter-btn:hover {
+            border-color: var(--accent-primary) !important;
+            color: var(--text-primary);
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .feed-filter-btn.active {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+            color: white;
+            border-color: transparent !important;
+        }
+
+        .feed-pause-btn {
+            width: auto !important;
+            padding: 0.4rem 0.9rem !important;
+            font-size: 0.8rem;
+            border-radius: 20px !important;
+            background: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: none !important;
+            margin-left: 0.5rem;
+        }
+
+        .feed-pause-btn:hover {
+            border-color: var(--accent-primary) !important;
+            color: var(--text-primary);
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .feed-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .feed-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .feed-container::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .feed-container::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .feed-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .feed-entry:hover {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .feed-entry:last-child {
+            border-bottom: none;
+        }
+
+        .feed-entry.new {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feed-severity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .feed-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .feed-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .feed-message {
+            font-size: 0.88rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .feed-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .feed-source-badge {
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .feed-source-badge.errors { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .feed-source-badge.visitors { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+        .feed-source-badge.checkout { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .feed-source-badge.security { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .feed-source-badge.chatbot { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+
+        .feed-details {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            word-break: break-all;
+        }
+
+        .feed-entry.expanded .feed-details {
+            display: block;
+        }
+
+        .feed-entry.expanded .feed-message {
+            white-space: normal;
+        }
+
+        .feed-empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .hub-header h1 {
+                font-size: 2rem;
+            }
+
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logout-btn {
+                top: 1rem;
+                right: 1rem;
+            }
+
+            .stats-expanded .stats-grid {
+                grid-template-columns: repeat(3, minmax(130px, 1fr));
+                overflow-x: auto;
+            }
+
+            .feed-container {
+                max-height: 350px;
+            }
+
+            .feed-controls {
+                width: 100%;
+            }
+
+            .live-feed-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-card">
+            <div class="login-logo">
+                <h2>💧 Water Blob® Admin</h2>
+                <p>Enter your credentials to access admin hub</p>
+            </div>
+            <input type="text" id="username" placeholder="Username" onkeypress="if(event.key==='Enter') document.getElementById('password').focus()" />
+            <input type="password" id="password" placeholder="Password" onkeypress="if(event.key==='Enter') login()" />
+            <button onclick="login()">Enter Admin Hub</button>
+            <p class="error-message" id="errorMessage"></p>
+        </div>
+    </div>
+
+    <!-- Admin Hub -->
+    <div class="admin-hub" id="adminHub">
+        <button class="logout-btn" onclick="logout()">Logout</button>
+
+        <div class="hub-header">
+            <h1>💧 Water Blob® Store</h1>
+            <p>Admin Control Center</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-overview">
+            <h2>Quick Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalOrders">0</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalRevenue">$0</div>
+                    <div class="stat-label">Revenue</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="pendingOrders">0</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalProducts">4</div>
+                    <div class="stat-label">Products</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Monitoring Stats -->
+        <div class="stats-expanded">
+            <h2>Live Monitoring</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="activeSessions">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="errorsToday">-</div>
+                    <div class="stat-label">Errors Today</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="visitorsOnline">-</div>
+                    <div class="stat-label">Visitors Online</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="systemHealth">-</div>
+                    <div class="stat-label">System Health</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="blockedIPs">-</div>
+                    <div class="stat-label">Blocked IPs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="serverUptime">-</div>
+                    <div class="stat-label">Server Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Event Feed -->
+        <div class="live-feed-section">
+            <div class="live-feed-header">
+                <h2>
+                    Live Event Feed
+                    <span class="live-indicator" id="liveIndicator">
+                        <span class="live-dot"></span>
+                        Live
+                    </span>
+                </h2>
+                <div class="feed-controls">
+                    <button class="feed-filter-btn active" data-filter="all" onclick="setFeedFilter('all')">All</button>
+                    <button class="feed-filter-btn" data-filter="errors" onclick="setFeedFilter('errors')">Errors</button>
+                    <button class="feed-filter-btn" data-filter="visitors" onclick="setFeedFilter('visitors')">Visitors</button>
+                    <button class="feed-filter-btn" data-filter="checkout" onclick="setFeedFilter('checkout')">Checkout</button>
+                    <button class="feed-filter-btn" data-filter="security" onclick="setFeedFilter('security')">Security</button>
+                    <button class="feed-filter-btn" data-filter="chatbot" onclick="setFeedFilter('chatbot')">Chatbot</button>
+                    <button class="feed-pause-btn" id="feedPauseBtn" onclick="toggleFeedPause()">⏸ Pause</button>
+                </div>
+            </div>
+            <div class="feed-container" id="feedContainer">
+                <div class="feed-empty">Loading events...</div>
+            </div>
+        </div>
+
+        <!-- Admin Cards -->
+        <div class="admin-grid">
+            <a href="/admin/" class="admin-card">
+                <div class="card-icon">📊</div>
+                <h3 class="card-title">Dashboard</h3>
+                <p class="card-description">Comprehensive analytics, statistics, and business insights at a glance.</p>
+                <span class="card-badge">Overview</span>
+            </a>
+
+            <a href="/admin/products.html" class="admin-card">
+                <div class="card-icon">🛍️</div>
+                <h3 class="card-title">Products</h3>
+                <p class="card-description">Manage product catalog, inventory, pricing, and visibility.</p>
+                <span class="card-badge">Inventory</span>
+            </a>
+
+            <a href="/admin/orders.html" class="admin-card">
+                <div class="card-icon">📦</div>
+                <h3 class="card-title">Orders</h3>
+                <p class="card-description">Track and manage customer orders, statuses, and fulfillment.</p>
+                <span class="card-badge">Fulfillment</span>
+            </a>
+
+            <a href="/admin/analytics.html" class="admin-card">
+                <div class="card-icon">📈</div>
+                <h3 class="card-title">Analytics</h3>
+                <p class="card-description">Track visitors, clicks, heatmaps, and detailed user behavior.</p>
+                <span class="card-badge">Live Data</span>
+            </a>
+
+            <a href="/admin/settings.html" class="admin-card">
+                <div class="card-icon">⚙️</div>
+                <h3 class="card-title">Settings</h3>
+                <p class="card-description">Configure store settings, payment integrations, and preferences.</p>
+                <span class="card-badge">Configuration</span>
+            </a>
+
+            <a href="/admin/activity.html" class="admin-card">
+                <div class="card-icon">🔍</div>
+                <h3 class="card-title">Activity Tracking</h3>
+                <p class="card-description">Monitor all user actions, clicks, edits, and system activity in real-time.</p>
+                <span class="card-badge">Admin Only</span>
+            </a>
+
+            <a href="/admin/debug.html" class="admin-card">
+                <div class="card-icon">🐛</div>
+                <h3 class="card-title">Debug Dashboard</h3>
+                <p class="card-description">Monitor errors, system health, and troubleshoot customer issues in real-time.</p>
+                <span class="card-badge">🔴 Live</span>
+            </a>
+
+            <a href="/admin/customers.html" class="admin-card">
+                <div class="card-icon">👥</div>
+                <h3 class="card-title">Customers</h3>
+                <p class="card-description">View customer information, order history, and manage relationships.</p>
+            </a>
+
+            <a href="/admin/videos.html" class="admin-card">
+                <div class="card-icon">📹</div>
+                <h3 class="card-title">Video Wall</h3>
+                <p class="card-description">Manage submitted videos, approve content, and feature top submissions.</p>
+                <span class="card-badge">Admin Only</span>
+            </a>
+
+            <div class="admin-card" onclick="alert('Marketing tools coming soon!')">
+                <div class="card-icon">📢</div>
+                <h3 class="card-title">Marketing</h3>
+                <p class="card-description">Email campaigns, promotions, discount codes, and engagement tools.</p>
+                <span class="card-badge coming-soon">Coming Soon</span>
+            </div>
+
+            <div class="admin-card" onclick="alert('Reports coming soon!')">
+                <div class="card-icon">📄</div>
+                <h3 class="card-title">Reports</h3>
+                <p class="card-description">Generate and export detailed reports for accounting and analysis.</p>
+                <span class="card-badge coming-soon">Coming Soon</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+
+        function getAuthToken() {
+            return localStorage.getItem('authToken');
+        }
+
+        function setAuthToken(token) {
+            localStorage.setItem('authToken', token);
+        }
+
+        function removeAuthToken() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+        }
+
+        function setUser(user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                document.getElementById('errorMessage').textContent = 'Please enter both username and password';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    setAuthToken(data.token);
+                    setUser(data.user);
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('adminHub').classList.add('authenticated');
+                    loadStats();
+                    startLiveFeatures();
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message || 'Invalid credentials';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('errorMessage').textContent = 'Connection error. Please try again.';
+            }
+        }
+
+        async function logout() {
+            const token = getAuthToken();
+            if (token) {
+                try {
+                    await fetch(`${API_BASE}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    console.error('Logout error:', error);
+                }
+            }
+            stopLiveFeatures();
+            removeAuthToken();
+            location.reload();
+        }
+
+        // Check if already authenticated
+        (async function checkAuth() {
+            const token = getAuthToken();
+            if (token) {
+                try {
+                    const response = await fetch(`${API_BASE}/api/auth/verify`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+                    if (response.ok && data.success && data.valid) {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('adminHub').classList.add('authenticated');
+                        loadStats();
+                        startLiveFeatures();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Auth check error:', error);
+                }
+
+                // If verification failed, clear token
+                removeAuthToken();
+            }
+        })();
+
+        async function loadStats() {
+            try {
+                const token = getAuthToken();
+                const response = await fetch(`${API_BASE}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    console.warn('Stats API returned error, using defaults');
+                    document.getElementById('totalOrders').textContent = '0';
+                    document.getElementById('totalRevenue').textContent = '$0.00';
+                    document.getElementById('pendingOrders').textContent = '0';
+                    document.getElementById('totalProducts').textContent = '0';
+                    return;
+                }
+
+                const data = await response.json();
+                document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+                document.getElementById('totalRevenue').textContent = '$' + (data.totalRevenue || 0).toFixed(2);
+                document.getElementById('pendingOrders').textContent = data.pendingOrders || 0;
+                document.getElementById('totalProducts').textContent = data.totalProducts || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                // Set defaults on error
+                document.getElementById('totalOrders').textContent = '0';
+                document.getElementById('totalRevenue').textContent = '$0.00';
+                document.getElementById('pendingOrders').textContent = '0';
+                document.getElementById('totalProducts').textContent = '0';
+            }
+        }
+
+        // ── Live Features ──
+        const EVENT_CONFIG = {
+            page_load:        { icon: '👁️', color: '#10b981', filter: 'visitors' },
+            page_exit:        { icon: '🚪', color: '#64748b', filter: 'visitors' },
+            javascript_error: { icon: '🐛', color: '#ef4444', filter: 'errors' },
+            api_error:        { icon: '🖥️', color: '#f97316', filter: 'errors' },
+            network_error:    { icon: '📡', color: '#ef4444', filter: 'errors' },
+            checkout:         { icon: '🛒', color: '#3b82f6', filter: 'checkout' },
+            security:         { icon: '🛡️', color: '#ef4444', filter: 'security' },
+            chatbot:          { icon: '💬', color: '#a855f7', filter: 'chatbot' }
+        };
+
+        const SEVERITY_COLORS = {
+            critical: '#ef4444',
+            error: '#f97316',
+            warning: '#f59e0b',
+            info: '#10b981'
+        };
+
+        let liveIntervals = [];
+        let feedPaused = false;
+        let currentFilter = 'all';
+        let allFeedEvents = [];
+        let previousEventIds = new Set();
+        let userHasScrolled = false;
+
+        function startLiveFeatures() {
+            stopLiveFeatures();
+            loadMonitoringStats();
+            loadLiveFeed();
+            liveIntervals.push(setInterval(loadStats, 30000));
+            liveIntervals.push(setInterval(loadMonitoringStats, 10000));
+            liveIntervals.push(setInterval(() => { if (!feedPaused) loadLiveFeed(); }, 8000));
+            liveIntervals.push(setInterval(refreshRelativeTimes, 30000));
+
+            const container = document.getElementById('feedContainer');
+            container.addEventListener('scroll', () => {
+                userHasScrolled = container.scrollTop > 20;
+            });
+        }
+
+        function stopLiveFeatures() {
+            liveIntervals.forEach(id => clearInterval(id));
+            liveIntervals = [];
+            feedPaused = false;
+            previousEventIds.clear();
+            allFeedEvents = [];
+        }
+
+        // ── Monitoring Stats ──
+        async function loadMonitoringStats() {
+            try {
+                const [errorRes, healthRes, abuseRes] = await Promise.allSettled([
+                    fetch(`${API_BASE}/api/error-logs`),
+                    fetchHealth(),
+                    fetch(`${API_BASE}/api/abuse-stats`)
+                ]);
+
+                // Active sessions & visitors online from error logs
+                if (errorRes.status === 'fulfilled' && errorRes.value.ok) {
+                    const data = await errorRes.value.json();
+                    const logs = data.logs || [];
+                    const now = Date.now();
+                    const fifteenMinAgo = now - 15 * 60 * 1000;
+                    const fiveMinAgo = now - 5 * 60 * 1000;
+                    const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+
+                    const sessions15 = new Set();
+                    const sessions5 = new Set();
+                    let errorsToday = 0;
+
+                    logs.forEach(log => {
+                        const ts = new Date(log.timestamp).getTime();
+                        if (log.sessionId && ts > fifteenMinAgo) sessions15.add(log.sessionId);
+                        if (log.sessionId && ts > fiveMinAgo) sessions5.add(log.sessionId);
+                        if (ts > todayStart.getTime() && ['critical', 'error', 'warning'].includes(log.severity)) {
+                            errorsToday++;
+                        }
+                    });
+
+                    document.getElementById('activeSessions').textContent = sessions15.size;
+                    document.getElementById('visitorsOnline').textContent = sessions5.size;
+                    document.getElementById('errorsToday').textContent = errorsToday;
+                }
+
+                // System health & uptime
+                if (healthRes.status === 'fulfilled') {
+                    const { data, responseTime } = healthRes.value;
+                    let healthHTML, uptimeText;
+
+                    if (!data) {
+                        healthHTML = '<span class="health-indicator red"></span> Down';
+                        uptimeText = '-';
+                    } else if (responseTime > 2000) {
+                        healthHTML = '<span class="health-indicator yellow"></span> Slow';
+                        uptimeText = formatUptime(data.uptime);
+                    } else {
+                        healthHTML = '<span class="health-indicator green"></span> OK';
+                        uptimeText = formatUptime(data.uptime);
+                    }
+
+                    document.getElementById('systemHealth').innerHTML = healthHTML;
+                    document.getElementById('serverUptime').textContent = uptimeText;
+                }
+
+                // Blocked IPs
+                if (abuseRes.status === 'fulfilled' && abuseRes.value.ok) {
+                    const data = await abuseRes.value.json();
+                    document.getElementById('blockedIPs').textContent = data.blockedIps || 0;
+                }
+            } catch (error) {
+                console.error('Error loading monitoring stats:', error);
+            }
+        }
+
+        async function fetchHealth() {
+            const start = Date.now();
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const responseTime = Date.now() - start;
+                const data = await response.json();
+                return { data, responseTime };
+            } catch {
+                return { data: null, responseTime: Date.now() - start };
+            }
+        }
+
+        function formatUptime(seconds) {
+            if (!seconds && seconds !== 0) return '-';
+            const d = Math.floor(seconds / 86400);
+            const h = Math.floor((seconds % 86400) / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            if (d > 0) return `${d}d ${h}h`;
+            if (h > 0) return `${h}h ${m}m`;
+            return `${m}m`;
+        }
+
+        // ── Live Event Feed ──
+        async function loadLiveFeed() {
+            try {
+                const [errorRes, checkoutRes, chatbotRes, abuseRes] = await Promise.allSettled([
+                    fetch(`${API_BASE}/api/error-logs`).then(r => r.json()),
+                    fetch(`${API_BASE}/api/checkout-logs`).then(r => r.json()),
+                    fetch(`${API_BASE}/api/chatbot-logs`).then(r => r.json()),
+                    fetch(`${API_BASE}/api/abuse-logs`).then(r => r.json())
+                ]);
+
+                const events = [];
+
+                // Error logs → page loads, errors, etc.
+                if (errorRes.status === 'fulfilled') {
+                    (errorRes.value.logs || []).forEach(log => {
+                        const cfg = EVENT_CONFIG[log.type] || EVENT_CONFIG.javascript_error;
+                        events.push({
+                            id: `err-${log.timestamp}-${log.sessionId || ''}-${log.type}`,
+                            type: log.type,
+                            filter: cfg.filter,
+                            severity: log.severity || 'info',
+                            message: log.message || `${log.type} event`,
+                            timestamp: new Date(log.timestamp),
+                            icon: cfg.icon,
+                            color: cfg.color,
+                            source: cfg.filter,
+                            details: {
+                                'Session ID': log.sessionId,
+                                'URL': log.url,
+                                'User Agent': log.userAgent,
+                                'Stack Trace': log.stack,
+                                'Screen': log.screenSize,
+                                'Visitor ID': log.visitorId
+                            }
+                        });
+                    });
+                }
+
+                // Checkout logs
+                if (checkoutRes.status === 'fulfilled') {
+                    (checkoutRes.value.logs || []).forEach(log => {
+                        const sev = log.status === 'error' ? 'error' : log.status === 'warning' ? 'warning' : 'info';
+                        let msg = `Checkout ${log.step || log.status}`;
+                        if (log.error) msg += `: ${log.error}`;
+                        if (log.amount) msg += ` ($${log.amount})`;
+                        events.push({
+                            id: `chk-${log.timestamp}-${log.checkoutSessionId || ''}`,
+                            type: 'checkout',
+                            filter: 'checkout',
+                            severity: sev,
+                            message: msg,
+                            timestamp: new Date(log.timestamp),
+                            icon: '🛒',
+                            color: '#3b82f6',
+                            source: 'checkout',
+                            details: {
+                                'Session ID': log.checkoutSessionId,
+                                'Step': log.step,
+                                'Method': log.method,
+                                'Amount': log.amount ? `$${log.amount}` : null,
+                                'Error': log.error
+                            }
+                        });
+                    });
+                }
+
+                // Chatbot logs
+                if (chatbotRes.status === 'fulfilled') {
+                    (chatbotRes.value.logs || []).forEach(log => {
+                        const userMsg = log.user_message || '';
+                        events.push({
+                            id: `chat-${log.created_at}-${log.session_id || ''}`,
+                            type: 'chatbot',
+                            filter: 'chatbot',
+                            severity: 'info',
+                            message: `User: ${userMsg.substring(0, 100)}${userMsg.length > 100 ? '...' : ''}`,
+                            timestamp: new Date(log.created_at),
+                            icon: '💬',
+                            color: '#a855f7',
+                            source: 'chatbot',
+                            details: {
+                                'Session ID': log.session_id,
+                                'User Message': log.user_message,
+                                'AI Response': log.ai_response ? log.ai_response.substring(0, 200) + '...' : null,
+                                'Page URL': log.page_url
+                            }
+                        });
+                    });
+                }
+
+                // Abuse logs
+                if (abuseRes.status === 'fulfilled') {
+                    (abuseRes.value.logs || []).forEach(log => {
+                        const sev = log.severity === 'critical' ? 'critical' : log.severity === 'high' ? 'error' : 'warning';
+                        events.push({
+                            id: `sec-${log.created_at}-${log.ip_address || ''}`,
+                            type: 'security',
+                            filter: 'security',
+                            severity: sev,
+                            message: `${(log.abuse_type || 'unknown').replace(/_/g, ' ')}: ${log.method} ${log.endpoint}`,
+                            timestamp: new Date(log.created_at),
+                            icon: '🛡️',
+                            color: '#ef4444',
+                            source: 'security',
+                            details: {
+                                'IP Address': log.ip_address,
+                                'Abuse Type': log.abuse_type,
+                                'Method': log.method,
+                                'Endpoint': log.endpoint,
+                                'User Agent': log.user_agent,
+                                'Request Data': log.request_data
+                            }
+                        });
+                    });
+                }
+
+                // Sort newest first, limit to 50
+                events.sort((a, b) => b.timestamp - a.timestamp);
+                const newIds = new Set(events.slice(0, 50).map(e => e.id));
+                allFeedEvents = events.slice(0, 50);
+                renderFeed(newIds);
+                previousEventIds = newIds;
+            } catch (error) {
+                console.error('Error loading live feed:', error);
+            }
+        }
+
+        function renderFeed(newIds) {
+            const container = document.getElementById('feedContainer');
+            const filtered = currentFilter === 'all'
+                ? allFeedEvents
+                : allFeedEvents.filter(e => e.filter === currentFilter);
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="feed-empty">No events to display</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(event => {
+                const isNew = newIds && !previousEventIds.has(event.id);
+                const sevColor = SEVERITY_COLORS[event.severity] || SEVERITY_COLORS.info;
+                const detailsHTML = Object.entries(event.details)
+                    .filter(([, v]) => v)
+                    .map(([k, v]) => `<div><strong>${k}:</strong> ${escapeHTML(String(v))}</div>`)
+                    .join('');
+
+                return `<div class="feed-entry${isNew ? ' new' : ''}" onclick="this.classList.toggle('expanded')">
+                    <div class="feed-severity-dot" style="background:${sevColor}"></div>
+                    <div class="feed-icon">${event.icon}</div>
+                    <div class="feed-content">
+                        <div class="feed-message">${escapeHTML(event.message)}</div>
+                        <div class="feed-meta">
+                            <span class="feed-time" data-ts="${event.timestamp.getTime()}">${relativeTime(event.timestamp)}</span>
+                            <span class="feed-source-badge ${event.source}">${event.source}</span>
+                        </div>
+                        ${detailsHTML ? `<div class="feed-details">${detailsHTML}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            if (!userHasScrolled) {
+                container.scrollTop = 0;
+            }
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function relativeTime(date) {
+            const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        function refreshRelativeTimes() {
+            document.querySelectorAll('.feed-time[data-ts]').forEach(el => {
+                el.textContent = relativeTime(new Date(parseInt(el.dataset.ts)));
+            });
+        }
+
+        function setFeedFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.feed-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderFeed();
+        }
+
+        function toggleFeedPause() {
+            feedPaused = !feedPaused;
+            const btn = document.getElementById('feedPauseBtn');
+            const indicator = document.getElementById('liveIndicator');
+            if (feedPaused) {
+                btn.textContent = '▶ Resume';
+                indicator.classList.add('paused');
+                indicator.querySelector('.live-dot').nextSibling.textContent = ' Paused';
+            } else {
+                btn.textContent = '⏸ Pause';
+                indicator.classList.remove('paused');
+                indicator.querySelector('.live-dot').nextSibling.textContent = ' Live';
+                loadLiveFeed();
+            }
+        }
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>

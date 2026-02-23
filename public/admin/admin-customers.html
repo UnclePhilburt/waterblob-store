@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Customers - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image:
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .header-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .header-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .customers-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .customers-table th,
+        .customers-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .customers-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .customers-table tr:hover {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .customers-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .customer-email {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .customer-phone {
+            color: var(--text-secondary);
+        }
+
+        .spending-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .spending-high {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .spending-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .spending-low {
+            background: rgba(148, 163, 184, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .order-count {
+            text-align: center;
+        }
+
+        .date-cell {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.875rem;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .action-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .customers-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="header-left">
+                <a href="/admin/hub.html">← Back to Hub</a>
+                <h1>Customers</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportCustomers()">Export CSV</button>
+                <button class="btn btn-primary" onclick="loadCustomers()">Refresh</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Customers</div>
+                <div class="stat-value" id="totalCustomers">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="totalRevenue">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg. Order Value</div>
+                <div class="stat-value" id="avgOrderValue">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Repeat Customers</div>
+                <div class="stat-value" id="repeatCustomers">-</div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-section">
+            <input type="text" class="search-input" id="searchInput" placeholder="Search by name, email, or phone..." oninput="filterCustomers()">
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table class="customers-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th>Last Order</th>
+                        <th>Member Since</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                    <tr>
+                        <td colspan="7" class="loading">Loading customers...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script>
+        let allCustomers = [];
+
+        async function loadCustomers() {
+            const tbody = document.getElementById('customersTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading customers...</td></tr>';
+
+            try {
+                const response = await fetchWithAuth(`${API_BASE}/api/customers`);
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch customers');
+                }
+
+                allCustomers = await response.json();
+                updateStats();
+                renderCustomers(allCustomers);
+            } catch (error) {
+                console.error('Error loading customers:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <h3>Error loading customers</h3>
+                            <p>${error.message}</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function updateStats() {
+            const totalCustomers = allCustomers.length;
+            const totalRevenue = allCustomers.reduce((sum, c) => sum + (parseFloat(c.total_spent) || 0), 0);
+            const totalOrders = allCustomers.reduce((sum, c) => sum + (c.order_count || 0), 0);
+            const repeatCustomers = allCustomers.filter(c => c.order_count > 1).length;
+
+            document.getElementById('totalCustomers').textContent = totalCustomers;
+            document.getElementById('totalRevenue').textContent = '$' + totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('avgOrderValue').textContent = totalOrders > 0
+                ? '$' + (totalRevenue / totalOrders).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                : '$0.00';
+            document.getElementById('repeatCustomers').textContent = repeatCustomers;
+        }
+
+        function renderCustomers(customers) {
+            const tbody = document.getElementById('customersTableBody');
+
+            if (customers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <h3>No customers found</h3>
+                            <p>Import customers from Square in Settings to see them here.</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = customers.map(customer => {
+                const totalSpent = parseFloat(customer.total_spent) || 0;
+                let spendingClass = 'spending-low';
+                if (totalSpent >= 1000) spendingClass = 'spending-high';
+                else if (totalSpent >= 200) spendingClass = 'spending-medium';
+
+                const lastOrder = customer.last_order_at
+                    ? new Date(customer.last_order_at).toLocaleDateString()
+                    : 'Never';
+                const memberSince = customer.created_at
+                    ? new Date(customer.created_at).toLocaleDateString()
+                    : '-';
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="customer-name">${escapeHtml(customer.name || 'Unknown')}</div>
+                            <div class="customer-email">${escapeHtml(customer.email)}</div>
+                        </td>
+                        <td class="customer-phone">${escapeHtml(customer.phone || '-')}</td>
+                        <td class="order-count">${customer.order_count || 0}</td>
+                        <td>
+                            <span class="spending-badge ${spendingClass}">
+                                $${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                        </td>
+                        <td class="date-cell">${lastOrder}</td>
+                        <td class="date-cell">${memberSince}</td>
+                        <td>
+                            <button class="action-btn" onclick="viewCustomer(${customer.id})">View</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterCustomers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allCustomers.filter(customer => {
+                const name = (customer.name || '').toLowerCase();
+                const email = (customer.email || '').toLowerCase();
+                const phone = (customer.phone || '').toLowerCase();
+                return name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm);
+            });
+            renderCustomers(filtered);
+        }
+
+        function viewCustomer(id) {
+            alert('Customer details view coming soon!');
+        }
+
+        function exportCustomers() {
+            if (allCustomers.length === 0) {
+                alert('No customers to export');
+                return;
+            }
+
+            const headers = ['Name', 'Email', 'Phone', 'Orders', 'Total Spent', 'Last Order', 'Member Since'];
+            const rows = allCustomers.map(c => [
+                c.name || '',
+                c.email || '',
+                c.phone || '',
+                c.order_count || 0,
+                c.total_spent || 0,
+                c.last_order_at ? new Date(c.last_order_at).toLocaleDateString() : '',
+                c.created_at ? new Date(c.created_at).toLocaleDateString() : ''
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `customers-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load customers on page load
+        loadCustomers();
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>
