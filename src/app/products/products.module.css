@@ -7,6 +7,7 @@
   max-width: 1100px;
   margin: 0 auto;
   padding: 4rem 1.5rem 6rem;
+  overflow-x: hidden;
 }
 
 /* ---------- Breadcrumb ---------- */
@@ -66,11 +67,14 @@
 .viewerColumn {
   position: sticky;
   top: 5rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* ---------- 3D Viewer Area ---------- */
 .viewerArea {
   width: 100%;
+  max-width: 100%;
   height: 500px;
   border-radius: 1.25rem;
   border: 1px solid var(--border-subtle);
@@ -84,6 +88,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 /* ---------- Size Tabs ---------- */
@@ -93,6 +98,7 @@
   overflow-x: auto;
   padding-bottom: 0.25rem;
   -webkit-overflow-scrolling: touch;
+  max-width: 100%;
 }
 
 .tabGroup {
