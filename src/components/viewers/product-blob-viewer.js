@@ -584,16 +584,20 @@ export class ProductBlobViewer {
         styles.textContent = `
             .blob-color-customizer {
                 width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
                 background: rgba(10, 20, 40, 0.95);
                 border-radius: 12px;
                 border: 1px solid rgba(0, 168, 232, 0.3);
                 font-family: system-ui, -apple-system, sans-serif;
                 backdrop-filter: blur(10px);
                 margin-top: 0.75rem;
+                overflow: hidden;
             }
 
             .customizer-content {
                 padding: 12px 16px;
+                overflow-x: auto;
             }
 
             .customizer-title {
@@ -654,12 +658,17 @@ export class ProductBlobViewer {
 
             @media (max-width: 768px) {
                 .color-parts-list {
-                    gap: 1rem;
+                    flex-direction: column;
+                    gap: 0.75rem;
+                }
+
+                .swatches-row {
+                    flex-wrap: wrap;
                 }
 
                 .color-swatch {
-                    width: 30px;
-                    height: 30px;
+                    width: 24px;
+                    height: 24px;
                 }
             }
         `;
