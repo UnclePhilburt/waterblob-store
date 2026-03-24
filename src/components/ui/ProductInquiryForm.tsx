@@ -8,7 +8,9 @@ interface ProductInquiryFormProps {
   productPrice: number;
   productSize?: string;
   quantity: number;
-  customization?: string | null;
+  productImage?: string;
+  getCustomization?: () => string | null;
+  getCustomImage?: () => string | null;
 }
 
 export default function ProductInquiryForm({
@@ -16,7 +18,9 @@ export default function ProductInquiryForm({
   productPrice,
   productSize,
   quantity,
-  customization,
+  productImage,
+  getCustomization,
+  getCustomImage,
 }: ProductInquiryFormProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -31,6 +35,10 @@ export default function ProductInquiryForm({
     setSubmitting(true);
     setResult(null);
 
+    // Capture customization and screenshot at submit time
+    const customization = getCustomization?.() || undefined;
+    const customImage = getCustomImage?.() || undefined;
+
     try {
       const res = await fetch('/api/product-inquiry', {
         method: 'POST',
@@ -44,7 +52,9 @@ export default function ProductInquiryForm({
           productPrice,
           productSize,
           quantity,
-          customization: customization || undefined,
+          productImage: productImage || undefined,
+          customization,
+          customImage,
           _t: timestampRef.current,
         }),
       });

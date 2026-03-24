@@ -205,11 +205,16 @@ export default function ProductsPage() {
     setQuantity(clamped);
   }, []);
 
-  /* ---------- Get customization from viewer ---------- */
-  const getCustomizationString = useCallback((): string | null => {
+  /* ---------- Viewer capture helpers (called at submit time) ---------- */
+  const getCustomization = useCallback((): string | null => {
     if (!viewerInstanceRef.current) return null;
     const colors = viewerInstanceRef.current.getCustomization?.();
     return colors ? JSON.stringify(colors) : null;
+  }, []);
+
+  const getCustomImage = useCallback((): string | null => {
+    if (!viewerInstanceRef.current) return null;
+    return viewerInstanceRef.current.captureScreenshot?.(400, 300) ?? null;
   }, []);
 
   /* ---------- Render ---------- */
@@ -388,7 +393,9 @@ export default function ProductsPage() {
                   productPrice={selectedProduct.price}
                   productSize={extractSize(selectedProduct.name) ? `${extractSize(selectedProduct.name)}ft` : undefined}
                   quantity={quantity}
-                  customization={getCustomizationString()}
+                  productImage={selectedProduct.image_url}
+                  getCustomization={getCustomization}
+                  getCustomImage={getCustomImage}
                 />
 
                 <div className={styles.callForQuote}>

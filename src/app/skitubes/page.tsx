@@ -95,10 +95,15 @@ export default function SkitubesPage() {
     }
   }
 
-  const getCustomizationString = useCallback((): string | null => {
+  const getCustomization = useCallback((): string | null => {
     if (!viewerRef.current) return null;
     const colors = viewerRef.current.getCustomization?.();
     return colors ? JSON.stringify(colors) : null;
+  }, []);
+
+  const getCustomImage = useCallback((): string | null => {
+    if (!viewerRef.current) return null;
+    return viewerRef.current.captureScreenshot?.(400, 300) ?? null;
   }, []);
 
   if (loading) {
@@ -208,7 +213,9 @@ export default function SkitubesPage() {
             productName={product?.name || 'Ski Tube'}
             productPrice={product?.price || 0}
             quantity={quantity}
-            customization={getCustomizationString()}
+            productImage={product?.image_url}
+            getCustomization={getCustomization}
+            getCustomImage={getCustomImage}
           />
 
           <div className={styles.callForQuote}>

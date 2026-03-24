@@ -107,6 +107,7 @@ export default function SkitubePage() {
               productName={product.name}
               productPrice={product.price}
               quantity={quantity}
+              productImage={product.image_url}
             />
           </div>
         </div>
