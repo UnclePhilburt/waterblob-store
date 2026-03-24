@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCart } from '@/components/cart/CartProvider';
+import ProductInquiryForm from '@/components/ui/ProductInquiryForm';
 import styles from './skitube.module.css';
 
 const product = {
@@ -18,11 +18,6 @@ const images = ['/assets/homepage/skitube/skitube1.jpg'];
 export default function SkitubePage() {
   const [mainImage, setMainImage] = useState(images[0]);
   const [quantity, setQuantity] = useState(1);
-  const { addToCart, maintenanceMode } = useCart();
-
-  const handleAddToCart = () => {
-    addToCart(product, quantity);
-  };
 
   return (
     <section className="product-page">
@@ -106,14 +101,13 @@ export default function SkitubePage() {
                   }}
                 />
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleAddToCart}
-                disabled={maintenanceMode}
-              >
-                {maintenanceMode ? 'Ordering Unavailable' : 'Add to Cart'}
-              </button>
             </div>
+
+            <ProductInquiryForm
+              productName={product.name}
+              productPrice={product.price}
+              quantity={quantity}
+            />
           </div>
         </div>
       </div>

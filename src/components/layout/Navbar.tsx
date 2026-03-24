@@ -3,11 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
-import { useCart } from '@/components/cart/CartProvider';
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { itemCount } = useCart();
 
   return (
     <nav className="navbar">
@@ -60,11 +58,6 @@ export default function Navbar() {
           </li>
           <li>
             <Link href="/account" onClick={() => setMobileOpen(false)}>Account</Link>
-          </li>
-          <li>
-            <Link href="/cart" className="cart-link" onClick={() => setMobileOpen(false)}>
-              Cart (<span id="cart-count">{itemCount}</span>)
-            </Link>
           </li>
           <li className="theme-toggle-li">
             <ThemeToggle />

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useCart } from '@/components/cart/CartProvider';
+import ProductInquiryForm from '@/components/ui/ProductInquiryForm';
 import styles from './waterslide.module.css';
 
 /* ==========================================================================
@@ -42,13 +42,8 @@ const specifications = [
    ========================================================================== */
 
 export default function WaterslidePage() {
-  const { addToCart, maintenanceMode } = useCart();
   const [mainImage, setMainImage] = useState(thumbnails[0]);
   const [quantity, setQuantity] = useState(1);
-
-  function handleAddToCart() {
-    addToCart(product, quantity);
-  }
 
   function handleQuantityChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = parseInt(e.target.value, 10);
@@ -139,16 +134,13 @@ export default function WaterslidePage() {
                   onChange={handleQuantityChange}
                 />
               </div>
-
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleAddToCart}
-                disabled={maintenanceMode}
-              >
-                {maintenanceMode ? 'Ordering Unavailable' : 'Add to Cart'}
-              </button>
             </div>
+
+            <ProductInquiryForm
+              productName={product.name}
+              productPrice={product.price}
+              quantity={quantity}
+            />
           </div>
         </div>
       </div>

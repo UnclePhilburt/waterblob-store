@@ -1,9 +1,7 @@
 'use client';
 
-import { useCart } from '@/components/cart/CartProvider';
-
 export default function MaintenanceBanner() {
-  const { maintenanceMode } = useCart();
+  const maintenanceMode = process.env.NEXT_PUBLIC_CART_MAINTENANCE_MODE === 'true';
 
   if (!maintenanceMode) return null;
 

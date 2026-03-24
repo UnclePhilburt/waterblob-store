@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { CartProvider } from '@/components/cart/CartProvider';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 import Navbar from '@/components/layout/Navbar';
 import MaintenanceBanner from '@/components/layout/MaintenanceBanner';
@@ -58,15 +57,13 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <CartProvider>
-          <AnalyticsProvider>
-            <Navbar />
-            <MaintenanceBanner />
-            {children}
-            <Footer />
-            <ChatbotWidget />
-          </AnalyticsProvider>
-        </CartProvider>
+        <AnalyticsProvider>
+          <Navbar />
+          <MaintenanceBanner />
+          {children}
+          <Footer />
+          <ChatbotWidget />
+        </AnalyticsProvider>
       </body>
     </html>
   );

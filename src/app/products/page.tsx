@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { useCart } from '@/components/cart/CartProvider';
+import ProductInquiryForm from '@/components/ui/ProductInquiryForm';
 import styles from './products.module.css';
 
 const ProductBlobViewerWrapper = dynamic(
@@ -133,15 +133,12 @@ function buildJsonLd() {
    ========================================================================== */
 
 export default function ProductsPage() {
-  const { addToCart, maintenanceMode } = useCart();
-
   /* ---------- State ---------- */
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [addedFeedback, setAddedFeedback] = useState(false);
 
   /* ---------- Viewer ref ---------- */
   const viewerInstanceRef = useRef<ViewerInstance | null>(null);
@@ -193,7 +190,6 @@ export default function ProductsPage() {
       if (idx === selectedIndex) return;
       setSelectedIndex(idx);
       setQuantity(1);
-      setAddedFeedback(false);
       // Force viewer remount by incrementing key
       setViewerKey((k) => k + 1);
     },
@@ -209,39 +205,12 @@ export default function ProductsPage() {
     setQuantity(clamped);
   }, []);
 
-  const handleAddToCart = useCallback(() => {
-    if (!selectedProduct) return;
-
-    let customization: string | null = null;
-    let customImage: string | null = null;
-
-    if (viewerInstanceRef.current) {
-      const colors = viewerInstanceRef.current.getCustomization?.();
-      if (colors) {
-        customization = JSON.stringify(colors);
-      }
-      const screenshot = viewerInstanceRef.current.captureScreenshot?.(400, 300);
-      if (screenshot) {
-        customImage = screenshot;
-      }
-    }
-
-    addToCart(
-      {
-        id: selectedProduct.id,
-        name: selectedProduct.name,
-        price: selectedProduct.price,
-        image_url: selectedProduct.image_url,
-      },
-      quantity,
-      customization,
-      customImage
-    );
-
-    setAddedFeedback(true);
-    const timer = setTimeout(() => setAddedFeedback(false), 2000);
-    return () => clearTimeout(timer);
-  }, [selectedProduct, quantity, addToCart]);
+  /* ---------- Get customization from viewer ---------- */
+  const getCustomizationString = useCallback((): string | null => {
+    if (!viewerInstanceRef.current) return null;
+    const colors = viewerInstanceRef.current.getCustomization?.();
+    return colors ? JSON.stringify(colors) : null;
+  }, []);
 
   /* ---------- Render ---------- */
   return (
@@ -380,7 +349,7 @@ export default function ProductsPage() {
                   </span>
                 </div>
 
-                {/* Purchase Row */}
+                {/* Quantity + Inquiry Form */}
                 <div className={styles.purchaseRow}>
                   <div className={styles.quantityControls}>
                     <button
@@ -412,18 +381,18 @@ export default function ProductsPage() {
                       +
                     </button>
                   </div>
-                  <button
-                    type="button"
-                    className={`${styles.addToCartBtn}${addedFeedback ? ` ${styles.addedFeedback}` : ''}`}
-                    onClick={handleAddToCart}
-                    disabled={maintenanceMode}
-                  >
-                    {maintenanceMode ? 'Ordering Unavailable' : addedFeedback ? 'Added to Cart' : 'Add to Cart'}
-                  </button>
                 </div>
 
+                <ProductInquiryForm
+                  productName={selectedProduct.name}
+                  productPrice={selectedProduct.price}
+                  productSize={extractSize(selectedProduct.name) ? `${extractSize(selectedProduct.name)}ft` : undefined}
+                  quantity={quantity}
+                  customization={getCustomizationString()}
+                />
+
                 <div className={styles.callForQuote}>
-                  Or call for a quote: <a href="tel:+14178648461">(417) 864-8461</a>
+                  Or call us directly: <a href="tel:+14178648461">(417) 864-8461</a>
                   {' '}&bull;{' '}
                   <Link href="/contact">Contact Us</Link>
                 </div>

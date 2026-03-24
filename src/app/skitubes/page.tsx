@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useCart } from '@/components/cart/CartProvider';
+import ProductInquiryForm from '@/components/ui/ProductInquiryForm';
 import styles from './skitubes.module.css';
 
 const ProductBlobViewerWrapper = dynamic(
@@ -53,10 +53,8 @@ export default function SkitubesPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
   const [shuffledPhotos] = useState(() => shuffleArray(GALLERY_PHOTOS));
   const viewerRef = useRef<ViewerInstance | null>(null);
-  const { addToCart, maintenanceMode } = useCart();
 
   useEffect(() => {
     async function fetchProduct() {
@@ -97,35 +95,11 @@ export default function SkitubesPage() {
     }
   }
 
-  function handleAddToCart() {
-    if (!product) return;
-
-    let customization: string | null = null;
-    let screenshot: string | null = null;
-
-    if (viewerRef.current) {
-      const colors = viewerRef.current.getCustomization?.();
-      if (colors) {
-        customization = JSON.stringify(colors);
-      }
-      screenshot = viewerRef.current.captureScreenshot?.(400, 300) ?? null;
-    }
-
-    addToCart(
-      {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image_url: product.image_url,
-      },
-      quantity,
-      customization,
-      screenshot
-    );
-
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  }
+  const getCustomizationString = useCallback((): string | null => {
+    if (!viewerRef.current) return null;
+    const colors = viewerRef.current.getCustomization?.();
+    return colors ? JSON.stringify(colors) : null;
+  }, []);
 
   if (loading) {
     return (
@@ -200,7 +174,7 @@ export default function SkitubesPage() {
             </span>
           </div>
 
-          {/* Purchase Controls */}
+          {/* Quantity */}
           <div className={styles.tubePurchase}>
             <div className={styles.tubeQty}>
               <button
@@ -228,18 +202,17 @@ export default function SkitubesPage() {
                 +
               </button>
             </div>
-            <button
-              type="button"
-              className={`${styles.tubeCartBtn}${added ? ` ${styles.tubeCartBtnAdded}` : ''}`}
-              onClick={handleAddToCart}
-              disabled={!product || maintenanceMode}
-            >
-              {maintenanceMode ? 'Ordering Unavailable' : added ? 'Added!' : 'Add to Cart'}
-            </button>
           </div>
 
+          <ProductInquiryForm
+            productName={product?.name || 'Ski Tube'}
+            productPrice={product?.price || 0}
+            quantity={quantity}
+            customization={getCustomizationString()}
+          />
+
           <div className={styles.callForQuote}>
-            Or call for a quote: <a href="tel:+14178648461">(417) 864-8461</a>
+            Or call us directly: <a href="tel:+14178648461">(417) 864-8461</a>
             {' '}&bull;{' '}
             <Link href="/contact">Contact Us</Link>
           </div>

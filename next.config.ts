@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
       { source: '/index.html', destination: '/', permanent: true },
       { source: '/about.html', destination: '/about', permanent: true },
       { source: '/products.html', destination: '/products', permanent: true },
-      { source: '/cart.html', destination: '/cart', permanent: true },
+      { source: '/cart.html', destination: '/products', permanent: true },
       { source: '/account.html', destination: '/account', permanent: true },
       { source: '/contact.html', destination: '/contact', permanent: true },
       { source: '/faq.html', destination: '/faq', permanent: true },
