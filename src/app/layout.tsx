@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 import Navbar from '@/components/layout/Navbar';
-import MaintenanceBanner from '@/components/layout/MaintenanceBanner';
 import Footer from '@/components/layout/Footer';
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 
@@ -59,7 +58,6 @@ export default function RootLayout({
       <body>
         <AnalyticsProvider>
           <Navbar />
-          <MaintenanceBanner />
           {children}
           <Footer />
           <ChatbotWidget />
