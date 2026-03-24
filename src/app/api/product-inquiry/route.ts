@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBrevoClient } from '@/lib/brevo';
 
+async function fetchImageAsBase64(imageUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(imageUrl);
+    if (!res.ok) return null;
+    const buffer = await res.arrayBuffer();
+    return Buffer.from(buffer).toString('base64');
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -51,20 +62,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build product image HTML
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thewaterblob.com';
+    // Build attachments array and inline image HTML using CID references
+    const attachments: { content: string; name: string; contentId?: string }[] = [];
     let productImageHtml = '';
+    let customImageHtml = '';
+
+    // Fetch product image and attach it
     if (productImage) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thewaterblob.com';
       const imageUrl = productImage.startsWith('http') ? productImage : `${siteUrl}${productImage}`;
-      productImageHtml = `<p><img src="${imageUrl}" alt="${productName}" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>`;
+      const ext = imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
+      const base64 = await fetchImageAsBase64(imageUrl);
+      if (base64) {
+        attachments.push({
+          content: base64,
+          name: `product-image.${ext}`,
+        });
+        productImageHtml = `<p><img src="cid:productImage" alt="${productName}" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>`;
+      }
     }
 
-    // Build custom screenshot HTML (base64 from 3D viewer)
-    let customImageHtml = '';
+    // Attach custom 3D viewer screenshot
     if (customImage) {
+      // customImage is a data URI like "data:image/png;base64,..."
+      const base64Data = customImage.replace(/^data:image\/\w+;base64,/, '');
+      attachments.push({
+        content: base64Data,
+        name: 'custom-color-preview.png',
+      });
       customImageHtml = `
         <h3>Custom Color Preview</h3>
-        <p><img src="${customImage}" alt="Custom color preview" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>
+        <p><img src="cid:customImage" alt="Custom color preview" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>
       `;
     }
 
@@ -103,6 +131,12 @@ export async function POST(request: NextRequest) {
           <hr/>
           <p style="color: #888; font-size: 12px;">Sent from the Water Blob® website product inquiry form.</p>
         `;
+
+        // Add image attachments
+        if (attachments.length > 0) {
+          sendSmtpEmail.attachment = attachments;
+        }
+
         await brevoClient.sendTransacEmail(sendSmtpEmail);
       } catch {
         // Email send failed silently
