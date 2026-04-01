@@ -356,6 +356,9 @@ export class ProductBlobViewer {
                         this.setPartColor(6, '#FFFFFF');
                         this.setPartColor(7, '#FFFFFF');
                     }
+
+                    // Highlight the active swatch in the UI for each group's default color
+                    this._syncActiveSwatches();
                 }
 
             },
@@ -559,6 +562,29 @@ export class ProductBlobViewer {
         // Apply color to all parts in this group
         group.partIndices.forEach(partIndex => {
             this.setPartColor(partIndex, hexColor);
+        });
+    }
+
+    _syncActiveSwatches() {
+        if (!this.colorPickerUI || !this.partGroups) return;
+
+        this.partGroups.forEach((group, groupIndex) => {
+            const firstPart = this.colorableParts[group.partIndices[0]];
+            if (!firstPart || !firstPart.currentColor) return;
+
+            const currentHex = '#' + firstPart.currentColor.getHexString().toUpperCase();
+            const partItems = this.colorPickerUI.querySelectorAll('.color-part-item');
+            const partItem = partItems[groupIndex];
+            if (!partItem) return;
+
+            const swatches = partItem.querySelectorAll('.color-swatch');
+            swatches.forEach(swatch => {
+                if (swatch.dataset.color.toUpperCase() === currentHex) {
+                    swatch.classList.add('active');
+                } else {
+                    swatch.classList.remove('active');
+                }
+            });
         });
     }
 
