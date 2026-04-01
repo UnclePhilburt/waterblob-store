@@ -559,6 +559,11 @@ export class ProductBlobViewer {
         const group = this.partGroups[groupIndex];
         if (!group) return;
 
+        // Track the selection so getCustomization() always has it
+        if (this.defaultColors && group.name) {
+            this.defaultColors[group.name] = hexColor.toUpperCase();
+        }
+
         // Apply color to all parts in this group
         group.partIndices.forEach(partIndex => {
             this.setPartColor(partIndex, hexColor);
@@ -569,10 +574,17 @@ export class ProductBlobViewer {
         if (!this.colorPickerUI || !this.partGroups) return;
 
         this.partGroups.forEach((group, groupIndex) => {
+            // Get color from 3D part, or fall back to defaultColors
             const firstPart = this.colorableParts[group.partIndices[0]];
-            if (!firstPart || !firstPart.currentColor) return;
+            let currentHex;
+            if (firstPart && firstPart.currentColor) {
+                currentHex = '#' + firstPart.currentColor.getHexString().toUpperCase();
+            } else if (this.defaultColors && this.defaultColors[group.name]) {
+                currentHex = this.defaultColors[group.name].toUpperCase();
+            } else {
+                return;
+            }
 
-            const currentHex = '#' + firstPart.currentColor.getHexString().toUpperCase();
             const partItems = this.colorPickerUI.querySelectorAll('.color-part-item');
             const partItem = partItems[groupIndex];
             if (!partItem) return;
@@ -802,37 +814,32 @@ export class ProductBlobViewer {
     }
 
     getCustomization() {
-        // Return current color customization as an object
-        if (!this.colorableParts || this.colorableParts.length === 0) {
-            // Model hasn't loaded yet — return the known defaults for this model type
-            return this.defaultColors || null;
+        // Start with defaults so every group is always included
+        const customization = this.defaultColors ? { ...this.defaultColors } : {};
+
+        // Overlay live colors from the 3D parts if the model has loaded
+        if (this.colorableParts && this.colorableParts.length > 0) {
+            const groups = this.partGroups || this.options.customGroups;
+
+            if (groups && groups.length > 0) {
+                groups.forEach(group => {
+                    const firstPartIndex = group.partIndices[0];
+                    const part = this.colorableParts[firstPartIndex];
+
+                    if (part && part.currentColor) {
+                        customization[group.name] = '#' + part.currentColor.getHexString().toUpperCase();
+                    }
+                });
+            } else {
+                this.colorableParts.forEach((part, index) => {
+                    if (part.currentColor) {
+                        customization[`Part ${index + 1}`] = '#' + part.currentColor.getHexString().toUpperCase();
+                    }
+                });
+            }
         }
 
-        const customization = {};
-        const groups = this.partGroups || this.options.customGroups;
-
-        if (groups && groups.length > 0) {
-            // Group-based customization
-            groups.forEach(group => {
-                // Get first part's color from this group as representative
-                const firstPartIndex = group.partIndices[0];
-                const part = this.colorableParts[firstPartIndex];
-
-                if (part && part.currentColor) {
-                    customization[group.name] = '#' + part.currentColor.getHexString().toUpperCase();
-                }
-            });
-        } else {
-            // Individual part colors
-            this.colorableParts.forEach((part, index) => {
-                if (part.currentColor) {
-                    customization[`Part ${index + 1}`] = '#' + part.currentColor.getHexString().toUpperCase();
-                }
-            });
-        }
-
-        // Return live colors, or fall back to defaults if somehow empty
-        return Object.keys(customization).length > 0 ? customization : (this.defaultColors || null);
+        return Object.keys(customization).length > 0 ? customization : null;
     }
 
     captureScreenshot(width = 800, height = 600) {
