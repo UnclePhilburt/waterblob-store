@@ -46,12 +46,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Format customization for the email
+    const colorNames: Record<string, string> = {
+      '#0044AA': 'Blue',
+      '#E53935': 'Red',
+      '#43A047': 'Green',
+      '#FFD600': 'Yellow',
+      '#FF9800': 'Orange',
+      '#FFFFFF': 'White',
+      '#757575': 'Gray',
+    };
     let customizationHtml = '';
     if (customization) {
       try {
         const colors = JSON.parse(customization);
         const colorEntries = Object.entries(colors)
-          .map(([part, color]) => `<li><strong>${part}:</strong> <span style="display:inline-block;width:14px;height:14px;background:${color};border:1px solid #ccc;border-radius:3px;vertical-align:middle;margin-right:4px;"></span> ${color}</li>`)
+          .map(([part, color]) => {
+            const hex = (color as string).toUpperCase();
+            const name = colorNames[hex] || hex;
+            return `<li><strong>${part}:</strong> <span style="display:inline-block;width:14px;height:14px;background:${color};border:2px solid #333;border-radius:3px;vertical-align:middle;margin-right:4px;"></span> ${name}</li>`;
+          })
           .join('');
         customizationHtml = `
           <h3>Color Customization</h3>
