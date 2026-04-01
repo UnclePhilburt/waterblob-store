@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
           .map(([part, color]) => {
             const hex = (color as string).toUpperCase();
             const name = colorNames[hex] || hex;
-            return `<li><strong>${part}:</strong> <span style="display:inline-block;width:14px;height:14px;background-color:${color};-webkit-print-color-adjust:exact;print-color-adjust:exact;border:2px solid #333;border-radius:3px;vertical-align:middle;margin-right:4px;"></span> ${name}</li>`;
+            const border = hex === '#FFFFFF' ? ';text-shadow:0 0 1px #999' : '';
+            return `<li><strong>${part}:</strong> <span style="color:${color};font-size:20px;vertical-align:middle;margin-right:4px${border}">&#9632;</span> ${name}</li>`;
           })
           .join('');
         customizationHtml = `
