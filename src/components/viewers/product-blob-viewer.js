@@ -699,13 +699,13 @@ export class ProductBlobViewer {
                 border-color: rgba(255,255,255,0.5);
             }
 
+            .color-swatch[data-color="#FFFFFF"] {
+                border-color: rgba(0,0,0,0.2);
+            }
+
             .color-swatch.active {
                 border-color: #00A8E8;
                 box-shadow: 0 0 0 2px rgba(0, 168, 232, 0.4);
-            }
-
-            .color-swatch[data-color="#FFFFFF"] {
-                border-color: rgba(0,0,0,0.2);
             }
 
             @media (max-width: 768px) {
