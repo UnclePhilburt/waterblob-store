@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
           .map(([part, color]) => {
             const hex = (color as string).toUpperCase();
             const name = colorNames[hex] || hex;
-            return `<li><strong>${part}:</strong> <span style="display:inline-block;width:14px;height:14px;background:${color};border:2px solid #333;border-radius:3px;vertical-align:middle;margin-right:4px;"></span> ${name}</li>`;
+            return `<li><strong>${part}:</strong> <span style="display:inline-block;width:14px;height:14px;background-color:${color};-webkit-print-color-adjust:exact;print-color-adjust:exact;border:2px solid #333;border-radius:3px;vertical-align:middle;margin-right:4px;"></span> ${name}</li>`;
           })
           .join('');
         customizationHtml = `
@@ -75,37 +75,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Build attachments array and inline image HTML using CID references
-    const attachments: { content: string; name: string; contentId?: string }[] = [];
+    // Build inline image HTML using base64 data URIs (works in email and print)
     let productImageHtml = '';
     let customImageHtml = '';
 
-    // Fetch product image and attach it
+    // Fetch product image and embed inline
     if (productImage) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://thewaterblob.com';
       const imageUrl = productImage.startsWith('http') ? productImage : `${siteUrl}${productImage}`;
       const ext = imageUrl.split('.').pop()?.toLowerCase() || 'jpg';
+      const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
       const base64 = await fetchImageAsBase64(imageUrl);
       if (base64) {
-        attachments.push({
-          content: base64,
-          name: `product-image.${ext}`,
-        });
-        productImageHtml = `<p><img src="cid:productImage" alt="${productName}" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>`;
+        productImageHtml = `<p><img src="data:${mimeType};base64,${base64}" alt="${productName}" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>`;
       }
     }
 
-    // Attach custom 3D viewer screenshot
+    // Embed custom 3D viewer screenshot inline
     if (customImage) {
-      // customImage is a data URI like "data:image/png;base64,..."
-      const base64Data = customImage.replace(/^data:image\/\w+;base64,/, '');
-      attachments.push({
-        content: base64Data,
-        name: 'custom-color-preview.png',
-      });
       customImageHtml = `
         <h3>Custom Color Preview</h3>
-        <p><img src="cid:customImage" alt="Custom color preview" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>
+        <p><img src="${customImage}" alt="Custom color preview" style="max-width:400px;width:100%;border-radius:8px;margin:8px 0;" /></p>
       `;
     }
 
@@ -144,11 +134,6 @@ export async function POST(request: NextRequest) {
           <hr/>
           <p style="color: #888; font-size: 12px;">Sent from the Water Blob® website product inquiry form.</p>
         `;
-
-        // Add image attachments
-        if (attachments.length > 0) {
-          sendSmtpEmail.attachment = attachments;
-        }
 
         await brevoClient.sendTransacEmail(sendSmtpEmail);
       } catch {
