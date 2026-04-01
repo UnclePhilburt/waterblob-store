@@ -46,6 +46,10 @@ export class ProductBlobViewer {
         this.selectedPart = null;
         this.colorPickerUI = null;
 
+        // Store default colors for this model type so getCustomization()
+        // can return them even before the 3D model finishes loading.
+        this.defaultColors = this._buildDefaultColors();
+
         // Lazy load - only initialize when in viewport
         this.setupLazyLoading();
     }
@@ -757,10 +761,25 @@ export class ProductBlobViewer {
         this.composer.render();
     }
 
+    _buildDefaultColors() {
+        const mp = this.options.modelPath || '';
+        if (mp.includes('skitube')) {
+            return { 'Top': '#FFFFFF', 'Bottom': '#FFFFFF', 'Handles': '#FFD600' };
+        } else if (mp.includes('weekender')) {
+            return { 'Main Body': '#FFFFFF', 'Side Panels': '#0044AA', 'End Caps': '#E53935', 'Anchor Points': '#FFFFFF' };
+        } else if (mp.includes('blob30')) {
+            return { 'End Caps': '#FFFFFF', 'Primary': '#0044AA', 'Secondary': '#E53935', 'Anchor Points': '#FFFFFF' };
+        } else {
+            // Default / 35ft / 40ft blob
+            return { 'End Caps': '#FFFFFF', 'Primary': '#0044AA', 'Secondary': '#E53935', 'Anchor Points': '#FFFFFF' };
+        }
+    }
+
     getCustomization() {
         // Return current color customization as an object
         if (!this.colorableParts || this.colorableParts.length === 0) {
-            return null;
+            // Model hasn't loaded yet — return the known defaults for this model type
+            return this.defaultColors || null;
         }
 
         const customization = {};
@@ -786,8 +805,8 @@ export class ProductBlobViewer {
             });
         }
 
-        // Only return if there's actual customization
-        return Object.keys(customization).length > 0 ? customization : null;
+        // Return live colors, or fall back to defaults if somehow empty
+        return Object.keys(customization).length > 0 ? customization : (this.defaultColors || null);
     }
 
     captureScreenshot(width = 800, height = 600) {
