@@ -144,6 +144,7 @@ export default function ProductsPage() {
   const viewerInstanceRef = useRef<ViewerInstance | null>(null);
   const viewerContainerRef = useRef<HTMLDivElement | null>(null);
   const [viewerKey, setViewerKey] = useState(0);
+  const [colorSelections, setColorSelections] = useState<Record<string, string> | null>(null);
 
   /* ---------- Fetch products ---------- */
   useEffect(() => {
@@ -200,6 +201,10 @@ export default function ProductsPage() {
     viewerInstanceRef.current = viewer;
   }, []);
 
+  const handleColorChange = useCallback((colors: Record<string, string>) => {
+    setColorSelections(colors);
+  }, []);
+
   const handleQuantityChange = useCallback((value: number) => {
     const clamped = Math.max(1, Math.min(99, value));
     setQuantity(clamped);
@@ -207,10 +212,15 @@ export default function ProductsPage() {
 
   /* ---------- Viewer capture helpers (called at submit time) ---------- */
   const getCustomization = useCallback((): string | null => {
+    // Use React state (always available) instead of querying the 3D viewer
+    if (colorSelections && Object.keys(colorSelections).length > 0) {
+      return JSON.stringify(colorSelections);
+    }
+    // Fallback: try the viewer directly
     if (!viewerInstanceRef.current) return null;
     const colors = viewerInstanceRef.current.getCustomization?.();
     return colors ? JSON.stringify(colors) : null;
-  }, []);
+  }, [colorSelections]);
 
   const getCustomImage = useCallback((): string | null => {
     if (!viewerInstanceRef.current) return null;
@@ -265,6 +275,7 @@ export default function ProductsPage() {
                 showAllParts
                 quality="medium"
                 onViewerReady={handleViewerReady}
+                onColorChange={handleColorChange}
                 style={{ width: '100%', height: '100%' }}
               />
             </div>

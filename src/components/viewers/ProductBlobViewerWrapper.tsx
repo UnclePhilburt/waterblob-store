@@ -13,6 +13,7 @@ interface ProductBlobViewerWrapperProps {
   style?: React.CSSProperties;
   className?: string;
   onViewerReady?: (viewer: ViewerInstance) => void;
+  onColorChange?: (colors: Record<string, string>) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +30,7 @@ export default function ProductBlobViewerWrapper({
   style,
   className,
   onViewerReady,
+  onColorChange,
 }: ProductBlobViewerWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerInstance | null>(null);
@@ -66,6 +68,7 @@ export default function ProductBlobViewerWrapper({
           enableColorCustomizer,
           showAllParts,
           quality,
+          onColorChange,
         });
         viewerRef.current = viewer;
         if (onViewerReady) {
@@ -82,7 +85,7 @@ export default function ProductBlobViewerWrapper({
       mounted = false;
       destroyViewer();
     };
-  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, onViewerReady, destroyViewer]);
+  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, onViewerReady, onColorChange, destroyViewer]);
 
   return (
     <div

@@ -55,6 +55,7 @@ export default function SkitubesPage() {
   const [quantity, setQuantity] = useState(1);
   const [shuffledPhotos] = useState(() => shuffleArray(GALLERY_PHOTOS));
   const viewerRef = useRef<ViewerInstance | null>(null);
+  const [colorSelections, setColorSelections] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -84,6 +85,10 @@ export default function SkitubesPage() {
     viewerRef.current = viewer;
   }, []);
 
+  const handleColorChange = useCallback((colors: Record<string, string>) => {
+    setColorSelections(colors);
+  }, []);
+
   function handleQuantityChange(delta: number) {
     setQuantity((prev) => Math.max(1, prev + delta));
   }
@@ -96,10 +101,13 @@ export default function SkitubesPage() {
   }
 
   const getCustomization = useCallback((): string | null => {
+    if (colorSelections && Object.keys(colorSelections).length > 0) {
+      return JSON.stringify(colorSelections);
+    }
     if (!viewerRef.current) return null;
     const colors = viewerRef.current.getCustomization?.();
     return colors ? JSON.stringify(colors) : null;
-  }, []);
+  }, [colorSelections]);
 
   const getCustomImage = useCallback((): string | null => {
     if (!viewerRef.current) return null;
@@ -143,6 +151,7 @@ export default function SkitubesPage() {
               showAllParts
               quality="medium"
               onViewerReady={handleViewerReady}
+              onColorChange={handleColorChange}
             />
           </div>
         </div>

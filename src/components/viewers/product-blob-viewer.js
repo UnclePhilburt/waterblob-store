@@ -359,6 +359,11 @@ export class ProductBlobViewer {
 
                     // Highlight the active swatch in the UI for each group's default color
                     this._syncActiveSwatches();
+
+                    // Send initial colors to React so form data is always available
+                    if (this.options.onColorChange && this.defaultColors) {
+                        this.options.onColorChange({ ...this.defaultColors });
+                    }
                 }
 
             },
@@ -568,6 +573,11 @@ export class ProductBlobViewer {
         group.partIndices.forEach(partIndex => {
             this.setPartColor(partIndex, hexColor);
         });
+
+        // Notify React of the color change
+        if (this.options.onColorChange && this.defaultColors) {
+            this.options.onColorChange({ ...this.defaultColors });
+        }
     }
 
     _syncActiveSwatches() {
