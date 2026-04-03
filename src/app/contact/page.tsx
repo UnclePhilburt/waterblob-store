@@ -42,6 +42,8 @@ export default function ContactPage() {
     message: '',
   });
   const [honeypot, setHoneypot] = useState('');
+  const [hp2, setHp2] = useState('');
+  const [hp3, setHp3] = useState('');
   const formLoadedAt = useRef(Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
@@ -67,6 +69,8 @@ export default function ContactPage() {
         body: JSON.stringify({
           ...formData,
           _hp: honeypot,
+          _hp2: hp2,
+          _hp3: hp3,
           _t: formLoadedAt.current,
         }),
       });
@@ -344,18 +348,14 @@ export default function ContactPage() {
                   />
                 </div>
 
-                {/* Honeypot — hidden from real users */}
+                {/* Honeypot fields — hidden from real users, bots fill these */}
                 <div className="hp-field" aria-hidden="true">
                   <label htmlFor="website">Website</label>
-                  <input
-                    id="website"
-                    name="website"
-                    type="text"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={honeypot}
-                    onChange={(e) => setHoneypot(e.target.value)}
-                  />
+                  <input id="website" name="website" type="text" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+                  <label htmlFor="contact-company">Company</label>
+                  <input id="contact-company" name="company" type="text" tabIndex={-1} autoComplete="off" value={hp2} onChange={(e) => setHp2(e.target.value)} />
+                  <label htmlFor="contact-url">URL</label>
+                  <input id="contact-url" name="url" type="url" tabIndex={-1} autoComplete="off" value={hp3} onChange={(e) => setHp3(e.target.value)} />
                 </div>
 
                 <button

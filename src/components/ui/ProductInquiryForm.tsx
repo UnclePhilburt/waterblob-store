@@ -29,6 +29,9 @@ export default function ProductInquiryForm({
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const timestampRef = useRef(Date.now());
+  const [hp1, setHp1] = useState('');
+  const [hp2, setHp2] = useState('');
+  const [hp3, setHp3] = useState('');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -55,6 +58,9 @@ export default function ProductInquiryForm({
           productImage: productImage || undefined,
           customization,
           customImage,
+          _hp: hp1,
+          _hp2: hp2,
+          _hp3: hp3,
           _t: timestampRef.current,
         }),
       });
@@ -135,9 +141,14 @@ export default function ProductInquiryForm({
         />
       </div>
 
-      {/* Honeypot */}
+      {/* Honeypot fields — hidden from real users, bots fill these */}
       <div className={styles.honeypot} aria-hidden="true">
-        <input type="text" name="_hp" tabIndex={-1} autoComplete="off" />
+        <label htmlFor="inq-website">Website</label>
+        <input id="inq-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={hp1} onChange={(e) => setHp1(e.target.value)} />
+        <label htmlFor="inq-company">Company</label>
+        <input id="inq-company" name="company" type="text" tabIndex={-1} autoComplete="off" value={hp2} onChange={(e) => setHp2(e.target.value)} />
+        <label htmlFor="inq-url">URL</label>
+        <input id="inq-url" name="url" type="url" tabIndex={-1} autoComplete="off" value={hp3} onChange={(e) => setHp3(e.target.value)} />
       </div>
 
       <button type="submit" className={styles.submitBtn} disabled={submitting}>

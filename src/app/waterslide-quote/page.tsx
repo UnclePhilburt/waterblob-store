@@ -37,6 +37,8 @@ const INITIAL_FORM_DATA: QuoteFormData = {
 export default function WaterslideQuotePage() {
   const [formData, setFormData] = useState<QuoteFormData>(INITIAL_FORM_DATA);
   const [honeypot, setHoneypot] = useState('');
+  const [hp2, setHp2] = useState('');
+  const [hp3, setHp3] = useState('');
   const formLoadedAt = useRef(Date.now());
   const [submitting, setSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState<{
@@ -63,6 +65,8 @@ export default function WaterslideQuotePage() {
         body: JSON.stringify({
           ...formData,
           _hp: honeypot,
+          _hp2: hp2,
+          _hp3: hp3,
           _t: formLoadedAt.current,
         }),
       });
@@ -351,18 +355,14 @@ export default function WaterslideQuotePage() {
                 </div>
               </div>
 
-              {/* Honeypot — hidden from real users */}
+              {/* Honeypot fields — hidden from real users, bots fill these */}
               <div className="hp-field" aria-hidden="true">
-                <label htmlFor="website">Website</label>
-                <input
-                  id="website"
-                  name="website"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                />
+                <label htmlFor="ws-website">Website</label>
+                <input id="ws-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+                <label htmlFor="ws-company">Company</label>
+                <input id="ws-company" name="company" type="text" tabIndex={-1} autoComplete="off" value={hp2} onChange={(e) => setHp2(e.target.value)} />
+                <label htmlFor="ws-url">URL</label>
+                <input id="ws-url" name="url" type="url" tabIndex={-1} autoComplete="off" value={hp3} onChange={(e) => setHp3(e.target.value)} />
               </div>
 
               <button

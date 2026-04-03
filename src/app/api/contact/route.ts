@@ -5,10 +5,10 @@ import { getBrevoClient } from '@/lib/brevo';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, subject, message, _hp, _t } = body;
+    const { firstName, lastName, email, phone, subject, message, _hp, _hp2, _hp3, _t } = body;
 
-    // Honeypot: if the hidden field was filled, it's a bot
-    if (_hp) {
+    // Honeypot: if any hidden field was filled, it's a bot
+    if (_hp || _hp2 || _hp3) {
       // Return success to not tip off the bot, but do nothing
       return NextResponse.json({ success: true, message: 'Thank you for your message! We will get back to you shortly.' });
     }

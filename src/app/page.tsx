@@ -116,6 +116,8 @@ export default function Home() {
     message: '',
   });
   const [quoteHoneypot, setQuoteHoneypot] = useState('');
+  const [quoteHp2, setQuoteHp2] = useState('');
+  const [quoteHp3, setQuoteHp3] = useState('');
   const quoteLoadedAt = useRef(Date.now());
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
   const [quoteSuccess, setQuoteSuccess] = useState(false);
@@ -156,6 +158,8 @@ export default function Home() {
           message: quoteForm.message,
           source: 'quote_panel',
           _hp: quoteHoneypot,
+          _hp2: quoteHp2,
+          _hp3: quoteHp3,
           _t: quoteLoadedAt.current,
         }),
       });
@@ -597,18 +601,14 @@ export default function Home() {
                   onChange={handleQuoteChange}
                 />
               </div>
-              {/* Honeypot — hidden from real users */}
+              {/* Honeypot fields — hidden from real users, bots fill these */}
               <div className="hp-field" aria-hidden="true">
                 <label htmlFor="quote-website">Website</label>
-                <input
-                  id="quote-website"
-                  name="website"
-                  type="text"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={quoteHoneypot}
-                  onChange={(e) => setQuoteHoneypot(e.target.value)}
-                />
+                <input id="quote-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={quoteHoneypot} onChange={(e) => setQuoteHoneypot(e.target.value)} />
+                <label htmlFor="quote-company">Company</label>
+                <input id="quote-company" name="company" type="text" tabIndex={-1} autoComplete="off" value={quoteHp2} onChange={(e) => setQuoteHp2(e.target.value)} />
+                <label htmlFor="quote-url">URL</label>
+                <input id="quote-url" name="url" type="url" tabIndex={-1} autoComplete="off" value={quoteHp3} onChange={(e) => setQuoteHp3(e.target.value)} />
               </div>
 
               <button

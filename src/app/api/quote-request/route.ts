@@ -8,11 +8,11 @@ export async function POST(request: NextRequest) {
     const {
       firstName, lastName, email, phone, organization, locationType,
       timeline, slideLength, slideWidth, waterDepth, features, message, howHeard,
-      _hp, _t,
+      _hp, _hp2, _hp3, _t,
     } = body;
 
-    // Honeypot: if the hidden field was filled, it's a bot
-    if (_hp) {
+    // Honeypot: if any hidden field was filled, it's a bot
+    if (_hp || _hp2 || _hp3) {
       return NextResponse.json({ success: true, message: 'Quote request received! We will contact you shortly.' });
     }
 

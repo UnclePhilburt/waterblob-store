@@ -28,11 +28,13 @@ export async function POST(request: NextRequest) {
       customization,
       customImage,
       _hp,
+      _hp2,
+      _hp3,
       _t,
     } = body;
 
-    // Honeypot check
-    if (_hp) {
+    // Honeypot check — if any hidden field was filled, it's a bot
+    if (_hp || _hp2 || _hp3) {
       return NextResponse.json({ success: true, message: 'Thank you! We will be in touch shortly.' });
     }
 
