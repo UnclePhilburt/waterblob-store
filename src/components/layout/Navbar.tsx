@@ -54,9 +54,6 @@ export default function Navbar() {
             <Link href="/blog" onClick={() => setMobileOpen(false)}>Blog</Link>
           </li>
           <li>
-            <Link href="/videos" onClick={() => setMobileOpen(false)}>Videos</Link>
-          </li>
-          <li>
             <Link href="/account" onClick={() => setMobileOpen(false)}>Account</Link>
           </li>
           <li className="theme-toggle-li">
