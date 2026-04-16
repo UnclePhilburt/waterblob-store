@@ -83,7 +83,7 @@ const warnings: string[] = [
   'Do not use under the influence of drugs or alcohol.',
   'Do not use if underinflated \u2014 this can cause entrapment, leading to serious injury or death.',
   'Use only in water with a minimum depth of 8 feet, away from personal watercraft, docks, bridges, or hazardous objects.',
-  'Do not tow with anyone on it. May only be towed under 5 mph to relocate.',
+  'This product is NOT towable. Never tow or pull the Water Blob\u00AE with any watercraft, vehicle, or person on board.',
   'Do not drag across land or rough surfaces.',
   'Must be properly anchored.',
   'No aerial tricks or gymnastics. No flips or somersaults \u2014 landing on your head or neck can cause serious injury, paralysis, or death.',
@@ -97,6 +97,7 @@ const assemblySteps: string[] = [
   'Takes about 10\u201315 minutes to inflate.',
   'Inflate to \u00BD to \u00BE full of air.',
   'Slowly guide into the water while ensuring no sharp objects are underneath.',
+  'Run anchor straps in a criss\u2011cross pattern underneath the blob \u2014 this keeps it steady and prevents it from shifting or rolling during use.',
   'Anchor using shock cord and 50 gallon buckets of concrete. Crisscross the anchor points.',
 ];
 
@@ -119,6 +120,7 @@ const safeUseRules: string[] = [
   'Weight difference between users must be no more than 30\u201350 lbs.',
   'A staff member must be stationed on the platform to supervise all jumps.',
   'Jumpers must land bottom-first onto the blob.',
+  'When being launched, the rider must lace their fingers together and place their hands behind their neck to protect the head and spine on landing.',
   'New jumpers must wait until previous users have exited the water.',
 ];
 
