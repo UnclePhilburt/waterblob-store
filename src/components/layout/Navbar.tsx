@@ -47,6 +47,7 @@ export default function Navbar() {
             <div className="nav-dropdown-menu">
               <Link href="/about">About Us</Link>
               <Link href="/faq">FAQ</Link>
+              <Link href="/guidelines">Safety & Guidelines</Link>
               <Link href="/contact">Contact</Link>
             </div>
           </li>
