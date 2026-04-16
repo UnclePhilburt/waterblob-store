@@ -207,7 +207,7 @@ const faqData: FaqCategory[] = [
       {
         question: 'Do Water Blob\u00AE products come with a warranty?',
         answer:
-          'Yes, all Water Blob\u00AE products come with a one-year manufacturer\'s warranty covering workmanship defects only. Normal wear and tear, punctures, cuts, abrasions, improper use, rental or commercial use, and damage from improper inflation, anchoring, storage, or maintenance are not covered. Contact us for specific warranty terms.',
+          'Water Blob\u00AE products come with a limited manufacturer\'s warranty covering workmanship defects only. Normal wear and tear, punctures, cuts, abrasions, improper use, rental or commercial use, and damage from improper inflation, anchoring, storage, or maintenance are not covered. Warranty claims are handled on a case-by-case basis \u2014 contact us for details.',
       },
     ],
   },

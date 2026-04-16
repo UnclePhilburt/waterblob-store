@@ -83,7 +83,6 @@ const warnings: string[] = [
   'Do not use under the influence of drugs or alcohol.',
   'Do not use if underinflated \u2014 this can cause entrapment, leading to serious injury or death.',
   'Use only in water with a minimum depth of 8 feet, away from personal watercraft, docks, bridges, or hazardous objects.',
-  'Do not use in swimming pools.',
   'Do not tow with anyone on it. May only be towed under 5 mph to relocate.',
   'Do not drag across land or rough surfaces.',
   'Must be properly anchored.',
@@ -149,7 +148,7 @@ const careDont: string[] = [
 ];
 
 const warrantyCovered =
-  'Springfield Special Products warrants to the original purchaser that Water Blob\u00AE products are free from defects in workmanship for one (1) year from the purchase date. This warranty covers workmanship defects only.';
+  'Springfield Special Products provides the original purchaser with a limited warranty against defects in workmanship. This warranty covers workmanship defects only and is handled on a case-by-case basis at the sole discretion of Springfield Special Products.';
 
 const warrantyExcluded: string[] = [
   'Normal wear and tear.',
