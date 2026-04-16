@@ -149,11 +149,13 @@ const careDont: string[] = [
 ];
 
 const warrantyCovered =
-  'Springfield Special Products warrants to the original purchaser that Water Blob\u00AE products are free from defects in material and workmanship for one (1) year from the purchase date.';
+  'Springfield Special Products warrants to the original purchaser that Water Blob\u00AE products are free from defects in workmanship for one (1) year from the purchase date. This warranty covers workmanship defects only.';
 
 const warrantyExcluded: string[] = [
+  'Normal wear and tear.',
+  'Punctures, cuts, or abrasions from use.',
   'Rental or commercial use.',
-  'Punctures, cuts, or abrasions from normal use.',
+  'Damage from improper use, inflation, anchoring, storage, or maintenance.',
 ];
 
 export default function GuidelinesPage() {

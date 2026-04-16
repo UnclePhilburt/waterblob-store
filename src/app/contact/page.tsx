@@ -23,7 +23,7 @@ const FAQ_ITEMS = [
   {
     question: 'What does the warranty cover?',
     answer:
-      'Our Water Blobs come with a manufacturer warranty covering defects in materials and workmanship. Warranty length varies by product, so please refer to your product documentation or contact us with your order details. Normal wear and tear, misuse, and damage from improper inflation are not covered.',
+      'Our Water Blobs come with a one-year manufacturer warranty covering workmanship defects only. Normal wear and tear, punctures, cuts, abrasions, improper use, rental or commercial use, and damage from improper inflation, anchoring, storage, or maintenance are not covered. Contact us with your order details for specific terms.',
   },
   {
     question: 'Do you ship internationally?',
