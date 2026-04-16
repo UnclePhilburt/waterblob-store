@@ -93,7 +93,7 @@ const warnings: string[] = [
 
 const assemblySteps: string[] = [
   'Lay the Water Blob\u00AE flat on a smooth surface free of debris.',
-  'Inflate using a leaf blower or a vacuum with a two-way switch.',
+  'Inflate using a leaf blower or a shop vac with a two-way switch.',
   'Takes about 10\u201315 minutes to inflate.',
   'Inflate to \u00BD to \u00BE full of air.',
   'Slowly guide into the water while ensuring no sharp objects are underneath.',
@@ -297,7 +297,7 @@ export default function GuidelinesPage() {
               <h3 className={styles.subheading}>Recommended air pumps</h3>
               <ul className={styles.list}>
                 <li>Leaf blower</li>
-                <li>Vacuum with a two-way switch</li>
+                <li>Shop vac with a two-way switch</li>
               </ul>
             </>
           )}
