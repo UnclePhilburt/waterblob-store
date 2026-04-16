@@ -98,7 +98,7 @@ const assemblySteps: string[] = [
   'Inflate to \u00BD to \u00BE full of air.',
   'Slowly guide into the water while ensuring no sharp objects are underneath.',
   'Run anchor straps in a criss\u2011cross pattern underneath the blob \u2014 this keeps it steady and prevents it from shifting or rolling during use.',
-  'Anchor using shock cord and 50 gallon buckets of concrete. Crisscross the anchor points.',
+  'Anchor using shock cord and one 50\u2011pound concrete bucket per anchor point. Crisscross the anchor points.',
 ];
 
 const useRules: string[] = [
