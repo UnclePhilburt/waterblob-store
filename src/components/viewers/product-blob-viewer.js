@@ -21,9 +21,9 @@ export class ProductBlobViewer {
             modelPath: 'assets/blob.glb', // Default model path
             showAllParts: true, // Show each node individually for color customization
             customGroups: null, // Custom part groupings
-            showAnchorLines: false, // Draw 3D leader lines + numbered labels at each anchor
+            showAnchorHotspots: false, // Show clickable HTML pins anchored to each anchor mesh
             anchorIndices: null, // Optional override for anchor part indices
-            anchorLineColor: 0xFFD600,
+            onAnchorClick: null, // Called with (index, partIndex) when a pin is clicked
             ...options
         };
 
@@ -369,8 +369,8 @@ export class ProductBlobViewer {
                     }
                 }
 
-                if (this.options.showAnchorLines) {
-                    this.setupAnchorLines();
+                if (this.options.showAnchorHotspots) {
+                    this.setupAnchorHotspots();
                 }
 
             },
@@ -814,6 +814,7 @@ export class ProductBlobViewer {
 
         this.controls.update();
         this.composer.render();
+        this.updateHotspotPositions();
     }
 
     _buildDefaultColors() {
@@ -897,7 +898,7 @@ export class ProductBlobViewer {
         }
     }
 
-    setupAnchorLines() {
+    setupAnchorHotspots() {
         if (!this.model || this.colorableParts.length === 0) return;
 
         const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
@@ -916,76 +917,153 @@ export class ProductBlobViewer {
 
         anchorIndices = anchorIndices.filter((i) => i < this.colorableParts.length);
 
-        const lineColor = this.options.anchorLineColor;
-        const lineLength = 1.6;
-        this.anchorOverlays = [];
+        this._injectAnchorPinStyles();
 
-        anchorIndices.forEach((idx, i) => {
-            const mesh = this.colorableParts[idx].mesh;
-            const worldCenter = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
-            const localCenter = this.model.worldToLocal(worldCenter.clone());
+        // Container must be positioned for absolute children to anchor correctly
+        if (getComputedStyle(this.container).position === 'static') {
+            this.container.style.position = 'relative';
+        }
 
-            const radial = new THREE.Vector3(localCenter.x, 0, localCenter.z);
-            if (radial.lengthSq() < 1e-6) radial.set(1, 0, 0);
-            radial.normalize();
+        this.anchorHotspots = anchorIndices.map((partIdx, i) => {
+            const mesh = this.colorableParts[partIdx].mesh;
 
-            const endPoint = localCenter
-                .clone()
-                .add(radial.multiplyScalar(lineLength))
-                .add(new THREE.Vector3(0, 0.6, 0));
+            const el = document.createElement('button');
+            el.type = 'button';
+            el.className = 'blob-anchor-pin';
+            el.setAttribute('aria-label', `Anchor point ${i + 1}`);
+            el.innerHTML = `<span class="blob-anchor-pin__pulse"></span><span class="blob-anchor-pin__label">${i + 1}</span>`;
 
-            const lineGeom = new THREE.BufferGeometry().setFromPoints([localCenter, endPoint]);
-            const lineMat = new THREE.LineBasicMaterial({
-                color: lineColor,
-                transparent: true,
-                opacity: 0.95,
-                depthTest: false,
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.setActiveAnchor(i);
+                if (typeof this.options.onAnchorClick === 'function') {
+                    this.options.onAnchorClick(i, partIdx);
+                }
             });
-            const line = new THREE.Line(lineGeom, lineMat);
-            line.renderOrder = 999;
-            this.model.add(line);
 
-            const sprite = this.makeAnchorLabelSprite(`${i + 1}`, lineColor);
-            sprite.position.copy(endPoint);
-            sprite.renderOrder = 1000;
-            this.model.add(sprite);
+            this.container.appendChild(el);
 
-            this.anchorOverlays.push({ line, sprite });
+            return { el, mesh, partIdx, index: i, _worldPos: new THREE.Vector3() };
         });
     }
 
-    makeAnchorLabelSprite(text, hexColor) {
-        const canvas = document.createElement('canvas');
-        const size = 256;
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext('2d');
+    _injectAnchorPinStyles() {
+        if (document.getElementById('blob-anchor-pin-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'blob-anchor-pin-styles';
+        style.textContent = `
+            .blob-anchor-pin {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 36px;
+                height: 36px;
+                margin: -18px 0 0 -18px;
+                padding: 0;
+                border: 2px solid #FFD600;
+                border-radius: 50%;
+                background: rgba(10, 20, 48, 0.9);
+                color: #FFD600;
+                font: 700 14px/1 "Helvetica Neue", Arial, sans-serif;
+                cursor: pointer;
+                pointer-events: auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 5;
+                transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+                will-change: transform;
+            }
+            .blob-anchor-pin__pulse {
+                position: absolute;
+                inset: -4px;
+                border-radius: 50%;
+                border: 2px solid rgba(255, 214, 0, 0.6);
+                animation: blob-anchor-pulse 2s ease-out infinite;
+                pointer-events: none;
+            }
+            .blob-anchor-pin__label {
+                position: relative;
+                z-index: 1;
+            }
+            .blob-anchor-pin:hover {
+                transform: scale(1.12);
+                background: rgba(255, 214, 0, 0.18);
+            }
+            .blob-anchor-pin--active {
+                background: #FFD600;
+                color: #0a1430;
+                box-shadow: 0 0 0 3px rgba(255, 214, 0, 0.35);
+            }
+            .blob-anchor-pin--occluded {
+                opacity: 0.35;
+            }
+            .blob-anchor-pin--hidden {
+                display: none;
+            }
+            @keyframes blob-anchor-pulse {
+                0% { transform: scale(1); opacity: 0.9; }
+                100% { transform: scale(1.9); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
-        ctx.beginPath();
-        ctx.arc(size / 2, size / 2, size / 2 - 10, 0, Math.PI * 2);
-        ctx.fillStyle = '#0a1430';
-        ctx.fill();
-        ctx.lineWidth = 12;
-        ctx.strokeStyle = '#' + new THREE.Color(hexColor).getHexString();
-        ctx.stroke();
+    updateHotspotPositions() {
+        if (!this.anchorHotspots || !this.anchorHotspots.length || !this.camera) return;
 
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 140px "Helvetica Neue", Arial, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, size / 2, size / 2 + 6);
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const containerRect = this.container.getBoundingClientRect();
+        const offsetX = rect.left - containerRect.left;
+        const offsetY = rect.top - containerRect.top;
+        const w = rect.width;
+        const h = rect.height;
+        const cameraPos = this.camera.position;
 
-        const texture = new THREE.CanvasTexture(canvas);
-        texture.minFilter = THREE.LinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        const material = new THREE.SpriteMaterial({
-            map: texture,
-            transparent: true,
-            depthTest: false,
+        this.anchorHotspots.forEach((hs) => {
+            hs.mesh.getWorldPosition(hs._worldPos);
+            const projected = hs._worldPos.clone().project(this.camera);
+
+            // Behind the camera or far outside view
+            if (projected.z > 1 || projected.z < -1) {
+                hs.el.classList.add('blob-anchor-pin--hidden');
+                return;
+            }
+
+            const x = (projected.x * 0.5 + 0.5) * w + offsetX;
+            const y = (-projected.y * 0.5 + 0.5) * h + offsetY;
+
+            // Cull when off-canvas
+            if (x < -40 || x > w + 40 || y < -40 || y > h + 40) {
+                hs.el.classList.add('blob-anchor-pin--hidden');
+                return;
+            }
+            hs.el.classList.remove('blob-anchor-pin--hidden');
+            hs.el.style.transform = `translate(${x}px, ${y}px)`;
+
+            // Occlude pins on the far side of the model (rough back-face dimming)
+            const toCamera = cameraPos.clone().sub(hs._worldPos).normalize();
+            const modelCenter = new THREE.Vector3(0, this.modelBaseY || 0, 0);
+            const outward = hs._worldPos.clone().sub(modelCenter).normalize();
+            const facing = outward.dot(toCamera);
+            if (facing < -0.05) {
+                hs.el.classList.add('blob-anchor-pin--occluded');
+            } else {
+                hs.el.classList.remove('blob-anchor-pin--occluded');
+            }
         });
-        const sprite = new THREE.Sprite(material);
-        sprite.scale.set(0.6, 0.6, 1);
-        return sprite;
+    }
+
+    setActiveAnchor(index) {
+        if (!this.anchorHotspots) return;
+        this.activeAnchorIndex = index;
+        this.anchorHotspots.forEach((hs) => {
+            if (hs.index === index) {
+                hs.el.classList.add('blob-anchor-pin--active');
+            } else {
+                hs.el.classList.remove('blob-anchor-pin--active');
+            }
+        });
     }
 
     destroy() {
@@ -994,22 +1072,11 @@ export class ProductBlobViewer {
             this.animationId = null;
         }
 
-        if (this.anchorOverlays && this.anchorOverlays.length) {
-            this.anchorOverlays.forEach(({ line, sprite }) => {
-                if (line) {
-                    if (line.parent) line.parent.remove(line);
-                    if (line.geometry) line.geometry.dispose();
-                    if (line.material) line.material.dispose();
-                }
-                if (sprite) {
-                    if (sprite.parent) sprite.parent.remove(sprite);
-                    if (sprite.material) {
-                        if (sprite.material.map) sprite.material.map.dispose();
-                        sprite.material.dispose();
-                    }
-                }
+        if (this.anchorHotspots && this.anchorHotspots.length) {
+            this.anchorHotspots.forEach(({ el }) => {
+                if (el && el.parentNode) el.parentNode.removeChild(el);
             });
-            this.anchorOverlays = [];
+            this.anchorHotspots = [];
         }
 
         // Remove color picker UI

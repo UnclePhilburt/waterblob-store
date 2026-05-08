@@ -10,9 +10,9 @@ interface ProductBlobViewerWrapperProps {
   enableColorCustomizer?: boolean;
   showAllParts?: boolean;
   quality?: 'low' | 'medium' | 'high';
-  showAnchorLines?: boolean;
+  showAnchorHotspots?: boolean;
   anchorIndices?: number[];
-  anchorLineColor?: number;
+  onAnchorClick?: (index: number, partIndex: number) => void;
   style?: React.CSSProperties;
   className?: string;
   onViewerReady?: (viewer: ViewerInstance) => void;
@@ -30,9 +30,9 @@ export default function ProductBlobViewerWrapper({
   enableColorCustomizer = true,
   showAllParts = true,
   quality = 'medium',
-  showAnchorLines = false,
+  showAnchorHotspots = false,
   anchorIndices,
-  anchorLineColor,
+  onAnchorClick,
   style,
   className,
   onViewerReady,
@@ -74,9 +74,9 @@ export default function ProductBlobViewerWrapper({
           enableColorCustomizer,
           showAllParts,
           quality,
-          showAnchorLines,
+          showAnchorHotspots,
           anchorIndices,
-          anchorLineColor,
+          onAnchorClick,
           onColorChange,
         });
         viewerRef.current = viewer;
@@ -94,7 +94,7 @@ export default function ProductBlobViewerWrapper({
       mounted = false;
       destroyViewer();
     };
-  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, showAnchorLines, anchorIndices, anchorLineColor, onViewerReady, onColorChange, destroyViewer]);
+  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, showAnchorHotspots, anchorIndices, onAnchorClick, onViewerReady, onColorChange, destroyViewer]);
 
   return (
     <div

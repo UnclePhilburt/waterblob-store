@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import dynamic from 'next/dynamic';
 import styles from './anchor-points.module.css';
 
@@ -24,7 +24,17 @@ const MODELS: ModelOption[] = [
 
 export default function AnchorPointsPage() {
   const [activeKey, setActiveKey] = useState<string>('blob40');
+  const [selectedAnchor, setSelectedAnchor] = useState<number | null>(null);
   const active = MODELS.find((m) => m.key === activeKey) ?? MODELS[1];
+
+  const handleModelChange = useCallback((key: string) => {
+    setActiveKey(key);
+    setSelectedAnchor(null);
+  }, []);
+
+  const handleAnchorClick = useCallback((index: number) => {
+    setSelectedAnchor(index);
+  }, []);
 
   return (
     <div className={styles.page}>
@@ -33,8 +43,7 @@ export default function AnchorPointsPage() {
         <h1 className={styles.heroTitle}>Anchor Points</h1>
         <p className={styles.heroDescription}>
           Every Water Blob® has dedicated anchor points around its perimeter.
-          Use this interactive 3D guide to see exactly where they are on each
-          model before you secure your blob.
+          Click a numbered pin on the model to see how to secure that point.
         </p>
       </section>
 
@@ -46,32 +55,56 @@ export default function AnchorPointsPage() {
               role="tab"
               aria-selected={activeKey === m.key}
               className={`${styles.tab} ${activeKey === m.key ? styles.tabActive : ''}`}
-              onClick={() => setActiveKey(m.key)}
+              onClick={() => handleModelChange(m.key)}
             >
               {m.label}
             </button>
           ))}
         </div>
 
-        <div className={styles.viewerArea}>
-          <ProductBlobViewerWrapper
-            key={active.key}
-            containerId={`anchor-viewer-${active.key}`}
-            modelPath={active.modelPath}
-            autoRotate
-            enableInteraction
-            enableColorCustomizer={false}
-            showAnchorLines
-            quality="high"
-          />
-        </div>
+        <div className={styles.layout}>
+          <div className={styles.viewerArea}>
+            <ProductBlobViewerWrapper
+              key={active.key}
+              containerId={`anchor-viewer-${active.key}`}
+              modelPath={active.modelPath}
+              autoRotate
+              enableInteraction
+              enableColorCustomizer={false}
+              showAnchorHotspots
+              quality="high"
+              onAnchorClick={handleAnchorClick}
+            />
+          </div>
 
-        <div className={styles.notes}>
-          <h2>{active.label} — {active.anchorCount} anchor points</h2>
-          <p className={styles.placeholder}>
-            Anchoring instructions for this model will go here. Drag to rotate
-            the model and inspect each numbered anchor point.
-          </p>
+          <aside className={styles.panel} aria-live="polite">
+            {selectedAnchor === null ? (
+              <div className={styles.panelEmpty}>
+                <div className={styles.panelEyebrow}>{active.label}</div>
+                <div className={styles.panelTitle}>{active.anchorCount} anchor points</div>
+                <p className={styles.panelHint}>
+                  Click any numbered pin on the model to see anchoring
+                  instructions for that point.
+                </p>
+              </div>
+            ) : (
+              <div className={styles.panelContent}>
+                <div className={styles.panelEyebrow}>Anchor</div>
+                <div className={styles.panelNumber}>{selectedAnchor + 1}</div>
+                <p className={styles.panelHint}>
+                  Anchoring instructions for this point are coming soon. For
+                  now, secure to a 50&nbsp;lb sandbag, ground stake, or
+                  approved tie-down at this location.
+                </p>
+                <button
+                  className={styles.panelClear}
+                  onClick={() => setSelectedAnchor(null)}
+                >
+                  Clear selection
+                </button>
+              </div>
+            )}
+          </aside>
         </div>
       </div>
     </div>
