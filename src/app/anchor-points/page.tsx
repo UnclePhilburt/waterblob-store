@@ -17,9 +17,40 @@ interface ModelOption {
 }
 
 const MODELS: ModelOption[] = [
-  { key: 'blob30', label: '30ft Blob', modelPath: '/assets/blob30.glb', anchorCount: 4 },
-  { key: 'blob40', label: '40ft Blob', modelPath: '/assets/blob.glb', anchorCount: 4 },
-  { key: 'weekender', label: 'Weekender', modelPath: '/assets/weekender.glb', anchorCount: 3 },
+  { key: 'blob30', label: '30ft Blob', modelPath: '/assets/blob30.glb', anchorCount: 10 },
+  { key: 'blob35', label: '35ft Blob', modelPath: '/assets/blob35.glb', anchorCount: 10 },
+  { key: 'blob40', label: '40ft Blob', modelPath: '/assets/blob.glb', anchorCount: 10 },
+  { key: 'weekender', label: 'Weekender', modelPath: '/assets/weekender.glb', anchorCount: 6 },
+];
+
+const SETUP_STEPS: Array<{ title: string; body: (anchorCount: number, label: string) => string }> = [
+  {
+    title: 'Prepare',
+    body: () => 'Lay your Water Blob® flat on a smooth surface, free of sticks and sharp objects.',
+  },
+  {
+    title: 'Inflate',
+    body: () => 'Use a leaf blower to inflate. It only takes about 5 minutes — fill until 1/2 to 3/4 full of air.',
+  },
+  {
+    title: 'Move into the water',
+    body: () => 'Make sure the area is clear of any sticks or sharp objects that could puncture the Water Blob®, then slowly guide it into the pond or lake.',
+  },
+  {
+    title: 'D-ring pads',
+    body: (anchorCount, label) =>
+      `The ${label} is equipped with ${anchorCount} heavy-duty D-ring pads for safety and stability.`,
+  },
+  {
+    title: 'Anchor',
+    body: () =>
+      'Anchor the Water Blob® using shock cord and a 30–50 lb anchor on each D-ring pad to ensure the best stability.',
+  },
+  {
+    title: 'Warning labels',
+    body: () =>
+      'Warning labels are located at the front of the Water Blob® for all participants to view. There is also a decal confirming you purchased a Water Blob® from the ORIGINAL Blob manufacturer.',
+  },
 ];
 
 export default function AnchorPointsPage() {
@@ -106,6 +137,24 @@ export default function AnchorPointsPage() {
             )}
           </aside>
         </div>
+
+        <section className={styles.setup} aria-labelledby="setup-heading">
+          <div className={styles.setupHeader}>
+            <div className={styles.panelEyebrow}>How To&apos;s</div>
+            <h2 id="setup-heading" className={styles.setupTitle}>
+              Setting up your {active.label}
+            </h2>
+          </div>
+          <ol className={styles.setupGrid}>
+            {SETUP_STEPS.map((step, i) => (
+              <li key={step.title} className={styles.setupCard}>
+                <div className={styles.setupNumber}>{i + 1}</div>
+                <div className={styles.setupCardTitle}>{step.title}</div>
+                <p className={styles.setupCardBody}>{step.body(active.anchorCount, active.label)}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
       </div>
     </div>
   );

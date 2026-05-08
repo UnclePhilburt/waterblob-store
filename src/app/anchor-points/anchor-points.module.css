@@ -183,6 +183,75 @@
     color: #FFD600;
 }
 
+.setup {
+    margin-top: 4rem;
+}
+
+.setupHeader {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.setupTitle {
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: white;
+    margin: 0.5rem 0 0;
+}
+
+.setupGrid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.setupCard {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.5rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.setupCard:hover {
+    border-color: rgba(255, 214, 0, 0.4);
+    background: rgba(255, 214, 0, 0.04);
+}
+
+.setupNumber {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 999px;
+    background: rgba(255, 214, 0, 0.15);
+    border: 1px solid rgba(255, 214, 0, 0.6);
+    color: #FFD600;
+    font-weight: 800;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+}
+
+.setupCardTitle {
+    color: white;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.setupCardBody {
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.55;
+    margin: 0;
+    font-size: 0.92rem;
+}
+
 @media (max-width: 900px) {
     .layout {
         grid-template-columns: 1fr;
@@ -190,11 +259,17 @@
     .panel {
         order: 2;
     }
+    .setupGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 600px) {
     .viewerArea {
         aspect-ratio: 4 / 5;
         min-height: 380px;
+    }
+    .setupGrid {
+        grid-template-columns: 1fr;
     }
 }

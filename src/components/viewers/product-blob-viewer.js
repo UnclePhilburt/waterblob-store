@@ -5,6 +5,128 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 
+// Hardcoded anchor pin positions in each model's local space. Keys are matched
+// as substrings against options.modelPath. When a model has entries here we
+// place pins at these exact coordinates instead of using mesh centroids — this
+// is what lets us put multiple pins on a single merged anchor mesh.
+//
+// Capture coordinates by visiting the page with ?pickAnchors=1 and clicking
+// each physical anchor; the model-local point is logged to the console.
+// Invisible reference points in model-local space, used as endpoints for
+// measurement labels. Capture via ?pickCorners=1.
+const ANCHOR_CORNERS = {
+    'blob30.glb': {
+        'front-left':  { x: -71.4251, y: 18.5497, z:  21.8872 },
+        'front-right': { x:  70.6790, y: 20.1150, z:  23.2457 },
+        'back-right':  { x:  70.7141, y: 20.7937, z: -42.8309 },
+        'back-left':   { x: -71.8466, y: 20.2553, z: -43.5441 },
+    },
+    'blob35.glb': {
+        'front-left':  { x: -105.1187, y: 24.8342, z:  42.7505 },
+        'front-right': { x:   99.9308, y: 20.3060, z:  37.9079 },
+        'back-right':  { x:  106.0226, y: 27.4268, z: -43.7985 },
+        'back-left':   { x: -105.3858, y: 27.6954, z: -43.3379 },
+    },
+    'blob.glb': {
+        'front-left':  { x: -87.9285, y: 20.3586, z:  35.4239 },
+        'front-right': { x:  91.8833, y: 20.2018, z:  34.9377 },
+        'back-right':  { x:  92.1211, y: 19.6976, z: -29.7399 },
+        'back-left':   { x: -88.6428, y: 20.3134, z: -28.1879 },
+    },
+    'weekender.glb': {},
+};
+
+// Distance labels drawn between two reference points. `from`/`to` are either
+// a pin index (number, into ANCHOR_POSITIONS) or a corner reference of the
+// form 'corner:<name>' (string, into ANCHOR_CORNERS). The label is rendered
+// at the 3D midpoint of the two points, projected to screen each frame.
+const ANCHOR_SEGMENTS = {
+    'blob30.glb': [
+        { from: 'corner:front-left', to: 0, label: "5'" },
+        { from: 0, to: 1, label: "5'" },
+        { from: 1, to: 2, label: "15'" },
+        { from: 2, to: 3, label: "5'" },
+        { from: 3, to: 'corner:front-right', label: "5'" },
+        { from: 'corner:back-right', to: 6, label: "5'" },
+        { from: 6, to: 7, label: "5'" },
+        { from: 7, to: 8, label: "15'" },
+        { from: 8, to: 9, label: "5'" },
+        { from: 9, to: 'corner:back-left', label: "5'" },
+    ],
+    'blob35.glb': [
+        { from: 'corner:front-left', to: 0, label: "5'" },
+        { from: 0, to: 1, label: "10'" },
+        { from: 1, to: 2, label: "10'" },
+        { from: 2, to: 3, label: "10'" },
+        { from: 3, to: 'corner:front-right', label: "5'" },
+        { from: 'corner:back-right', to: 6, label: "5'" },
+        { from: 6, to: 7, label: "10'" },
+        { from: 7, to: 8, label: "10'" },
+        { from: 8, to: 9, label: "10'" },
+        { from: 9, to: 'corner:back-left', label: "5'" },
+    ],
+    'blob.glb': [
+        { from: 'corner:front-left', to: 0, label: "5'" },
+        { from: 0, to: 1, label: "10'" },
+        { from: 1, to: 2, label: "15'" },
+        { from: 2, to: 3, label: "10'" },
+        { from: 3, to: 'corner:front-right', label: "5'" },
+        { from: 'corner:back-right', to: 6, label: "5'" },
+        { from: 6, to: 7, label: "10'" },
+        { from: 7, to: 8, label: "15'" },
+        { from: 8, to: 9, label: "10'" },
+        { from: 9, to: 'corner:back-left', label: "5'" },
+    ],
+    'weekender.glb': [],
+};
+
+const ANCHOR_POSITIONS = {
+    'blob35.glb': [
+        { x: -70.0695, y: 25.6049, z:  35.8508 },
+        { x: -22.7465, y: 26.6069, z:  33.2314 },
+        { x:  24.1684, y: 26.1618, z:  33.3131 },
+        { x:  72.0135, y: 26.0878, z:  35.7057 },
+        { x: 101.7749, y: 28.2401, z:  25.7059 },
+        { x: 101.5869, y: 27.7631, z: -25.3180 },
+        { x:  70.5532, y: 25.0392, z: -36.3694 },
+        { x:  22.6084, y: 26.0531, z: -33.7078 },
+        { x: -24.0340, y: 25.4254, z: -34.0421 },
+        { x: -70.5212, y: 25.9149, z: -36.1540 },
+    ],
+    'blob30.glb': [
+        { x: -46.4306, y: 18.7723, z:  17.2201 },
+        { x: -26.6610, y: 18.8114, z:  16.0394 },
+        { x:  25.2520, y: 18.6049, z:  16.1245 },
+        { x:  43.4664, y: 19.9617, z:  16.5712 },
+        { x:  67.2281, y: 21.2459, z:   8.8562 },
+        { x:  67.0023, y: 20.8021, z: -29.2790 },
+        { x:  43.8344, y: 19.7946, z: -37.3665 },
+        { x:  22.9719, y: 19.2624, z: -36.2000 },
+        { x: -24.6863, y: 16.3386, z: -35.5695 },
+        { x: -46.1731, y: 19.1639, z: -37.7531 },
+    ],
+    'weekender.glb': [
+        { x: -0.8534, y: -0.2394, z:  0.4280 },
+        { x:  0.0008, y: -0.2661, z:  0.3996 },
+        { x:  0.8702, y: -0.2559, z:  0.4269 },
+        { x:  0.8606, y:  0.2290, z: -0.4367 },
+        { x: -0.0030, y:  0.2032, z: -0.4283 },
+        { x: -0.8534, y:  0.2139, z: -0.4539 },
+    ],
+    'blob.glb': [
+        { x: -62.0495, y: 18.6410, z:  30.4414 },
+        { x: -24.5105, y: 18.2048, z:  28.7970 },
+        { x:  25.7181, y: 18.6630, z:  28.6498 },
+        { x:  59.8922, y: 19.9861, z:  29.7691 },
+        { x:  88.8793, y: 20.1285, z:  23.0004 },
+        { x:  88.5759, y: 19.9899, z: -16.0233 },
+        { x:  61.0689, y: 21.9623, z: -24.5528 },
+        { x:  25.1071, y: 20.6429, z: -23.0741 },
+        { x: -25.1968, y: 20.1493, z: -23.0911 },
+        { x: -62.2251, y: 20.4540, z: -24.7811 },
+    ],
+};
+
 export class ProductBlobViewer {
     constructor(containerId, options = {}) {
         this.container = document.getElementById(containerId);
@@ -371,7 +493,10 @@ export class ProductBlobViewer {
 
                 if (this.options.showAnchorHotspots) {
                     this.setupAnchorHotspots();
+                    this.setupAnchorMeasurements();
                 }
+
+                this.setupAnchorPicker();
 
             },
             undefined,
@@ -815,6 +940,7 @@ export class ProductBlobViewer {
         this.controls.update();
         this.composer.render();
         this.updateHotspotPositions();
+        this.updateMeasurementPositions();
     }
 
     _buildDefaultColors() {
@@ -901,53 +1027,61 @@ export class ProductBlobViewer {
     setupAnchorHotspots() {
         if (!this.model || this.colorableParts.length === 0) return;
 
-        const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
-        const isBlob30 = this.options.modelPath && this.options.modelPath.includes('blob30');
+        // Prefer hardcoded model-local positions when available — needed for
+        // models where multiple physical anchors are merged into a single mesh.
+        const configured = this._getConfiguredAnchorPositions();
 
-        let anchorIndices;
-        if (Array.isArray(this.options.anchorIndices)) {
-            anchorIndices = this.options.anchorIndices;
-        } else if (isWeekender) {
-            anchorIndices = [5, 6, 7];
-        } else if (isBlob30) {
-            anchorIndices = [0, 1, 7, 8];
+        let hotspotSources;
+        if (configured && configured.length) {
+            hotspotSources = configured.map((pos) => ({
+                mesh: this.model,
+                localCenter: new THREE.Vector3(pos.x, pos.y, pos.z),
+                partIdx: -1,
+            }));
         } else {
-            anchorIndices = [4, 5, 6, 7];
+            const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
+            const isBlob30 = this.options.modelPath && this.options.modelPath.includes('blob30');
+
+            let anchorIndices;
+            if (Array.isArray(this.options.anchorIndices)) {
+                anchorIndices = this.options.anchorIndices;
+            } else if (isWeekender) {
+                anchorIndices = [5, 6, 7];
+            } else if (isBlob30) {
+                anchorIndices = [0, 1, 7, 8];
+            } else {
+                anchorIndices = [4, 5, 6, 7];
+            }
+
+            anchorIndices = anchorIndices.filter((i) => i < this.colorableParts.length);
+
+            hotspotSources = anchorIndices.map((partIdx) => {
+                const mesh = this.colorableParts[partIdx].mesh;
+                if (mesh.geometry && !mesh.geometry.boundingBox) {
+                    mesh.geometry.computeBoundingBox();
+                }
+                const localCenter = mesh.geometry && mesh.geometry.boundingBox
+                    ? mesh.geometry.boundingBox.getCenter(new THREE.Vector3())
+                    : new THREE.Vector3();
+                return { mesh, localCenter, partIdx };
+            });
         }
 
-        anchorIndices = anchorIndices.filter((i) => i < this.colorableParts.length);
-
-        // Debug: surface what we actually mounted so we can verify in the field
         if (typeof window !== 'undefined') {
-            const summary = {
+            console.log('[anchor-hotspots]', {
                 modelPath: this.options.modelPath,
-                totalParts: this.colorableParts.length,
-                anchorIndices,
-                partNames: this.colorableParts.map((p, idx) => `${idx}: ${p.name}`),
-            };
-            console.log('[anchor-hotspots]', summary);
+                count: hotspotSources.length,
+                mode: configured && configured.length ? 'configured-positions' : 'mesh-centroid',
+            });
         }
 
         this._injectAnchorPinStyles();
 
-        // Container must be positioned for absolute children to anchor correctly
         if (getComputedStyle(this.container).position === 'static') {
             this.container.style.position = 'relative';
         }
 
-        this.anchorHotspots = anchorIndices.map((partIdx, i) => {
-            const mesh = this.colorableParts[partIdx].mesh;
-
-            // Pre-compute the geometry's local centroid so we project the
-            // visible center of the mesh (not the mesh's transform origin,
-            // which for GLB imports is often at the model root).
-            if (mesh.geometry) {
-                if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
-            }
-            const localCenter = mesh.geometry && mesh.geometry.boundingBox
-                ? mesh.geometry.boundingBox.getCenter(new THREE.Vector3())
-                : new THREE.Vector3();
-
+        this.anchorHotspots = hotspotSources.map((src, i) => {
             const el = document.createElement('button');
             el.type = 'button';
             el.className = 'blob-anchor-pin';
@@ -958,7 +1092,7 @@ export class ProductBlobViewer {
                 e.stopPropagation();
                 this.setActiveAnchor(i);
                 if (typeof this.options.onAnchorClick === 'function') {
-                    this.options.onAnchorClick(i, partIdx);
+                    this.options.onAnchorClick(i, src.partIdx);
                 }
             });
 
@@ -966,13 +1100,201 @@ export class ProductBlobViewer {
 
             return {
                 el,
-                mesh,
-                partIdx,
+                mesh: src.mesh,
+                partIdx: src.partIdx,
                 index: i,
-                _localCenter: localCenter,
+                _localCenter: src.localCenter,
                 _worldPos: new THREE.Vector3(),
             };
         });
+    }
+
+    _getConfiguredAnchorPositions() {
+        const path = this.options.modelPath || '';
+        for (const key of Object.keys(ANCHOR_POSITIONS)) {
+            if (path.includes(key)) {
+                const positions = ANCHOR_POSITIONS[key];
+                return Array.isArray(positions) ? positions : null;
+            }
+        }
+        return null;
+    }
+
+    _getConfiguredSegments() {
+        const path = this.options.modelPath || '';
+        for (const key of Object.keys(ANCHOR_SEGMENTS)) {
+            if (path.includes(key)) {
+                const segs = ANCHOR_SEGMENTS[key];
+                return Array.isArray(segs) ? segs : null;
+            }
+        }
+        return null;
+    }
+
+    _getConfiguredCorners() {
+        const path = this.options.modelPath || '';
+        for (const key of Object.keys(ANCHOR_CORNERS)) {
+            if (path.includes(key)) {
+                return ANCHOR_CORNERS[key] || null;
+            }
+        }
+        return null;
+    }
+
+    _resolveSegmentEndpoint(ref) {
+        if (typeof ref === 'number') {
+            const hs = this.anchorHotspots && this.anchorHotspots[ref];
+            return hs ? hs._localCenter.clone() : null;
+        }
+        if (typeof ref === 'string' && ref.startsWith('corner:')) {
+            const name = ref.slice('corner:'.length);
+            const corners = this._getConfiguredCorners();
+            const c = corners && corners[name];
+            return c ? new THREE.Vector3(c.x, c.y, c.z) : null;
+        }
+        return null;
+    }
+
+    setupAnchorMeasurements() {
+        const segments = this._getConfiguredSegments();
+        if (!segments || !segments.length) return;
+        if (!this.model) return;
+
+        this._injectAnchorMeasurementStyles();
+
+        this.anchorMeasurements = segments.map((seg) => {
+            const aLocal = this._resolveSegmentEndpoint(seg.from);
+            const bLocal = this._resolveSegmentEndpoint(seg.to);
+            if (!aLocal || !bLocal) return null;
+
+            const el = document.createElement('div');
+            el.className = 'blob-anchor-measurement';
+            el.textContent = seg.label;
+            this.container.appendChild(el);
+
+            return {
+                el,
+                aLocal,
+                bLocal,
+                _midLocal: new THREE.Vector3(),
+                _worldPos: new THREE.Vector3(),
+            };
+        }).filter(Boolean);
+    }
+
+    _injectAnchorMeasurementStyles() {
+        if (document.getElementById('blob-anchor-measurement-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'blob-anchor-measurement-styles';
+        style.textContent = `
+            .blob-anchor-measurement {
+                position: absolute;
+                left: 0;
+                top: 0;
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+                font: 600 11px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+                color: #0f172a;
+                background: rgba(255, 255, 255, 0.92);
+                border: 1px solid rgba(15, 23, 42, 0.15);
+                border-radius: 999px;
+                padding: 3px 8px;
+                box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+                white-space: nowrap;
+                z-index: 5;
+                transition: opacity 0.15s ease;
+            }
+            .blob-anchor-measurement--occluded { opacity: 0.35; }
+            .blob-anchor-measurement--hidden { opacity: 0; }
+        `;
+        document.head.appendChild(style);
+    }
+
+    updateMeasurementPositions() {
+        if (!this.anchorMeasurements || !this.anchorMeasurements.length || !this.camera || !this.model) return;
+
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        const containerRect = this.container.getBoundingClientRect();
+        const offsetX = rect.left - containerRect.left;
+        const offsetY = rect.top - containerRect.top;
+        const w = rect.width;
+        const h = rect.height;
+        const cameraPos = this.camera.position;
+        const modelCenter = new THREE.Vector3(0, this.modelBaseY || 0, 0);
+
+        this.model.updateWorldMatrix(true, false);
+
+        this.anchorMeasurements.forEach((m) => {
+            // Both endpoints live in model-local space (whether they were
+            // resolved from a pin or a corner reference), so a midpoint in
+            // local space stays valid through the model's world transform.
+            m._midLocal.copy(m.aLocal).add(m.bLocal).multiplyScalar(0.5);
+            m._worldPos.copy(m._midLocal).applyMatrix4(this.model.matrixWorld);
+            const projected = m._worldPos.clone().project(this.camera);
+
+            if (projected.z > 1 || projected.z < -1) {
+                m.el.classList.add('blob-anchor-measurement--hidden');
+                return;
+            }
+
+            const x = (projected.x * 0.5 + 0.5) * w + offsetX;
+            const y = (-projected.y * 0.5 + 0.5) * h + offsetY;
+
+            if (x < -60 || x > w + 60 || y < -40 || y > h + 40) {
+                m.el.classList.add('blob-anchor-measurement--hidden');
+                return;
+            }
+            m.el.classList.remove('blob-anchor-measurement--hidden');
+            m.el.style.transform = `translate(calc(${x}px - 50%), calc(${y}px - 50%))`;
+
+            // Same back-face dim as pins: dot the outward direction with the
+            // direction to the camera; if facing away, fade the label.
+            const toCamera = cameraPos.clone().sub(m._worldPos).normalize();
+            const outward = m._worldPos.clone().sub(modelCenter).normalize();
+            if (outward.dot(toCamera) < -0.05) {
+                m.el.classList.add('blob-anchor-measurement--occluded');
+            } else {
+                m.el.classList.remove('blob-anchor-measurement--occluded');
+            }
+        });
+    }
+
+    setupAnchorPicker() {
+        if (typeof window === 'undefined') return;
+        const params = new URLSearchParams(window.location.search);
+        const pickAnchors = params.get('pickAnchors') === '1';
+        const pickCorners = params.get('pickCorners') === '1';
+        if (!pickAnchors && !pickCorners) return;
+        if (!this.model || !this.camera || !this.renderer) return;
+
+        // Stop auto-rotate so the model holds still while picking.
+        if (this.controls) this.controls.autoRotate = false;
+
+        // Corners take precedence if both flags are set.
+        const tag = pickCorners ? '[corner-pick]' : '[anchor-pick]';
+        const what = pickCorners ? 'corner' : 'anchor';
+
+        const canvas = this.renderer.domElement;
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2();
+
+        console.log(`${tag} enabled — click each ${what} on the model; coords print below`);
+
+        this._anchorPickerHandler = (event) => {
+            const rect = canvas.getBoundingClientRect();
+            ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(ndc, this.camera);
+            const intersects = raycaster.intersectObject(this.model, true);
+            if (intersects.length === 0) {
+                console.log(`${tag} miss — click directly on the model`);
+                return;
+            }
+            const local = this.model.worldToLocal(intersects[0].point.clone());
+            const r = (n) => Number(n.toFixed(4));
+            console.log(tag, JSON.stringify({ x: r(local.x), y: r(local.y), z: r(local.z) }));
+        };
+        canvas.addEventListener('click', this._anchorPickerHandler);
     }
 
     _injectAnchorPinStyles() {
@@ -1106,6 +1428,18 @@ export class ProductBlobViewer {
                 if (el && el.parentNode) el.parentNode.removeChild(el);
             });
             this.anchorHotspots = [];
+        }
+
+        if (this.anchorMeasurements && this.anchorMeasurements.length) {
+            this.anchorMeasurements.forEach(({ el }) => {
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+            });
+            this.anchorMeasurements = [];
+        }
+
+        if (this._anchorPickerHandler && this.renderer && this.renderer.domElement) {
+            this.renderer.domElement.removeEventListener('click', this._anchorPickerHandler);
+            this._anchorPickerHandler = null;
         }
 
         // Remove color picker UI
