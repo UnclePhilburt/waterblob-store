@@ -917,6 +917,17 @@ export class ProductBlobViewer {
 
         anchorIndices = anchorIndices.filter((i) => i < this.colorableParts.length);
 
+        // Debug: surface what we actually mounted so we can verify in the field
+        if (typeof window !== 'undefined') {
+            const summary = {
+                modelPath: this.options.modelPath,
+                totalParts: this.colorableParts.length,
+                anchorIndices,
+                partNames: this.colorableParts.map((p, idx) => `${idx}: ${p.name}`),
+            };
+            console.log('[anchor-hotspots]', summary);
+        }
+
         this._injectAnchorPinStyles();
 
         // Container must be positioned for absolute children to anchor correctly
@@ -926,6 +937,16 @@ export class ProductBlobViewer {
 
         this.anchorHotspots = anchorIndices.map((partIdx, i) => {
             const mesh = this.colorableParts[partIdx].mesh;
+
+            // Pre-compute the geometry's local centroid so we project the
+            // visible center of the mesh (not the mesh's transform origin,
+            // which for GLB imports is often at the model root).
+            if (mesh.geometry) {
+                if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+            }
+            const localCenter = mesh.geometry && mesh.geometry.boundingBox
+                ? mesh.geometry.boundingBox.getCenter(new THREE.Vector3())
+                : new THREE.Vector3();
 
             const el = document.createElement('button');
             el.type = 'button';
@@ -943,7 +964,14 @@ export class ProductBlobViewer {
 
             this.container.appendChild(el);
 
-            return { el, mesh, partIdx, index: i, _worldPos: new THREE.Vector3() };
+            return {
+                el,
+                mesh,
+                partIdx,
+                index: i,
+                _localCenter: localCenter,
+                _worldPos: new THREE.Vector3(),
+            };
         });
     }
 
@@ -1021,7 +1049,8 @@ export class ProductBlobViewer {
         const cameraPos = this.camera.position;
 
         this.anchorHotspots.forEach((hs) => {
-            hs.mesh.getWorldPosition(hs._worldPos);
+            hs.mesh.updateWorldMatrix(true, false);
+            hs._worldPos.copy(hs._localCenter).applyMatrix4(hs.mesh.matrixWorld);
             const projected = hs._worldPos.clone().project(this.camera);
 
             // Behind the camera or far outside view
