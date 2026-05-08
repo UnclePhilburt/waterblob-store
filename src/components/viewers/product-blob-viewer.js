@@ -21,6 +21,9 @@ export class ProductBlobViewer {
             modelPath: 'assets/blob.glb', // Default model path
             showAllParts: true, // Show each node individually for color customization
             customGroups: null, // Custom part groupings
+            showAnchorLines: false, // Draw 3D leader lines + numbered labels at each anchor
+            anchorIndices: null, // Optional override for anchor part indices
+            anchorLineColor: 0xFFD600,
             ...options
         };
 
@@ -364,6 +367,10 @@ export class ProductBlobViewer {
                     if (this.options.onColorChange && this.defaultColors) {
                         this.options.onColorChange({ ...this.defaultColors });
                     }
+                }
+
+                if (this.options.showAnchorLines) {
+                    this.setupAnchorLines();
                 }
 
             },
@@ -890,10 +897,119 @@ export class ProductBlobViewer {
         }
     }
 
+    setupAnchorLines() {
+        if (!this.model || this.colorableParts.length === 0) return;
+
+        const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
+        const isBlob30 = this.options.modelPath && this.options.modelPath.includes('blob30');
+
+        let anchorIndices;
+        if (Array.isArray(this.options.anchorIndices)) {
+            anchorIndices = this.options.anchorIndices;
+        } else if (isWeekender) {
+            anchorIndices = [5, 6, 7];
+        } else if (isBlob30) {
+            anchorIndices = [0, 1, 7, 8];
+        } else {
+            anchorIndices = [4, 5, 6, 7];
+        }
+
+        anchorIndices = anchorIndices.filter((i) => i < this.colorableParts.length);
+
+        const lineColor = this.options.anchorLineColor;
+        const lineLength = 1.6;
+        this.anchorOverlays = [];
+
+        anchorIndices.forEach((idx, i) => {
+            const mesh = this.colorableParts[idx].mesh;
+            const worldCenter = new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3());
+            const localCenter = this.model.worldToLocal(worldCenter.clone());
+
+            const radial = new THREE.Vector3(localCenter.x, 0, localCenter.z);
+            if (radial.lengthSq() < 1e-6) radial.set(1, 0, 0);
+            radial.normalize();
+
+            const endPoint = localCenter
+                .clone()
+                .add(radial.multiplyScalar(lineLength))
+                .add(new THREE.Vector3(0, 0.6, 0));
+
+            const lineGeom = new THREE.BufferGeometry().setFromPoints([localCenter, endPoint]);
+            const lineMat = new THREE.LineBasicMaterial({
+                color: lineColor,
+                transparent: true,
+                opacity: 0.95,
+                depthTest: false,
+            });
+            const line = new THREE.Line(lineGeom, lineMat);
+            line.renderOrder = 999;
+            this.model.add(line);
+
+            const sprite = this.makeAnchorLabelSprite(`${i + 1}`, lineColor);
+            sprite.position.copy(endPoint);
+            sprite.renderOrder = 1000;
+            this.model.add(sprite);
+
+            this.anchorOverlays.push({ line, sprite });
+        });
+    }
+
+    makeAnchorLabelSprite(text, hexColor) {
+        const canvas = document.createElement('canvas');
+        const size = 256;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 10, 0, Math.PI * 2);
+        ctx.fillStyle = '#0a1430';
+        ctx.fill();
+        ctx.lineWidth = 12;
+        ctx.strokeStyle = '#' + new THREE.Color(hexColor).getHexString();
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 140px "Helvetica Neue", Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, size / 2, size / 2 + 6);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        const material = new THREE.SpriteMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false,
+        });
+        const sprite = new THREE.Sprite(material);
+        sprite.scale.set(0.6, 0.6, 1);
+        return sprite;
+    }
+
     destroy() {
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
             this.animationId = null;
+        }
+
+        if (this.anchorOverlays && this.anchorOverlays.length) {
+            this.anchorOverlays.forEach(({ line, sprite }) => {
+                if (line) {
+                    if (line.parent) line.parent.remove(line);
+                    if (line.geometry) line.geometry.dispose();
+                    if (line.material) line.material.dispose();
+                }
+                if (sprite) {
+                    if (sprite.parent) sprite.parent.remove(sprite);
+                    if (sprite.material) {
+                        if (sprite.material.map) sprite.material.map.dispose();
+                        sprite.material.dispose();
+                    }
+                }
+            });
+            this.anchorOverlays = [];
         }
 
         // Remove color picker UI

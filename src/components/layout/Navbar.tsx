@@ -48,6 +48,7 @@ export default function Navbar() {
               <Link href="/about">About Us</Link>
               <Link href="/faq">FAQ</Link>
               <Link href="/guidelines">Safety & Guidelines</Link>
+              <Link href="/anchor-points">Anchor Points</Link>
               <Link href="/contact">Contact</Link>
             </div>
           </li>

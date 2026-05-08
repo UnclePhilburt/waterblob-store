@@ -1,0 +1,140 @@
+.page {
+    background: #000510;
+    color: white;
+    min-height: 100vh;
+}
+
+.hero {
+    background: linear-gradient(135deg, #000510 0%, #0A1628 50%, #001a3d 100%);
+    padding: 8rem 2rem 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 214, 0, 0.18) 0%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(60px);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.heroEyebrow {
+    position: relative;
+    z-index: 1;
+    color: #FFD600;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.heroTitle {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 900;
+    color: white;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.heroDescription {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+}
+
+.modelTabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.tab {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    padding: 0.65rem 1.4rem;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.tab:hover {
+    background: rgba(255, 214, 0, 0.08);
+    border-color: rgba(255, 214, 0, 0.5);
+    color: white;
+}
+
+.tabActive {
+    background: rgba(255, 214, 0, 0.15);
+    border-color: #FFD600;
+    color: #FFD600;
+}
+
+.viewerArea {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    min-height: 420px;
+    background: linear-gradient(135deg, #050a18 0%, #0A1628 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.viewerArea > div {
+    width: 100%;
+    height: 100%;
+}
+
+.notes {
+    margin-top: 2.5rem;
+    padding: 1.5rem 1.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.65;
+}
+
+.notes h2 {
+    color: white;
+    font-size: 1.15rem;
+    margin: 0 0 0.6rem;
+    letter-spacing: 0.02em;
+}
+
+.placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .viewerArea {
+        aspect-ratio: 4 / 5;
+        min-height: 360px;
+    }
+}
