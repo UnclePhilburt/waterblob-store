@@ -632,7 +632,7 @@ export default function Home() {
               <div className="quote-panel-footer">
                 <p>
                   Or call us directly:{' '}
-                  <a href="tel:+18005551984">(800) 555-1984</a>
+                  <a href="tel:+14178648461">(417) 864-8461</a>
                 </p>
               </div>
             </form>
