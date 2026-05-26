@@ -3,7 +3,6 @@ import './globals.css';
 import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import ChatbotWidget from '@/components/chatbot/ChatbotWidget';
 
 export const metadata: Metadata = {
   title: 'Water Blob® | Commercial Water Trampolines & Lake Inflatables Since 1984',
@@ -60,7 +59,6 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
-          <ChatbotWidget />
         </AnalyticsProvider>
       </body>
     </html>
