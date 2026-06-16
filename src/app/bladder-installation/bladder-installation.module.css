@@ -1,0 +1,325 @@
+.page {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.hero {
+    position: relative;
+    min-height: 86vh;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    padding: 8rem clamp(1.25rem, 5vw, 4rem) 4rem;
+}
+
+.heroMedia,
+.heroOverlay {
+    position: absolute;
+    inset: 0;
+}
+
+.heroMedia {
+    background: #121212;
+}
+
+.heroImage {
+    object-fit: cover;
+}
+
+.heroOverlay {
+    background:
+        linear-gradient(90deg, rgba(3, 10, 18, 0.9) 0%, rgba(3, 10, 18, 0.58) 48%, rgba(3, 10, 18, 0.28) 100%),
+        linear-gradient(0deg, rgba(3, 10, 18, 0.82) 0%, rgba(3, 10, 18, 0.04) 55%);
+}
+
+.heroContent {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    color: white;
+}
+
+.eyebrow {
+    color: var(--accent-sun);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+}
+
+.heroContent h1 {
+    font-size: clamp(2.4rem, 7vw, 5.8rem);
+    line-height: 0.98;
+    max-width: 920px;
+    margin: 0;
+    color: white;
+}
+
+.heroContent p {
+    max-width: 690px;
+    margin: 1.25rem 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: clamp(1rem, 2vw, 1.24rem);
+    line-height: 1.65;
+}
+
+.heroButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3rem;
+    margin-top: 1.75rem;
+    padding: 0.85rem 1.25rem;
+    border-radius: 0.5rem;
+    background: var(--accent-sun);
+    color: #142033;
+    text-decoration: none;
+    font-weight: 800;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.26);
+}
+
+.intro,
+.steps,
+.checkSection,
+.support {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-inline: clamp(1.25rem, 4vw, 2rem);
+}
+
+.intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+    gap: clamp(1.25rem, 4vw, 3rem);
+    align-items: stretch;
+    padding-top: 4rem;
+    padding-bottom: 2rem;
+}
+
+.introText h2,
+.sectionHeader h2,
+.checkSection h2,
+.support h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.08;
+}
+
+.introText p:not(.eyebrow),
+.checkSection p,
+.support p {
+    margin: 1rem 0 0;
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.callout {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-left: 5px solid var(--accent-blue);
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+.callout h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.35rem;
+}
+
+.callout p {
+    margin: 0.75rem 0 0;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+.steps {
+    padding-top: 4rem;
+    padding-bottom: 3rem;
+}
+
+.sectionHeader {
+    max-width: 760px;
+    margin-bottom: 2rem;
+}
+
+.stepList {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin: 0;
+    padding: 0;
+}
+
+.stepCard {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.5rem;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-md);
+}
+
+.stepImageWrap {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #141414;
+}
+
+.stepImage {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.stepCopy {
+    padding: 1.25rem;
+}
+
+.stepNumber {
+    display: block;
+    color: var(--accent-blue);
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    line-height: 1.2;
+    margin-bottom: 0.55rem;
+    text-transform: uppercase;
+}
+
+.stepCopy h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    line-height: 1.16;
+}
+
+.stepCopy p {
+    margin: 0.75rem 0 0;
+    color: var(--text-secondary);
+    line-height: 1.64;
+}
+
+.checkSection {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(300px, 1fr);
+    gap: clamp(1.25rem, 4vw, 3rem);
+    align-items: start;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+.checklist {
+    list-style: none;
+    display: grid;
+    gap: 0.8rem;
+    margin: 0;
+    padding: 0;
+}
+
+.checklist li {
+    position: relative;
+    min-height: 3rem;
+    padding: 0.85rem 1rem 0.85rem 2.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.5rem;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.checklist li::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 1.05rem;
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: 0 0 0 4px rgba(0, 217, 255, 0.16);
+}
+
+.support {
+    margin-bottom: 5rem;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    border-radius: 0.5rem;
+    background: linear-gradient(135deg, rgba(0, 168, 232, 0.13), rgba(255, 179, 71, 0.16));
+    border: 1px solid var(--border-subtle);
+}
+
+.supportActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.supportActions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.75rem 1.05rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 800;
+    background: var(--accent-blue);
+    color: white;
+}
+
+.supportActions a:last-child {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 860px) {
+    .hero {
+        min-height: 78vh;
+        padding-top: 7rem;
+    }
+
+    .intro,
+    .checkSection {
+        grid-template-columns: 1fr;
+    }
+
+    .stepList {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .hero {
+        min-height: 72vh;
+        padding-bottom: 2.5rem;
+    }
+
+    .heroOverlay {
+        background:
+            linear-gradient(90deg, rgba(3, 10, 18, 0.88) 0%, rgba(3, 10, 18, 0.64) 100%),
+            linear-gradient(0deg, rgba(3, 10, 18, 0.82) 0%, rgba(3, 10, 18, 0.08) 55%);
+    }
+
+    .heroButton,
+    .supportActions a {
+        width: 100%;
+    }
+
+    .stepCopy {
+        padding: 1rem;
+    }
+}

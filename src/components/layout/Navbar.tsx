@@ -49,6 +49,7 @@ export default function Navbar() {
               <Link href="/faq">FAQ</Link>
               <Link href="/guidelines">Safety & Guidelines</Link>
               <Link href="/anchor-points">Anchor Points</Link>
+              <Link href="/bladder-installation">Bladder Installation</Link>
               <Link href="/contact">Contact</Link>
             </div>
           </li>
