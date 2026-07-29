@@ -562,6 +562,56 @@ html:not([data-theme="dark"]) .hero,
     color: #00D9FF;
 }
 
+.sale-banner {
+    pointer-events: all;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding: 0.55rem 0.8rem 0.55rem 0.6rem;
+    color: #071a2d;
+    background: linear-gradient(135deg, #ffe454, #ffb82e);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+    box-shadow: 0 8px 26px rgba(255, 184, 46, 0.42);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sale-banner:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 34px rgba(255, 184, 46, 0.58);
+}
+
+.sale-banner-badge {
+    padding: 0.35rem 0.65rem;
+    color: #fff;
+    background: #e63b2e;
+    border-radius: 999px;
+    font-size: 1rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sale-banner-text,
+.sale-banner-arrow {
+    white-space: nowrap;
+}
+
+.sale-banner-arrow {
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.sale-banner:hover .sale-banner-arrow {
+    transform: translateX(3px);
+}
+
 .hero-content .btn {
     pointer-events: all;
 }
@@ -651,6 +701,17 @@ html:not([data-theme="dark"]) .hero,
 }
 
 @media (max-width: 768px) {
+    .sale-banner {
+        gap: 0.5rem;
+        padding: 0.5rem 0.7rem 0.5rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .sale-banner-badge {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
     .hero-actions {
         flex-direction: column;
         width: 100%;

@@ -347,6 +347,13 @@ export default function Home() {
 
           <div className="hero-content">
             <div className="container">
+              <Link href="/products" className="sale-banner" aria-label="Shop Water Blobs at 15% off">
+                <span className="sale-banner-badge">15% OFF</span>
+                <span className="sale-banner-text">
+                  Water Blobs <span aria-hidden="true">•</span> Limited Time
+                </span>
+                <span className="sale-banner-arrow" aria-hidden="true">→</span>
+              </Link>
               <h1>The Leap That Changes <span className="hero-accent">Everything</span></h1>
               <p className="hero-tagline">
                 Since 1984, the Water Blob&reg; has turned nervous campers into the bravest kids on the lake.
