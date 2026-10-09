@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>AI Terminal Order - Water Blob</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #07111f;
+            --panel: #101c2d;
+            --panel-2: #162338;
+            --line: #2b3e59;
+            --text: #f4f7fb;
+            --muted: #9fb1c8;
+            --accent: #16a34a;
+            --accent-2: #0ea5e9;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            border-bottom: 1px solid var(--line);
+            background: #0c1728;
+            padding: 18px clamp(16px, 4vw, 42px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: clamp(24px, 4vw, 38px);
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        a {
+            color: #b9ddff;
+        }
+
+        button, input, textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            background: var(--accent-2);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .secondary {
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+        }
+
+        .success {
+            background: var(--accent);
+        }
+
+        .danger {
+            background: var(--danger);
+        }
+
+        main {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+            padding: 24px clamp(14px, 3vw, 32px) 48px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        textarea, input {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #081321;
+            color: var(--text);
+            padding: 12px;
+        }
+
+        textarea {
+            min-height: 190px;
+            resize: vertical;
+            line-height: 1.45;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 14px;
+        }
+
+        .status {
+            min-height: 24px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+
+        .status.good {
+            color: #86efac;
+        }
+
+        .status.bad {
+            color: #fca5a5;
+        }
+
+        .questions {
+            margin-top: 14px;
+            display: none;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            background: rgba(245, 158, 11, 0.12);
+            color: #fed7aa;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        td input {
+            padding: 9px;
+        }
+
+        .qty {
+            width: 82px;
+        }
+
+        .money {
+            width: 110px;
+        }
+
+        .total-box {
+            margin-top: 16px;
+            padding: 18px;
+            border-radius: 8px;
+            background: #062716;
+            border: 1px solid rgba(22, 163, 74, 0.45);
+        }
+
+        .total-label {
+            color: #a7f3d0;
+            font-weight: 800;
+        }
+
+        .total-value {
+            display: block;
+            margin-top: 6px;
+            font-size: clamp(34px, 7vw, 58px);
+            line-height: 1;
+            font-weight: 900;
+            color: #4ade80;
+        }
+
+        .small {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .login {
+            display: none;
+        }
+
+        .login.active {
+            display: block;
+        }
+
+        .app {
+            display: none;
+        }
+
+        .app.active {
+            display: grid;
+        }
+
+        @media (max-width: 860px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .grid, .row {
+                grid-template-columns: 1fr;
+            }
+
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                border-bottom: 1px solid var(--line);
+                padding: 10px 0;
+            }
+
+            td {
+                border: 0;
+                padding: 6px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>AI Terminal Order</h1>
+            <div class="small">Type the order, review every price, then send it to the Square terminal.</div>
+        </div>
+        <a href="/employee/employee-portal.html">Back to Employee Portal</a>
+    </header>
+
+    <main>
+        <section class="panel login" id="loginPanel">
+            <h2>Employee Login</h2>
+            <p class="small">Use the same employee login as the main portal.</p>
+            <form id="loginForm">
+                <div class="row">
+                    <div>
+                        <label for="username">Username</label>
+                        <input id="username" autocomplete="username" required>
+                    </div>
+                    <div>
+                        <label for="password">Password</label>
+                        <input id="password" type="password" autocomplete="current-password" required>
+                    </div>
+                    <div style="align-self: end;">
+                        <button type="submit">Login</button>
+                    </div>
+                </div>
+            </form>
+            <div class="status bad" id="loginStatus"></div>
+        </section>
+
+        <section class="app" id="appPanel">
+            <div class="grid">
+                <section class="panel">
+                    <h2>1. Type The Order</h2>
+                    <p class="small">Examples: "black tarp 10x10 and 4 straps" or "two 30 foot commercial blobs, repair kit, and shipping note pickup Friday".</p>
+                    <label for="orderText">Order text</label>
+                    <textarea id="orderText" placeholder="black tarp 10x10, 4 straps"></textarea>
+                    <div class="row" style="margin-top: 12px;">
+                        <div>
+                            <label for="customerName">Customer name</label>
+                            <input id="customerName" placeholder="Terminal Customer">
+                        </div>
+                        <div>
+                            <label for="customerPhone">Phone</label>
+                            <input id="customerPhone" placeholder="Optional">
+                        </div>
+                        <div>
+                            <label for="customerEmail">Email</label>
+                            <input id="customerEmail" placeholder="Optional">
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button id="parseButton">Build Cart</button>
+                        <button class="secondary" id="clearButton">Clear</button>
+                    </div>
+                    <div class="status" id="parseStatus"></div>
+                    <div class="questions" id="questionsBox"></div>
+                </section>
+
+                <section class="panel">
+                    <h2>2. Review And Send</h2>
+                    <p class="small">Nothing charges until you confirm here and the customer pays on the Square machine.</p>
+                    <div id="cartEmpty" class="small" style="margin-top: 18px;">No cart yet.</div>
+                    <div id="cartWrap" style="display: none;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Each</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartBody"></tbody>
+                        </table>
+                        <div class="actions">
+                            <button class="secondary" id="addLineButton">Add Line</button>
+                        </div>
+                        <label for="orderNotes" style="margin-top: 14px;">Internal notes</label>
+                        <textarea id="orderNotes" style="min-height: 80px;" placeholder="Optional notes for the work order"></textarea>
+                    </div>
+                    <div class="total-box">
+                        <span class="total-label">Total</span>
+                        <span class="total-value" id="totalValue">$0.00</span>
+                    </div>
+                    <div class="actions">
+                        <button class="success" id="sendButton" disabled>Confirm And Send To Terminal</button>
+                    </div>
+                    <div class="status" id="checkoutStatus"></div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let authToken = localStorage.getItem('employeeToken') || localStorage.getItem('authToken') || '';
+        let cartItems = [];
+        let activeCheckoutId = null;
+
+        const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+        const el = (id) => document.getElementById(id);
+
+        function authHeaders(extra = {}) {
+            return {
+                ...extra,
+                Authorization: `Bearer ${authToken}`,
+            };
+        }
+
+        function showLogin() {
+            el('loginPanel').classList.add('active');
+            el('appPanel').classList.remove('active');
+        }
+
+        function showApp() {
+            el('loginPanel').classList.remove('active');
+            el('appPanel').classList.add('active');
+        }
+
+        function setStatus(id, text, kind = '') {
+            const node = el(id);
+            node.textContent = text || '';
+            node.className = `status ${kind}`.trim();
+        }
+
+        function getTotal() {
+            return cartItems.reduce((sum, item) => {
+                return sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+            }, 0);
+        }
+
+        function updateTotals() {
+            el('totalValue').textContent = money.format(getTotal());
+            el('sendButton').disabled = cartItems.length === 0 || getTotal() <= 0;
+        }
+
+        function renderCart() {
+            const body = el('cartBody');
+            body.innerHTML = '';
+            cartItems.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input value="${escapeHtml(item.name)}" data-field="name" data-index="${index}"></td>
+                    <td><input class="qty" type="number" min="1" step="1" value="${item.quantity}" data-field="quantity" data-index="${index}"></td>
+                    <td><input class="money" type="number" min="0" step="0.01" value="${item.unitPrice}" data-field="unitPrice" data-index="${index}"></td>
+                    <td>${money.format((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}</td>
+                    <td><button class="danger" data-remove="${index}" title="Remove line">X</button></td>
+                `;
+                body.appendChild(tr);
+            });
+
+            el('cartEmpty').style.display = cartItems.length ? 'none' : 'block';
+            el('cartWrap').style.display = cartItems.length ? 'block' : 'none';
+            updateTotals();
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        async function parseOrder() {
+            const message = el('orderText').value.trim();
+            if (!message) {
+                setStatus('parseStatus', 'Type an order first.', 'bad');
+                return;
+            }
+
+            setStatus('parseStatus', 'Building cart with AI...');
+            el('questionsBox').style.display = 'none';
+            el('parseButton').disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/employee/terminal-chat/parse`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ message }),
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.details || data.error || 'Failed to build cart');
+                }
+
+                cartItems = (data.items || []).map((item) => ({
+                    name: item.name || 'Custom item',
+                    quantity: Number(item.quantity) || 1,
+                    unitPrice: Number(item.unitPrice) || 0,
+                    notes: item.notes || '',
+                    confidence: item.confidence || 'low',
+                }));
+
+                if (data.questions?.length) {
+                    el('questionsBox').innerHTML = '<strong>Needs review:</strong><br>' + data.questions.map(escapeHtml).join('<br>');
+                    el('questionsBox').style.display = 'block';
+                }
+
+                if (data.notes) {
+                    el('orderNotes').value = data.notes;
+                }
+
+                renderCart();
+                setStatus('parseStatus', `Cart ready. Review the prices before sending.`, 'good');
+            } catch (error) {
+                setStatus('parseStatus', error.message || 'Failed to build cart.', 'bad');
+            } finally {
+                el('parseButton').disabled = false;
+            }
+        }
+
+        async function sendToTerminal() {
+            const total = getTotal();
+            if (!cartItems.length || total <= 0) {
+                setStatus('checkoutStatus', 'Add priced items before sending.', 'bad');
+                return;
+            }
+
+            setStatus('checkoutStatus', `Sending ${money.format(total)} to Square Terminal...`);
+            el('sendButton').disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/employee/terminal-chat/checkout`, {
+                    method: 'POST',
+                    headers: authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        customer: {
+                            name: el('customerName').value.trim(),
+                            phone: el('customerPhone').value.trim(),
+                            email: el('customerEmail').value.trim(),
+                        },
+                        items: cartItems,
+                        notes: el('orderNotes').value.trim(),
+                    }),
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.details || data.error || 'Failed to send to terminal');
+                }
+
+                activeCheckoutId = data.checkoutId;
+                setStatus('checkoutStatus', `Sent to terminal. Waiting for card payment...`, 'good');
+                await pollCheckout(data.checkoutId);
+            } catch (error) {
+                setStatus('checkoutStatus', error.message || 'Terminal checkout failed.', 'bad');
+                el('sendButton').disabled = false;
+            }
+        }
+
+        async function pollCheckout(checkoutId) {
+            for (let attempt = 0; attempt < 80; attempt++) {
+                await new Promise((resolve) => setTimeout(resolve, 3000));
+                const response = await fetch(`${API_BASE}/api/terminal-checkout/${checkoutId}/status`, {
+                    headers: authHeaders(),
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.details || data.error || 'Failed to check payment status');
+                }
+
+                if (data.status === 'COMPLETED') {
+                    setStatus('checkoutStatus', 'Paid. Work order was marked paid automatically.', 'good');
+                    return;
+                }
+
+                if (['CANCELED', 'CANCEL_REQUESTED'].includes(data.status)) {
+                    throw new Error(`Square checkout was ${data.status.toLowerCase()}.`);
+                }
+
+                setStatus('checkoutStatus', `Terminal status: ${data.status || 'pending'}...`);
+            }
+
+            throw new Error('Still waiting for Square. Check the terminal or work order status.');
+        }
+
+        el('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            setStatus('loginStatus', 'Logging in...');
+            try {
+                const response = await fetch(`${API_BASE}/api/employee/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: el('username').value.trim(),
+                        password: el('password').value,
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Login failed');
+                authToken = data.token;
+                localStorage.setItem('employeeToken', authToken);
+                showApp();
+                setStatus('loginStatus', '');
+            } catch (error) {
+                setStatus('loginStatus', error.message || 'Login failed', 'bad');
+            }
+        });
+
+        el('parseButton').addEventListener('click', parseOrder);
+        el('sendButton').addEventListener('click', sendToTerminal);
+        el('clearButton').addEventListener('click', () => {
+            el('orderText').value = '';
+            el('orderNotes').value = '';
+            cartItems = [];
+            activeCheckoutId = null;
+            renderCart();
+            setStatus('parseStatus', '');
+            setStatus('checkoutStatus', '');
+            el('questionsBox').style.display = 'none';
+        });
+        el('addLineButton').addEventListener('click', () => {
+            cartItems.push({ name: 'Custom item', quantity: 1, unitPrice: 0, notes: '', confidence: 'low' });
+            renderCart();
+        });
+        el('cartBody').addEventListener('input', (event) => {
+            const input = event.target;
+            const index = Number(input.dataset.index);
+            const field = input.dataset.field;
+            if (!Number.isInteger(index) || !field || !cartItems[index]) return;
+            cartItems[index][field] = field === 'name' ? input.value : Number(input.value);
+            updateTotals();
+        });
+        el('cartBody').addEventListener('change', (event) => {
+            const input = event.target;
+            const index = Number(input.dataset.index);
+            const field = input.dataset.field;
+            if (!Number.isInteger(index) || !field || !cartItems[index]) return;
+            cartItems[index][field] = field === 'name' ? input.value : Number(input.value);
+            renderCart();
+        });
+        el('cartBody').addEventListener('click', (event) => {
+            const button = event.target.closest('button[data-remove]');
+            if (!button) return;
+            cartItems.splice(Number(button.dataset.remove), 1);
+            renderCart();
+        });
+
+        if (authToken) {
+            showApp();
+        } else {
+            showLogin();
+        }
+        renderCart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Extra employee order/pricing notes for the AI Terminal Order page.
+#
+# Add plain text lines here for items that are not in the products database.
+# Example format:
+# Black tarp 10x10 - $0.00 - replace with real price
+# Strap - $0.00 each - replace with real price
+#
+# The AI uses this file as reference material, but employees still review and
+# confirm prices before anything is sent to the Square terminal.
