@@ -91,7 +91,7 @@ const INITIAL_CONFIG: Config = {
 const START_MESSAGES: ChatMessage[] = [
   {
     role: 'assistant',
-    text: 'Hi, I can build your quote. What are we making today: a Water Blob or a Ski Tube?',
+    text: 'Hi, I can build your Water Blob quote. What size are you looking for? If you need a Ski Tube instead, just say Ski Tube.',
   },
 ];
 
@@ -132,7 +132,7 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'What are we making today: Water Blob or Ski Tube?';
+      return 'What size Water Blob are you looking for? If you need a Ski Tube instead, just say Ski Tube.';
     case 'size':
       return `What size ${productLabel(config.product)} do you want? Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
@@ -180,6 +180,16 @@ function nextStep(current: ChatStep): ChatStep {
 
 function parseProduct(text: string): ProductType {
   return text.toLowerCase().includes('ski') ? 'skitube' : 'waterblob';
+}
+
+function parseSize(product: ProductType, text: string) {
+  const normalized = text.toLowerCase();
+  const options = sizeOptionsFor(product);
+  return options.find((option) => {
+    const optionText = option.toLowerCase();
+    const number = option.match(/\d+/)?.[0];
+    return normalized.includes(optionText) || Boolean(number && normalized.includes(number));
+  }) || '';
 }
 
 function parseContact(text: string) {
@@ -290,14 +300,15 @@ export default function WaterBlobAiPage() {
 
     if (step === 'product') {
       const product = parseProduct(answer);
+      const parsedSize = parseSize(product, answer);
       nextConfig = {
         ...nextConfig,
         product,
-        size: product === 'skitube' ? 'Standard ski tube' : '30 ft Original',
+        size: parsedSize,
       };
-      helper = product === 'waterblob'
-        ? 'Perfect. Water Blob selected.'
-        : 'Perfect. Ski Tube selected.';
+      helper = product === 'skitube'
+        ? 'Perfect. Ski Tube selected.'
+        : 'Perfect, I will assume Water Blob.';
     } else if (step === 'size') {
       nextConfig.size = answer;
       helper = 'Got it.';
@@ -348,6 +359,10 @@ export default function WaterBlobAiPage() {
     setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
 
     const next = nextStep(step);
+    if (step === 'product' && nextConfig.size) {
+      askNext('baseColor', nextConfig, `${helper} I grabbed the size too.`);
+      return;
+    }
     if (step === 'notes') {
       askNext('ready', nextConfig, 'Everything is ready.');
       return;
