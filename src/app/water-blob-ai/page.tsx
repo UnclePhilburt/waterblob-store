@@ -142,23 +142,23 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'Who is this blob for: younger kids, older kids, teens, adults, a family, a camp, or something else?';
+      return 'Tell me who gets to launch off this thing. Younger kids, older kids, teens, adults, a family, a camp, or somebody else?';
     case 'size':
-      return `Pick the blob size and I will shape the preview. Bigger blobs make more launch and airtime, especially for older kids and teens. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
+      return `Now let us find the right size. If it is mostly younger kids or a smaller family, the Family Blob / Weekender is a friendly place to start. If older kids, teens, or adults want bigger launches, I would look harder at the 35 ft or 40 ft Original. What are you picturing? Sizes I can build here: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
-      return `You can change these color groups: body/main panels, stripes/side panels, end caps, and anchor patches. What main body color should we start with? Options: ${COLORS.join(', ')}.`;
+      return `Alright, now we get to dress it up. The color groups I can change are body/main panels, stripes/side panels, end caps, and anchor patches. What main body color should we start with? ${COLORS.join(', ')} all work.`;
     case 'stripeStyle':
-      return `How do you want the stripes laid out? Options: ${STRIPES.join(', ')}.`;
+      return `How do you want the stripes to feel: clean and simple, loud, or custom? I can do ${STRIPES.join(', ')}.`;
     case 'stripeColor':
-      return `What color should the stripe or side panels be? You can also say it all at once, like "red body, white stripe, blue end caps." Options: ${COLORS.join(', ')}.`;
+      return `What color should the stripe or side panels be? You can also give me the whole combo in one shot, like "red body, white stripe, blue end caps." ${COLORS.join(', ')} all work.`;
     case 'useCase':
       return `Tell me a little more about who will use it. Family with younger kids, older kids, teens, adults, summer camp, resort, private lake?`;
     case 'waterDepth':
-      return 'How deep is the water where this will be used?';
+      return 'Quick safety check before we get too excited: about how deep is the water where this will be used?';
     case 'timeline':
       return `When do you need it? Options: ${TIMELINES.join(', ')}.`;
     case 'quantity':
-      return 'How many are we building?';
+      return 'How many of these beauties are we building?';
     case 'contact':
       return 'Who should we send this masterpiece to? Name, email, and phone please.';
     case 'notes':
@@ -796,7 +796,7 @@ export default function WaterBlobAiPage() {
 
     let helper = 'Got it.';
     if (updated.has('product')) {
-      helper = 'Perfect, we are building a Water Blob.';
+      helper = 'Perfect, Water Blob it is. I like where this is going.';
     }
     if (updated.has('size')) {
       const sizeReason = explainSizeChoice(nextConfig);
