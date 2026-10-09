@@ -292,6 +292,23 @@ function getNamedColorTheme(text: string) {
   return { baseColor, stripeColor, endCapColor, anchorColor };
 }
 
+function wantsRandomColors(text: string) {
+  return /\b(random|randomize|shuffle|mix it up|surprise me|wild card|wildcard)\b/i.test(text);
+}
+
+function randomColor(exclude: string[] = []) {
+  const available = COLORS.filter((color) => !exclude.includes(color));
+  return available[Math.floor(Math.random() * available.length)] || COLORS[0];
+}
+
+function getRandomColorTheme() {
+  const baseColor = randomColor();
+  const stripeColor = randomColor([baseColor]);
+  const endCapColor = randomColor([baseColor, stripeColor]);
+  const anchorColor = randomColor([endCapColor]);
+  return { baseColor, stripeColor, endCapColor, anchorColor };
+}
+
 function looksLikeAgreement(text: string) {
   return /\b(yes|yeah|yep|sure|ok|okay|correct|right|that works|sounds good|do that|lets do that|let's do that|go with that|use that|perfect)\b/i.test(text);
 }
@@ -323,6 +340,19 @@ function findColorForGroup(text: string, keywords: string[]) {
 function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: ChatStep, answer: string) {
   const normalized = answer.toLowerCase();
   const colors = parseColors(answer);
+
+  const randomTheme = wantsRandomColors(answer) ? getRandomColorTheme() : null;
+  if (randomTheme && colors.length < 2) {
+    nextConfig.baseColor = randomTheme.baseColor;
+    nextConfig.stripeColor = randomTheme.stripeColor;
+    nextConfig.endCapColor = randomTheme.endCapColor;
+    nextConfig.anchorColor = randomTheme.anchorColor;
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
 
   const namedTheme = getNamedColorTheme(answer);
   if (namedTheme && colors.length < 2) {
