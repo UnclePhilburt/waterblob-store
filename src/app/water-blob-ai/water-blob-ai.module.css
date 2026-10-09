@@ -36,24 +36,31 @@
   margin: 12px 0 0;
 }
 
-.callButton {
+.phoneLink {
   flex: 0 0 auto;
-  border: 1px solid #d8dee8;
-  background: #ffffff;
   color: #111827;
-  border-radius: 999px;
-  padding: 12px 17px;
+  padding: 4px 0;
   font-weight: 900;
-  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+  text-decoration: underline;
+  text-underline-offset: 5px;
 }
 
 .builder {
   max-width: 1240px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(340px, 0.9fr) minmax(430px, 1.1fr);
   gap: 16px;
   align-items: stretch;
+  transition: grid-template-columns 260ms ease;
+}
+
+.chatOnly {
+  grid-template-columns: minmax(0, 780px);
+  justify-content: center;
+}
+
+.withPreview {
+  grid-template-columns: minmax(340px, 0.9fr) minmax(430px, 1.1fr);
 }
 
 .viewerPanel,
@@ -69,6 +76,7 @@
   display: flex;
   flex-direction: column;
   min-height: 660px;
+  animation: previewIn 260ms ease both;
 }
 
 .modelStage {
@@ -171,35 +179,8 @@
   gap: 12px;
 }
 
-.suggestedReplies {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.suggestedReplies button {
-  border: 1px solid #dbe2ea;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #111827;
-  padding: 10px 14px;
-  font: inherit;
-  font-weight: 850;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.suggestedReplies button:hover {
-  background: #111827;
-  color: #ffffff;
-  border-color: #111827;
-}
-
 .freeText {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 9px;
+  display: block;
 }
 
 .freeText input {
@@ -216,18 +197,6 @@
 .freeText input:focus {
   border-color: #0f766e;
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
-}
-
-.freeText button,
-.submitButton {
-  border: 0;
-  border-radius: 16px;
-  background: #111827;
-  color: #ffffff;
-  padding: 0 18px;
-  font-weight: 900;
-  white-space: nowrap;
-  cursor: pointer;
 }
 
 .quoteSummary {
@@ -267,13 +236,10 @@
   gap: 10px;
 }
 
-.submitButton {
-  min-height: 50px;
-}
-
-.submitButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
+.submitArea p {
+  margin: 0;
+  color: #657080;
+  font-weight: 800;
 }
 
 .error,
@@ -305,6 +271,11 @@
     grid-template-columns: 1fr;
   }
 
+  .chatOnly,
+  .withPreview {
+    grid-template-columns: 1fr;
+  }
+
   .viewerPanel,
   .chatPanel {
     min-height: auto;
@@ -324,15 +295,19 @@
     padding: 18px 12px 34px;
   }
 
-  .freeText {
-    grid-template-columns: 1fr;
-  }
-
-  .freeText button {
-    min-height: 46px;
-  }
-
   .quoteSummary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@keyframes previewIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }

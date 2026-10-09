@@ -132,23 +132,23 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'What are we making today?';
+      return 'What are we making today: Water Blob or Ski Tube?';
     case 'size':
-      return `What size ${productLabel(config.product)} do you want?`;
+      return `What size ${productLabel(config.product)} do you want? Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
-      return 'What main color should the body be?';
+      return `What main color should the body be? Options: ${COLORS.join(', ')}.`;
     case 'stripeStyle':
-      return 'How do you want the stripes laid out?';
+      return `How do you want the stripes laid out? Options: ${STRIPES.join(', ')}.`;
     case 'stripeColor':
-      return 'What color should the stripe be?';
+      return `What color should the stripe be? Options: ${COLORS.join(', ')}.`;
     case 'useCase':
-      return 'Who is this for?';
+      return `Who is this for? Examples: ${USE_CASES.join(', ')}.`;
     case 'waterDepth':
       return config.product === 'waterblob'
         ? 'How deep is the water where this will be used?'
         : 'Where will the ski tube mostly be used?';
     case 'timeline':
-      return 'When do you need it?';
+      return `When do you need it? Options: ${TIMELINES.join(', ')}.`;
     case 'quantity':
       return 'How many should we quote?';
     case 'contact':
@@ -156,7 +156,7 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'notes':
       return 'Any logo, stripe notes, or special details?';
     default:
-      return 'Review this and send the quote request.';
+      return 'Review this and type "send quote" when you want me to submit it.';
   }
 }
 
@@ -176,30 +176,6 @@ function nextStep(current: ChatStep): ChatStep {
     'ready',
   ];
   return flow[Math.min(flow.indexOf(current) + 1, flow.length - 1)];
-}
-
-function choicesForStep(step: ChatStep, config: Config) {
-  switch (step) {
-    case 'product':
-      return ['Water Blob', 'Ski Tube'];
-    case 'size':
-      return sizeOptionsFor(config.product);
-    case 'baseColor':
-    case 'stripeColor':
-      return COLORS;
-    case 'stripeStyle':
-      return STRIPES;
-    case 'useCase':
-      return USE_CASES;
-    case 'timeline':
-      return TIMELINES;
-    case 'quantity':
-      return ['1', '2', '3', '4+'];
-    case 'notes':
-      return ['No extra notes'];
-    default:
-      return [];
-  }
 }
 
 function parseProduct(text: string): ProductType {
@@ -231,7 +207,6 @@ export default function WaterBlobAiPage() {
   const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const modelPath = useMemo(() => modelForConfig(config), [config]);
-  const choices = choicesForStep(step, config);
   const currentQuestion = questionForStep(step, config);
   const progress = Math.round(([
     'product',
@@ -303,6 +278,12 @@ export default function WaterBlobAiPage() {
     setError('');
     setSubmitted(false);
     setInput('');
+
+    if (step === 'ready' && /\b(send|submit|quote|request)\b/i.test(answer)) {
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+      await sendInquiry();
+      return;
+    }
 
     let nextConfig = { ...config };
     let helper = '';
@@ -385,10 +366,10 @@ export default function WaterBlobAiPage() {
         const data = await response.json();
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: data.reply || 'I added that to the quote notes.' },
+          { role: 'assistant', text: `${data.reply || 'I added that to the quote notes.'} Type "send quote" when you want me to submit it.` },
         ]);
       } catch {
-        setMessages((prev) => [...prev, { role: 'assistant', text: 'I added that to the quote notes.' }]);
+        setMessages((prev) => [...prev, { role: 'assistant', text: 'I added that to the quote notes. Type "send quote" when you want me to submit it.' }]);
       }
       return;
     }
@@ -476,36 +457,38 @@ export default function WaterBlobAiPage() {
             Chat through a Water Blob or Ski Tube quote while the 3D preview updates in real time.
           </p>
         </div>
-        <a href="tel:+14178648461" className={styles.callButton}>(417) 864-8461</a>
+        <a href="tel:+14178648461" className={styles.phoneLink}>(417) 864-8461</a>
       </section>
 
-      <section className={styles.builder}>
-        <div className={styles.viewerPanel}>
-          <div className={styles.modelStage}>
-            <ProductBlobViewerWrapper
-              key={`${config.product || 'waterblob'}-${config.size || 'default'}`}
-              containerId="customer-ai-product-viewer"
-              modelPath={modelPath}
-              autoRotate
-              enableInteraction
-              enableColorCustomizer={false}
-              showAllParts
-              quality="medium"
-              onViewerReady={(viewer) => {
-                viewerRef.current = viewer;
-                scheduleColorSync(viewer, config);
-              }}
-            />
+      <section className={`${styles.builder} ${config.product ? styles.withPreview : styles.chatOnly}`}>
+        {config.product && (
+          <div className={styles.viewerPanel}>
+            <div className={styles.modelStage}>
+              <ProductBlobViewerWrapper
+                key={`${config.product}-${config.size || 'default'}`}
+                containerId="customer-ai-product-viewer"
+                modelPath={modelPath}
+                autoRotate
+                enableInteraction
+                enableColorCustomizer={false}
+                showAllParts
+                quality="medium"
+                onViewerReady={(viewer) => {
+                  viewerRef.current = viewer;
+                  scheduleColorSync(viewer, config);
+                }}
+              />
+            </div>
+            <div className={styles.previewMeta}>
+              <span>Live 3D preview</span>
+              <strong>{productLabel(config.product)}</strong>
+              <span>
+                {config.size || 'Size pending'} · {config.baseColor}
+                {config.stripeStyle === 'No stripes' ? ' · no stripes' : ` with ${config.stripeColor} ${config.stripeStyle.toLowerCase()}`}
+              </span>
+            </div>
           </div>
-          <div className={styles.previewMeta}>
-            <span>Live 3D preview</span>
-            <strong>{config.product ? productLabel(config.product) : 'Start with product type'}</strong>
-            <span>
-              {config.size || 'Size pending'} · {config.baseColor}
-              {config.stripeStyle === 'No stripes' ? ' · no stripes' : ` with ${config.stripeColor} ${config.stripeStyle.toLowerCase()}`}
-            </span>
-          </div>
-        </div>
+        )}
 
         <div className={styles.chatPanel}>
           <div className={styles.chatTop}>
@@ -528,20 +511,6 @@ export default function WaterBlobAiPage() {
           </div>
 
           <div className={styles.chatComposer}>
-            {choices.length > 0 && (
-              <div className={styles.suggestedReplies}>
-                {choices.map((choice) => (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => processAnswer(choice)}
-                  >
-                    {choice}
-                  </button>
-                ))}
-              </div>
-            )}
-
             <form className={styles.freeText} onSubmit={handleTypedSubmit}>
               <input
                 value={input}
@@ -550,11 +519,10 @@ export default function WaterBlobAiPage() {
                   step === 'contact'
                     ? 'Type name, email, and phone'
                     : step === 'ready'
-                      ? 'Ask a question or add another note'
+                      ? 'Type "send quote" or add another note'
                       : 'Type your answer'
                 }
               />
-              <button type="submit">Send</button>
             </form>
           </div>
 
@@ -580,9 +548,7 @@ export default function WaterBlobAiPage() {
           <div className={styles.submitArea}>
             {error && <div className={styles.error}>{error}</div>}
             {submitted && <div className={styles.success}>Quote request sent.</div>}
-            <button className={styles.submitButton} type="button" onClick={sendInquiry} disabled={submitting || step !== 'ready'}>
-              {submitting ? 'Sending...' : step === 'ready' ? 'Send quote request' : 'Finish chat to send'}
-            </button>
+            <p>{submitting ? 'Sending quote request...' : step === 'ready' ? 'Type "send quote" to submit.' : 'Answer each chat question to finish the quote.'}</p>
           </div>
         </div>
       </section>
