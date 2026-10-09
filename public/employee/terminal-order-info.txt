@@ -7,6 +7,8 @@
 GENERAL CUSTOM MATERIAL RATES
 - 22 oz vinyl: $2.10 per square foot.
 - 18 oz vinyl: $1.90 per square foot.
+- Default tarp/custom tarp material: use 22 oz vinyl at $2.10 per square foot when the employee/customer does not specify 18 oz or 22 oz.
+- If someone says "black tarp 10x10", treat it as a custom black 22 oz vinyl tarp that is 10 ft x 10 ft = 100 square feet, unit price $210.00.
 - Custom strap webbing, 1 inch wide: $0.25 per foot.
 - Custom strap webbing, 2 inch wide: $0.50 per foot.
 - Custom strap webbing, 4 inch wide: $0.75 per foot.

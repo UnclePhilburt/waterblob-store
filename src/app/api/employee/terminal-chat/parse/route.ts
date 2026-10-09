@@ -96,6 +96,8 @@ Rules:
 - Use the extra notes text for accessory/custom pricing.
 - If the extra notes include an exact listed price for a finished item, use that exact price.
 - For custom vinyl by dimensions, calculate square feet and multiply by the correct vinyl square-foot rate from the extra notes.
+- If the user says tarp/custom tarp and gives dimensions but no material weight, default to 22 oz vinyl at the extra-notes square-foot rate.
+- For dimensions like 10x10, assume feet unless the user explicitly says inches.
 - For custom straps/webbing, use exact finished strap prices first. Only use per-foot webbing rates when the requested strap is custom or does not match a listed finished item.
 - Put any formula used in the item notes, for example "10 ft x 10 ft = 100 sq ft x $2.10".
 - If price is unknown, set unitPrice to 0, confidence to low, and add a question.
