@@ -93,7 +93,7 @@ const INITIAL_CONFIG: Config = {
 const START_MESSAGES: ChatMessage[] = [
   {
     role: 'assistant',
-    text: 'Hi, I am Blobby. I can build your Water Blob quote. What size are you looking for?',
+    text: 'Hey, I am Blobby. Let us build your perfect Water Blob. What size are we starting with?',
   },
 ];
 
@@ -135,9 +135,9 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'What size Water Blob are you looking for?';
+      return 'What size Water Blob are we starting with?';
     case 'size':
-      return `What size ${productLabel(config.product)} do you want? Options: ${sizeOptionsFor(config.product).join(', ')}.`;
+      return `Pick the blob size and I will shape the preview. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
       return `What main color should the body be? Options: ${COLORS.join(', ')}.`;
     case 'stripeStyle':
@@ -151,13 +151,13 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'timeline':
       return `When do you need it? Options: ${TIMELINES.join(', ')}.`;
     case 'quantity':
-      return 'How many should we quote?';
+      return 'How many are we building?';
     case 'contact':
-      return 'What name, email, and phone should we use for the quote?';
+      return 'Who should we send this masterpiece to? Name, email, and phone please.';
     case 'notes':
       return 'Any logo, stripe notes, or special details?';
     default:
-      return 'Review this and type "send quote" when you want me to submit it.';
+      return 'Give it one last look, then type "send design" when this blob is ready to swim.';
   }
 }
 
@@ -257,7 +257,7 @@ function parseWaterDepth(text: string) {
 }
 
 function parseQuantity(text: string) {
-  const match = text.match(/\b(?:qty|quantity|quote|need|want)?\s*(\d+)\b/i);
+  const match = text.match(/\b(?:qty|quantity|need|want)?\s*(\d+)\b/i);
   return match ? Math.max(1, Number(match[1])) : 0;
 }
 
@@ -519,7 +519,7 @@ export default function WaterBlobAiPage() {
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: `${data.reply || 'Good question. I can help with Water Blob quotes.'} ${questionForStep(step, config)}`,
+          text: `${data.reply || 'Good question. I can help shape this Water Blob.'} ${questionForStep(step, config)}`,
         },
       ]);
     } catch {
@@ -527,7 +527,7 @@ export default function WaterBlobAiPage() {
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: `Good question. I can help with Water Blob quotes. ${questionForStep(step, config)}`,
+          text: `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`,
         },
       ]);
     }
@@ -541,7 +541,7 @@ export default function WaterBlobAiPage() {
     setSubmitted(false);
     setInput('');
 
-    if (step === 'ready' && /\b(send|submit|quote|request)\b/i.test(answer)) {
+    if (step === 'ready' && /\b(send|done|finished|ready|submit)\b/i.test(answer)) {
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
       await sendInquiry();
       return;
@@ -567,7 +567,7 @@ export default function WaterBlobAiPage() {
       setConfig(nextConfig);
       syncViewerColors(viewerRef.current, nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
-      askNext('baseColor', nextConfig, 'Got it.');
+      askNext('baseColor', nextConfig, 'Perfect. Now the fun part.');
       return;
     }
 
@@ -589,11 +589,11 @@ export default function WaterBlobAiPage() {
 
     let helper = 'Got it.';
     if (updated.has('product')) {
-      helper = 'Perfect, I will assume Water Blob.';
+      helper = 'Perfect, we are building a Water Blob.';
     }
-    if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Got it.';
+    if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Nice, I locked in that size.';
     if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
-      helper = 'Nice, the preview is changing now.';
+      helper = 'Nice, the blob is coming alive.';
     }
     if (updated.has('waterDepth') && nextConfig.product === 'waterblob') helper = 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.';
     if (updated.has('contact')) helper = nextConfig.email && nextConfig.phone ? 'Contact saved.' : 'I saved what I could.';
@@ -605,7 +605,7 @@ export default function WaterBlobAiPage() {
 
     const next = nextUnansweredStep(step, updated);
     if (updated.size === 0 && step !== 'ready') {
-      askNext(step, nextConfig, "I am not sure I caught the quote detail from that.");
+      askNext(step, nextConfig, "I am not sure I caught that design detail.");
       return;
     }
     if (!updated.has(step) && step !== 'product' && step !== 'notes' && step !== 'ready') {
@@ -630,10 +630,10 @@ export default function WaterBlobAiPage() {
         const data = await response.json();
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: `${data.reply || 'I added that to the quote notes.'} Type "send quote" when you want me to submit it.` },
+          { role: 'assistant', text: `${data.reply || 'I tucked that into the design notes.'} Type "send design" when this thing is ready.` },
         ]);
       } catch {
-        setMessages((prev) => [...prev, { role: 'assistant', text: 'I added that to the quote notes. Type "send quote" when you want me to submit it.' }]);
+        setMessages((prev) => [...prev, { role: 'assistant', text: 'I tucked that into the design notes. Type "send design" when this thing is ready.' }]);
       }
       return;
     }
@@ -651,12 +651,12 @@ export default function WaterBlobAiPage() {
     setError('');
 
     if (!config.name || !config.email || !config.phone) {
-      setError('I still need a name, email, and phone before sending this.');
+      setError('I still need a name, email, and phone before sending this design.');
       setSubmitting(false);
       setStep('contact');
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: 'Send me the customer name, email, and phone number, then I can submit the quote.' },
+        { role: 'assistant', text: 'Send me the customer name, email, and phone number, then I can launch this design over to the Water Blob team.' },
       ]);
       return;
     }
@@ -682,7 +682,7 @@ export default function WaterBlobAiPage() {
           email: config.email,
           phone: config.phone,
           message: summarizeConfig(config),
-          productName: `${productLabel(config.product)} AI Quote`,
+          productName: `${productLabel(config.product)} AI Design`,
           productPrice: 0,
           productSize: config.size,
           quantity: config.quantity,
@@ -695,16 +695,16 @@ export default function WaterBlobAiPage() {
 
       const data = await response.json();
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to send inquiry');
+        throw new Error(data.error || 'Failed to send design');
       }
 
       setSubmitted(true);
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: 'Sent. We have the product, 3D color choices, notes, and contact details.' },
+        { role: 'assistant', text: 'Splashed it over. We have the size, colors, notes, preview, and contact details.' },
       ]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send inquiry');
+      setError(err instanceof Error ? err.message : 'Failed to send design');
     } finally {
       setSubmitting(false);
     }
@@ -717,7 +717,7 @@ export default function WaterBlobAiPage() {
           <Link href="/products" className={styles.backLink}>Products</Link>
           <h1>Blobby</h1>
           <p>
-            Chat with Blobby to build a Water Blob quote while the 3D preview updates in real time.
+            Customize your own Water Blob with Blobby while the 3D preview updates in real time.
           </p>
         </div>
         <a href="tel:+14178648461" className={styles.phoneLink}>(417) 864-8461</a>
@@ -788,7 +788,7 @@ export default function WaterBlobAiPage() {
                   step === 'contact'
                     ? 'Type name, email, and phone'
                     : step === 'ready'
-                      ? 'Type "send quote" or add another note'
+                      ? 'Type "send design" or add another idea'
                       : 'Type your answer'
                 }
               />
@@ -797,7 +797,7 @@ export default function WaterBlobAiPage() {
 
           <div className={styles.quoteSummary}>
             <div>
-              <span>Quote draft</span>
+              <span>Blob draft</span>
               <strong>{config.product ? productLabel(config.product) : 'Not picked yet'}</strong>
             </div>
             <div>
@@ -816,8 +816,8 @@ export default function WaterBlobAiPage() {
 
           <div className={styles.submitArea}>
             {error && <div className={styles.error}>{error}</div>}
-            {submitted && <div className={styles.success}>Quote request sent.</div>}
-            <p>{submitting ? 'Sending quote request...' : step === 'ready' ? 'Type "send quote" to submit.' : 'Answer each chat question to finish the quote.'}</p>
+            {submitted && <div className={styles.success}>Blob design sent.</div>}
+            <p>{submitting ? 'Sending your blob design...' : step === 'ready' ? 'Type "send design" when this masterpiece is ready.' : 'Answer each chat question to finish your blob.'}</p>
           </div>
         </div>
       </section>

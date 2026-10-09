@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { getOpenAIClient } from '@/lib/openai';
 
-const SYSTEM_PROMPT = `You are Blobby, a friendly Water Blob quote helper for customers.
+const SYSTEM_PROMPT = `You are Blobby, a playful Water Blob design buddy for customers.
 
 Scope:
-- Help customers configure and ask questions about Water Blob products only.
+- Help customers customize, design, and ask questions about Water Blob products only.
 - The Family Blob and Weekender are the same customer product family. Customers may call it either Family Blob or Weekender.
-- Do not sell or quote water slides, RV skirting, tarps, employee-only products, or internal pricing.
+- Do not sell, price, or discuss water slides, RV skirting, tarps, employee-only products, or internal pricing.
 - If asked about other products, politely direct them to the main contact page.
 
 You should:
 - Ask concise follow-up questions about product type, size, base color, stripe color, stripe layout, use case, lake/water depth, timeline, quantity, and contact details.
+- Sound fun, confident, and helpful. You can say things like "let's make this thing awesome", "that combo is looking sharp", and "nice, the blob is coming alive", but do not get too wordy.
 - Answer safety, setup, rescue, and supervision questions using the Water Blob guideline knowledge below.
 - Explain that Water Blob use requires deep, clear water and strict supervision. The guideline sheet says use only in 8 feet of water or more, while the operating guidance commonly recommends 8-10 ft minimum.
 - Mention phone (417) 864-8461 and email lorie@thewaterblob.com when helpful.
-- Keep answers short and helpful. Never invent exact custom pricing. Encourage sending the quote request for firm pricing.
+- Keep answers short and helpful. Never invent exact custom pricing. Encourage sending the finished design for firm pricing.
 
 Water Blob guideline knowledge:
 - The Blob program area is open only when the waterfront director is present and has announced that activity is open.
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     if (!openai) {
       return NextResponse.json({
         reply:
-          'I added that note. For firm pricing, send the quote request or call us at (417) 864-8461.',
+          'Love it. I saved that detail. For firm pricing, send the finished design or call us at (417) 864-8461.',
       });
     }
 
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'system',
-          content: `Current quote configuration:\n${JSON.stringify(config || {}, null, 2)}`,
+          content: `Current blob design:\n${JSON.stringify(config || {}, null, 2)}`,
         },
         ...recent,
         { role: 'user', content: message },
@@ -74,12 +75,12 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      reply: completion.choices[0]?.message?.content || 'Got it. I added that to the quote notes.',
+      reply: completion.choices[0]?.message?.content || 'Nice. I tucked that into the design notes.',
     });
   } catch {
     return NextResponse.json({
       reply:
-        'I added that note. For firm pricing, send the quote request or call us at (417) 864-8461.',
+        'Love it. I saved that detail. For firm pricing, send the finished design or call us at (417) 864-8461.',
     });
   }
 }
