@@ -4,6 +4,8 @@ import AnalyticsProvider from '@/components/analytics/AnalyticsProvider';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
 export const metadata: Metadata = {
   title: 'Water Blob® | Commercial Water Trampolines & Lake Inflatables Since 1984',
   description:
@@ -39,6 +41,27 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {apiBaseUrl && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                window.WATERBLOB_API_BASE = ${JSON.stringify(apiBaseUrl)};
+                (function() {
+                  var nativeFetch = window.fetch.bind(window);
+                  window.fetch = function(input, init) {
+                    if (typeof input === 'string' && input.indexOf('/api/') === 0) {
+                      return nativeFetch(window.WATERBLOB_API_BASE + input, init);
+                    }
+                    if (input && input.url && input.url.indexOf(window.location.origin + '/api/') === 0) {
+                      return nativeFetch(input.url.replace(window.location.origin, window.WATERBLOB_API_BASE), init);
+                    }
+                    return nativeFetch(input, init);
+                  };
+                })();
+              `,
+            }}
+          />
+        )}
         {/* Inline theme script to prevent FOUC */}
         <script
           dangerouslySetInnerHTML={{

@@ -3,7 +3,7 @@
 (function() {
     'use strict';
 
-    const API_BASE = '';
+    const API_BASE = 'https://waterblob-store.onrender.com';
 
     const ActivityTracker = {
         init() {

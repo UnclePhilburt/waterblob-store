@@ -1,17 +1,32 @@
 import type { NextConfig } from 'next';
 
-const nextConfig: NextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'img.youtube.com',
-      },
-    ],
-  },
+const isGithubPagesBuild = process.env.GITHUB_PAGES === 'true';
 
-  async redirects() {
-    return [
+const nextConfig: NextConfig = {
+  ...(isGithubPagesBuild
+    ? {
+        output: 'export' as const,
+        trailingSlash: true,
+        images: {
+          unoptimized: true,
+        },
+      }
+    : {
+        images: {
+          remotePatterns: [
+            {
+              protocol: 'https',
+              hostname: 'img.youtube.com',
+            },
+          ],
+        },
+      }),
+
+  ...(isGithubPagesBuild
+    ? {}
+    : {
+        async redirects() {
+          return [
       // Old .html public pages → Next.js routes
       { source: '/index.html', destination: '/', permanent: true },
       { source: '/about.html', destination: '/about', permanent: true },
@@ -43,11 +58,19 @@ const nextConfig: NextConfig = {
       { source: '/employee-portal.html', destination: '/employee/', permanent: true },
       { source: '/employee-hub.html', destination: '/employee/hub.html', permanent: true },
       { source: '/employee-supplies.html', destination: '/employee/supplies.html', permanent: true },
-    ];
-  },
+          ];
+        },
 
-  async headers() {
-    return [
+        async headers() {
+          return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+        ],
+      },
       {
         // Cache GLB 3D model files for 1 year
         source: '/assets/:path*.glb',
@@ -62,18 +85,19 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=2592000' },
         ],
       },
-    ];
-  },
+          ];
+        },
 
-  async rewrites() {
-    return [
+        async rewrites() {
+          return [
       // Blog article redirects from old .html paths
       {
         source: '/blog/:slug.html',
         destination: '/blog/:slug',
       },
-    ];
-  },
+          ];
+        },
+      }),
 };
 
 export default nextConfig;

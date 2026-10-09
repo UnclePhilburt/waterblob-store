@@ -1,7 +1,7 @@
 // Shared authentication utilities for all admin pages
 // This script should be included in all admin pages
 
-const API_BASE = '';
+const API_BASE = 'https://waterblob-store.onrender.com';
 
 // Get auth token from localStorage
 function getAuthToken() {

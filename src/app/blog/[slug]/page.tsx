@@ -4,6 +4,10 @@ import type { Metadata } from 'next';
 import { blogPosts, sortedBlogPosts } from '../blogData';
 import styles from './article.module.css';
 
+export function generateStaticParams() {
+  return sortedBlogPosts.map((post) => ({ slug: post.slug }));
+}
+
 /* ---------------------------------------------------
    Dynamic Metadata
    --------------------------------------------------- */

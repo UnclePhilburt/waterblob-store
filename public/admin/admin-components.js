@@ -309,7 +309,7 @@ async function performGlobalSearch(query) {
     // Search products
     try {
         const token = localStorage.getItem('authToken');
-        const response = await fetch('/api/products', {
+        const response = await fetch(`${window.API_BASE || 'https://waterblob-store.onrender.com'}/api/products`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
