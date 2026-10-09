@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /employee/
+Disallow: /api/
+Disallow: /cart
+Disallow: /account
+
+Sitemap: https://thewaterblob.com/sitemap.xml

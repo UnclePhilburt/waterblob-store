@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Settings - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .header-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .header-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .settings-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-section h2 {
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-card {
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .status-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-connected {
+            color: var(--success);
+        }
+
+        .status-warning {
+            color: var(--warning);
+        }
+
+        .status-error {
+            color: var(--danger);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .form-group input:read-only {
+            background: var(--bg-tertiary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .form-hint {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .info-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid var(--accent-primary);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .info-box p {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning-box p {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="header-left">
+                <a href="/admin/hub.html">← Back to Hub</a>
+                <h1>Settings</h1>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="settings-section">
+            <h2>⚡ System Status</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-label">API Server</div>
+                    <div class="status-indicator status-connected">
+                        <span>✅</span> Running
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Database</div>
+                    <div class="status-indicator status-warning" id="dbStatus">
+                        <span>⚠️</span> Checking...
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Stripe Integration</div>
+                    <div class="status-indicator status-warning" id="stripeStatus">
+                        <span>⚠️</span> Not Configured
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Analytics</div>
+                    <div class="status-indicator status-connected">
+                        <span>✅</span> Active
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="settings-section">
+            <h2>🔒 Security Settings</h2>
+            <div class="warning-box">
+                <p>⚠️ Admin password is currently stored client-side. For production, implement proper backend authentication with encrypted passwords and session management.</p>
+            </div>
+            <div class="form-group">
+                <label>Current Password Location</label>
+                <input type="text" value="frontend/admin-hub.html (Line 491)" readonly />
+                <div class="form-hint">Password: waterblob2024</div>
+            </div>
+            <div class="divider"></div>
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" placeholder="Enter new password (min 8 characters)" />
+            </div>
+            <div class="form-group">
+                <label>Confirm Password</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password" />
+            </div>
+            <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+        </div>
+
+        <!-- Store Configuration -->
+        <div class="settings-section">
+            <h2>🏪 Store Configuration</h2>
+            <div class="form-group">
+                <label>Store Name</label>
+                <input type="text" value="Water Blob® Store" />
+            </div>
+            <div class="form-group">
+                <label>Store URL</label>
+                <input type="text" value="https://thewaterblob.com" />
+            </div>
+            <div class="form-group">
+                <label>Contact Email</label>
+                <input type="email" placeholder="contact@thewaterblob.com" />
+            </div>
+            <div class="form-group">
+                <label>Currency</label>
+                <select>
+                    <option>USD - US Dollar</option>
+                    <option>EUR - Euro</option>
+                    <option>GBP - British Pound</option>
+                </select>
+            </div>
+            <button class="btn btn-primary">Save Configuration</button>
+        </div>
+
+        <!-- Database Configuration -->
+        <div class="settings-section">
+            <h2>🗄️ Database Configuration</h2>
+            <div class="info-box">
+                <p>📝 Database credentials are configured in <code>backend/.env</code> file. Never commit this file to version control.</p>
+            </div>
+            <div class="form-group">
+                <label>Database Type</label>
+                <input type="text" value="PostgreSQL" readonly />
+            </div>
+            <div class="form-group">
+                <label>Database URL</label>
+                <input type="password" placeholder="postgresql://user:password@localhost:5432/waterblob" readonly />
+                <div class="form-hint">Configured in backend/.env as DATABASE_URL</div>
+            </div>
+            <div class="form-group">
+                <label>Connection Pool Size</label>
+                <input type="number" value="10" />
+            </div>
+        </div>
+
+        <!-- Square Integration -->
+        <div class="settings-section">
+            <h2>🟩 Square Integration</h2>
+            <div class="info-box">
+                <p>Sync customers and products between your website and Square. Square credentials are configured in <code>backend/.env</code>.</p>
+            </div>
+            <div class="status-grid" style="margin-bottom: 1.5rem;">
+                <div class="status-card">
+                    <div class="status-label">Square Status</div>
+                    <div class="status-indicator" id="squareStatus">
+                        <span>⚠️</span> Checking...
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn" id="importCustomersBtn" onclick="importCustomersFromSquare()" style="background: linear-gradient(135deg, #3b82f6, #6366f1); color: white;">
+                    📥 Import Customers from Square
+                </button>
+                <button class="btn" id="syncCustomersBtn" onclick="syncCustomersToSquare()" style="background: linear-gradient(135deg, #00a86b, #00d68f); color: white;">
+                    📤 Sync Customers to Square
+                </button>
+                <button class="btn" id="syncProductsBtn" onclick="syncProductsToSquare()" style="background: linear-gradient(135deg, #f59e0b, #f97316); color: white;">
+                    📦 Sync Products to Square
+                </button>
+            </div>
+            <div id="squareSyncResult" style="margin-top: 1rem; padding: 1rem; border-radius: 8px; display: none;"></div>
+        </div>
+
+        <!-- Email Configuration -->
+        <div class="settings-section">
+            <h2>📧 Email Configuration</h2>
+            <div class="form-group">
+                <label>Email Provider</label>
+                <select>
+                    <option>SMTP</option>
+                    <option>SendGrid</option>
+                    <option>AWS SES</option>
+                    <option>Mailgun</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>SMTP Host</label>
+                <input type="text" placeholder="smtp.gmail.com" />
+            </div>
+            <div class="form-group">
+                <label>SMTP Port</label>
+                <input type="number" placeholder="587" />
+            </div>
+            <div class="form-group">
+                <label>Email Notifications</label>
+                <select>
+                    <option selected>Enabled</option>
+                    <option>Disabled</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-section">
+            <h2>⚠️ Danger Zone</h2>
+            <div class="warning-box">
+                <p>⚠️ These actions are permanent and cannot be undone. Please proceed with caution.</p>
+            </div>
+            <button class="btn btn-danger" onclick="if(confirm('Clear all cache? This cannot be undone.')) alert('Cache cleared successfully!')">Clear Cache</button>
+            <button class="btn btn-danger" style="margin-left: 1rem;" onclick="if(confirm('Reset ALL settings to default? This cannot be undone.')) alert('Settings reset to default')">Reset to Defaults</button>
+        </div>
+
+        <!-- About -->
+        <div class="settings-section">
+            <h2>ℹ️ About</h2>
+            <div style="color: var(--text-secondary); line-height: 1.8;">
+                <p><strong>Version:</strong> 2.0.0</p>
+                <p><strong>Last Updated:</strong> November 2024</p>
+                <p><strong>Admin Panel:</strong> Water Blob® Store Admin Hub</p>
+                <p><strong>Environment:</strong> Development</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script>
+        // API_BASE is defined in admin-auth.js
+        async function loadStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+
+                const dbStatus = document.getElementById('dbStatus');
+                if (data.database === 'connected') {
+                    dbStatus.className = 'status-indicator status-connected';
+                    dbStatus.innerHTML = '<span>✅</span> Connected';
+                } else {
+                    dbStatus.className = 'status-indicator status-warning';
+                    dbStatus.innerHTML = '<span>⚠️</span> Not Configured';
+                }
+            } catch (error) {
+                console.error('Error loading status:', error);
+            }
+        }
+
+        function changePassword() {
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (!newPass || !confirmPass) {
+                alert('Please fill in both password fields');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            if (newPass.length < 8) {
+                alert('Password must be at least 8 characters long');
+                return;
+            }
+
+            alert(`⚠️ To change the password:\n\n1. Open frontend/admin-hub.html\n2. Find line 491: const ADMIN_PASSWORD\n3. Change 'waterblob2024' to: '${newPass}'\n4. Save the file\n\n⚠️ For production, implement proper backend authentication!`);
+        }
+
+        // Square Integration Functions
+        async function checkSquareStatus() {
+            const squareStatus = document.getElementById('squareStatus');
+            try {
+                const response = await fetch(`${API_BASE}/api/square/config`);
+                if (response.ok) {
+                    const data = await response.json();
+                    squareStatus.className = 'status-indicator status-connected';
+                    squareStatus.innerHTML = `<span>✅</span> Connected (${data.environment})`;
+                } else {
+                    squareStatus.className = 'status-indicator status-warning';
+                    squareStatus.innerHTML = '<span>⚠️</span> Not Configured';
+                }
+            } catch (error) {
+                squareStatus.className = 'status-indicator status-error';
+                squareStatus.innerHTML = '<span>❌</span> Connection Error';
+            }
+        }
+
+        function showSyncResult(message, isError = false) {
+            const resultDiv = document.getElementById('squareSyncResult');
+            resultDiv.style.display = 'block';
+            resultDiv.style.background = isError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)';
+            resultDiv.style.border = `1px solid ${isError ? 'var(--danger)' : 'var(--success)'}`;
+            resultDiv.style.color = 'var(--text-primary)';
+            resultDiv.innerHTML = message;
+        }
+
+        async function importCustomersFromSquare() {
+            const btn = document.getElementById('importCustomersBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Importing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/square/import-customers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSyncResult(`✅ Successfully imported ${data.imported || 0} customers from Square. ${data.skipped || 0} already existed.`);
+                } else {
+                    showSyncResult(`❌ Error: ${data.error || 'Failed to import customers'}`, true);
+                }
+            } catch (error) {
+                showSyncResult(`❌ Error: ${error.message}`, true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function syncCustomersToSquare() {
+            const btn = document.getElementById('syncCustomersBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Syncing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/square/sync-customers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSyncResult(`✅ Successfully synced ${data.synced || 0} customers to Square. ${data.failed || 0} failed.`);
+                } else {
+                    showSyncResult(`❌ Error: ${data.error || 'Failed to sync customers'}`, true);
+                }
+            } catch (error) {
+                showSyncResult(`❌ Error: ${error.message}`, true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function syncProductsToSquare() {
+            const btn = document.getElementById('syncProductsBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ Syncing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/square/sync-products`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSyncResult(`✅ Successfully synced ${data.synced || 0} products to Square. ${data.failed || 0} failed.`);
+                } else {
+                    showSyncResult(`❌ Error: ${data.error || 'Failed to sync products'}`, true);
+                }
+            } catch (error) {
+                showSyncResult(`❌ Error: ${error.message}`, true);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        loadStatus();
+        checkSquareStatus();
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>

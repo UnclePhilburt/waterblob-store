@@ -1,0 +1,121 @@
+/* Admin Panel Theme System - Dark & Light Mode */
+
+:root[data-theme="dark"] {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #141824;
+    --bg-tertiary: #1a1f2e;
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #6366f1;
+    --accent-glow: rgba(139, 92, 246, 0.4);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --border-color: rgba(148, 163, 184, 0.1);
+    --card-bg: rgba(26, 31, 46, 0.6);
+    --hover-bg: rgba(139, 92, 246, 0.1);
+    --input-bg: #141824;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"],
+:root:not([data-theme]) {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --accent-primary: #8b5cf6;
+    --accent-secondary: #6366f1;
+    --accent-glow: rgba(139, 92, 246, 0.2);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --border-color: rgba(148, 163, 184, 0.2);
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --hover-bg: rgba(139, 92, 246, 0.05);
+    --input-bg: #ffffff;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth theme transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Override transition for interactive elements */
+button, a, input, select, textarea {
+    transition: all 0.3s ease;
+}
+
+/* Light mode specific adjustments */
+:root[data-theme="light"] body {
+    background-image:
+        radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.08) 0px, transparent 50%);
+}
+
+:root[data-theme="light"] .admin-card,
+:root[data-theme="light"] .stat-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+}
+
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+}
+
+:root[data-theme="light"] input:focus,
+:root[data-theme="light"] select:focus,
+:root[data-theme="light"] textarea:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Chart adjustments for light mode */
+:root[data-theme="light"] canvas {
+    filter: brightness(0.95);
+}
+
+/* Scrollbar theming */
+:root[data-theme="dark"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: var(--bg-tertiary);
+    border-radius: 5px;
+}
+
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #2a3040;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-track {
+    background: var(--bg-tertiary);
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 5px;
+}
+
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

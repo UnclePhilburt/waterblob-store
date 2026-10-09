@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Order Management - Water Blob® Admin</title>
+    <link rel="stylesheet" href="admin-mobile.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f2e;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #6366f1;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --border-color: rgba(148, 163, 184, 0.1);
+            --card-bg: rgba(26, 31, 46, 0.6);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(at 20% 20%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 80%, rgba(99, 102, 241, 0.15) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .header-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+
+        .header-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .admin-header h1 {
+            font-size: 1.75rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-primary);
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Orders Table */
+        .orders-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 1.25rem;
+        }
+
+        .bulk-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .bulk-select {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr {
+            transition: all 0.2s;
+        }
+
+        tbody tr:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .badge-paid {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .badge-cancelled {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-secondary);
+            transform: translateY(-1px);
+        }
+
+        /* Order Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            padding: 2.5rem;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .order-detail {
+            margin-bottom: 1.5rem;
+        }
+
+        .order-detail label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .order-detail value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-wrapper {
+                overflow-x: scroll;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <div class="header-left">
+                <a href="/admin/hub.html">← Back to Hub</a>
+                <h1>Order Management</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportOrders()">📥 Export</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/admin/hub.html'">Logout</button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="statusFilter" onchange="loadOrders()">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Search Email</label>
+                    <input type="text" id="emailSearch" placeholder="customer@email.com" oninput="loadOrders()" />
+                </div>
+                <div class="filter-group">
+                    <label>Date From</label>
+                    <input type="date" id="dateFrom" onchange="loadOrders()" />
+                </div>
+                <div class="filter-group">
+                    <label>Date To</label>
+                    <input type="date" id="dateTo" onchange="loadOrders()" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-container">
+            <div class="table-header">
+                <h2>Orders</h2>
+                <div class="bulk-actions">
+                    <select class="bulk-select" id="bulkAction">
+                        <option value="">Bulk Actions</option>
+                        <option value="complete">Mark Complete</option>
+                        <option value="pending">Mark Pending</option>
+                        <option value="cancel">Cancel Orders</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="applyBulkAction()">Apply</button>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" onclick="toggleSelectAll(this)" /></th>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="7" style="text-align: center;">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <h2>Order Details</h2>
+            <div id="orderDetails"></div>
+            <button class="btn btn-primary" onclick="closeModal()" style="width: 100%; margin-top: 2rem;">Close</button>
+        </div>
+    </div>
+
+    <script src="admin-auth.js"></script>
+    <script>
+        // API_BASE is defined in admin-auth.js
+        let allOrders = [];
+        let selectedOrders = new Set();
+
+        async function loadOrders() {
+            try {
+                const response = await fetch(`${API_BASE}/api/orders`);
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                allOrders = await response.json();
+                filterAndDisplayOrders();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('ordersTableBody').innerHTML = 
+                    '<tr><td colspan="7" style="text-align: center; color: var(--danger);">No orders found or database not configured</td></tr>';
+            }
+        }
+
+        function filterAndDisplayOrders() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const emailSearch = document.getElementById('emailSearch').value.toLowerCase();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            let filtered = allOrders.filter(order => {
+                if (statusFilter !== 'all' && order.status !== statusFilter) return false;
+                if (emailSearch && !order.customer_email.toLowerCase().includes(emailSearch)) return false;
+                if (dateFrom && new Date(order.created_at) < new Date(dateFrom)) return false;
+                if (dateTo && new Date(order.created_at) > new Date(dateTo)) return false;
+                return true;
+            });
+
+            const tbody = document.getElementById('ordersTableBody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No orders match your filters</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(order => {
+                const date = new Date(order.created_at).toLocaleDateString();
+                const statusBadge = order.status === 'completed' ? 'badge-completed' :
+                                   order.status === 'pending' ? 'badge-pending' :
+                                   order.status === 'paid' ? 'badge-paid' : 'badge-cancelled';
+
+                return `
+                    <tr>
+                        <td><input type="checkbox" class="order-checkbox" value="${order.id}" onchange="toggleOrderSelect(${order.id})"/></td>
+                        <td>#${order.id}</td>
+                        <td>${order.customer_email}</td>
+                        <td>$${parseFloat(order.total || order.amount || 0).toFixed(2)}</td>
+                        <td><span class="badge ${statusBadge}">${order.status}</span></td>
+                        <td>${date}</td>
+                        <td>
+                            <button class="btn-action" onclick="viewOrder(${order.id})">View</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleSelectAll(checkbox) {
+            document.querySelectorAll('.order-checkbox').forEach(cb => {
+                cb.checked = checkbox.checked;
+                const orderId = parseInt(cb.value);
+                if (checkbox.checked) {
+                    selectedOrders.add(orderId);
+                } else {
+                    selectedOrders.delete(orderId);
+                }
+            });
+        }
+
+        function toggleOrderSelect(orderId) {
+            if (selectedOrders.has(orderId)) {
+                selectedOrders.delete(orderId);
+            } else {
+                selectedOrders.add(orderId);
+            }
+        }
+
+        function viewOrder(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const modal = document.getElementById('orderModal');
+            const details = document.getElementById('orderDetails');
+            
+            details.innerHTML = `
+                <div class="order-detail">
+                    <label>Order ID</label>
+                    <value>#${order.id}</value>
+                </div>
+                <div class="order-detail">
+                    <label>Customer Email</label>
+                    <value>${order.customer_email}</value>
+                </div>
+                <div class="order-detail">
+                    <label>Amount</label>
+                    <value>$${parseFloat(order.total || order.amount || 0).toFixed(2)}</value>
+                </div>
+                <div class="order-detail">
+                    <label>Status</label>
+                    <value><span class="badge ${order.status === 'completed' ? 'badge-completed' : order.status === 'pending' ? 'badge-pending' : order.status === 'paid' ? 'badge-paid' : 'badge-cancelled'}">${order.status}</span></value>
+                </div>
+                <div class="order-detail">
+                    <label>Date</label>
+                    <value>${new Date(order.created_at).toLocaleString()}</value>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').classList.remove('active');
+        }
+
+        function applyBulkAction() {
+            const action = document.getElementById('bulkAction').value;
+            if (!action || selectedOrders.size === 0) {
+                alert('Please select orders and an action');
+                return;
+            }
+            alert(`Bulk action "${action}" would be applied to ${selectedOrders.size} orders. Database connection required.`);
+        }
+
+        function exportOrders() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const csv = [
+                ['Order ID', 'Customer', 'Amount', 'Status', 'Date'],
+                ...allOrders
+                    .filter(o => statusFilter === 'all' || o.status === statusFilter)
+                    .map(o => [o.id, o.customer_email, o.amount, o.status, new Date(o.created_at).toLocaleDateString()])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `orders-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        document.getElementById('orderModal').addEventListener('click', (e) => {
+            if (e.target.id === 'orderModal') closeModal();
+        });
+
+        loadOrders();
+    </script>
+    <script src="admin-mobile-nav.js"></script>
+</body>
+</html>
