@@ -262,6 +262,31 @@ function buildBiggerBlobRecommendation(config: Config) {
   return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, so the 35 ft or 40 ft Original is usually the more exciting move. Want to switch to 35 or 40, or keep ${size}?`;
 }
 
+function explainSizeChoice(config: Config) {
+  const size = config.size;
+  const useCase = config.useCase.toLowerCase();
+
+  if (!size) return '';
+  if (size === 'Family Blob / Weekender') {
+    return useCase.includes('family')
+      ? 'I picked the Family Blob / Weekender because you said family, and that is the friendlier family-size starting point.'
+      : 'I picked the Family Blob / Weekender, which is the friendlier starter blob when you want something manageable and easygoing.';
+  }
+  if (size === '30 ft Weekender') {
+    return 'I picked the 30 ft Weekender because it keeps the Weekender / family style but gives you more room than the smaller family setup.';
+  }
+  if (size === '30 ft Original') {
+    return 'I picked the 30 ft Original because it is the classic full-size Water Blob feel without jumping all the way to the biggest launch.';
+  }
+  if (size === '35 ft Original') {
+    return 'I picked the 35 ft Original because bigger blobs give more launch and airtime, which is better for older kids, teens, and stronger jumpers.';
+  }
+  if (size === '40 ft Original') {
+    return 'I picked the 40 ft Original because it gives the most room, the biggest launch, and the most airtime for supervised older kids, teens, and adults.';
+  }
+  return `I picked ${size} based on what you told me.`;
+}
+
 function parseBiggerBlobSwitch(text: string) {
   const normalized = text.toLowerCase();
   if (/\b40\b|\bforty\b/.test(normalized)) return '40 ft Original';
@@ -627,7 +652,7 @@ export default function WaterBlobAiPage() {
       setConfig(nextConfig);
       syncViewerColors(viewerRef.current, nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
-      askNext('baseColor', nextConfig, 'Perfect. Now the fun part.');
+      askNext('baseColor', nextConfig, `${explainSizeChoice(nextConfig)} Now the fun part.`);
       return;
     }
 
@@ -650,7 +675,13 @@ export default function WaterBlobAiPage() {
       setConfig(nextConfig);
       syncViewerColors(viewerRef.current, nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
-      askNext(nextUnansweredStepForConfig(step, new Set(['size']), nextConfig), nextConfig, sizeChoice === 'keep' ? 'You got it, we will keep that size.' : 'Excellent choice. More blob, more launch.');
+      askNext(
+        nextUnansweredStepForConfig(step, new Set(['size']), nextConfig),
+        nextConfig,
+        sizeChoice === 'keep'
+          ? `${explainSizeChoice(nextConfig)} We will keep it there.`
+          : `${explainSizeChoice(nextConfig)} Excellent choice.`
+      );
       return;
     }
 
@@ -674,7 +705,10 @@ export default function WaterBlobAiPage() {
     if (updated.has('product')) {
       helper = 'Perfect, we are building a Water Blob.';
     }
-    if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Nice, I locked in that size.';
+    if (updated.has('size')) {
+      const sizeReason = explainSizeChoice(nextConfig);
+      helper = sizeReason || 'Nice, I locked in that size.';
+    }
     if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
       helper = 'Nice, the blob is coming alive.';
     }
