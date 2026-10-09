@@ -336,6 +336,17 @@ function wantsPrintSummary(text: string) {
   return /\b(print|pdf|summary|save as pdf|printable)\b/i.test(text);
 }
 
+function isColorObservation(text: string) {
+  const normalized = text.toLowerCase().replace(/[’]/g, "'");
+  if (parseColors(text).length === 0) return false;
+  return (
+    /\b(?:i\s+)?(?:do\s+not|don't|dont|cannot|can't|cant)\s+(?:really\s+)?(?:see|notice|spot|find)\b/.test(normalized) ||
+    /\b(?:not|isn't|isnt)\s+(?:showing|visible)\b/.test(normalized) ||
+    /\bwhere(?:\s+is|\s+are)?\b.*\b(?:showing|visible|color|colors|see|notice|spot|find)\b/.test(normalized) ||
+    /\bwhy\b.*\b(?:showing|visible|see|notice|spot|find)\b/.test(normalized)
+  );
+}
+
 function randomColor(exclude: string[] = []) {
   const available = COLORS.filter((color) => !exclude.includes(color));
   return available[Math.floor(Math.random() * available.length)] || COLORS[0];
@@ -1011,7 +1022,7 @@ export default function WaterBlobAiPage() {
     }
   }
 
-  async function answerConversationQuestion(answer: string) {
+  async function answerConversationQuestion(answer: string, allowDesignUpdates = true) {
     setMessages((prev) => [
       ...prev,
       { role: 'customer', text: answer },
@@ -1033,7 +1044,7 @@ export default function WaterBlobAiPage() {
       const data = await response.json();
       const reply = cleanAssistantText(data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`);
       const recommendation = applyAssistantRecommendation(config, reply);
-      if (recommendation.updated.size > 0) {
+      if (allowDesignUpdates && recommendation.updated.size > 0) {
         applyConfig(recommendation.nextConfig);
       }
       setMessages((prev) => [
@@ -1154,6 +1165,11 @@ export default function WaterBlobAiPage() {
         { role: 'customer', text: answer },
         { role: 'assistant', text: THIRTY_FOOT_CLARIFICATION },
       ]);
+      return;
+    }
+
+    if (isColorObservation(answer)) {
+      await answerConversationQuestion(answer, false);
       return;
     }
 
