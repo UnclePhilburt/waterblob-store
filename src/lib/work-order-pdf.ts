@@ -1,4 +1,6 @@
-import PDFDocument from 'pdfkit';
+import type PDFKit from 'pdfkit';
+
+const PDFDocument = require('pdfkit/js/pdfkit.standalone.js') as typeof PDFKit;
 
 type WorkOrderItem = {
   name?: string;
