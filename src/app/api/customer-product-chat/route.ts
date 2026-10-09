@@ -20,6 +20,7 @@ You should:
 - Mention the two-layer shell-and-bladder build naturally when discussing durability, quality, why it costs more than cheap online versions, or why camps and families choose it.
 - Hold a real conversation while helping them design. Ask who will use the blob: younger kids, older kids, teens, adults, family, camp, resort, or private lake.
 - Recommend bigger blobs for older kids, teens, adults, camps, or anyone wanting higher launches. Explain simply that bigger blobs create more launch, more airtime, and a more exciting ride when supervised properly.
+- If asked about bounce differences, explain clearly: the Family Blob / Weekender is friendlier and easier for younger kids or casual family use; the 30 ft Original gives the classic full-size bounce; the 35 ft Original has noticeably more launch for older kids, teens, and camps; the 40 ft Original gives the biggest launch and most airtime. Bigger Originals have more length and air volume, so the jumper's force transfers into a stronger launch at the far end.
 - For families with younger kids, explain that the Family Blob / Weekender is a friendlier starting point. For older kids or mixed-age families, suggest considering 35 ft or 40 ft Original if they want more height and excitement.
 - Use web search when current public context helps answer a sales, comparison, camp, lake, safety, durability, or product research question. Keep the Water Blob facts and guideline knowledge below authoritative if the web disagrees.
 - Answer safety, setup, rescue, and supervision questions using the Water Blob guideline knowledge below.
@@ -41,6 +42,15 @@ Water Blob guideline knowledge:
 - Rescue guidance: if someone appears injured on top of the Blob, do not move them. Evaluate the injury. If they should not be moved from the Blob, clear campers from the swim area, launch the rescue boat, send 4-5 people to stabilize the Blob, disconnect tie-downs from the Blob, keep one person at each corner to prevent rolling, move the Blob to shallow water or dock side, lower air pressure while 4 people assist, then place a backboard under the injured person before transport.
 - Warning rules: not a lifesaving device; never leave children unattended; use only under competent supervision; read the owner's manual before use; use by more than two people increases injury risk; not for children under 7; do not use if damaged or leaking; do not use under drugs or alcohol; do not use when under-inflated; do not use near docks, pilings, bridges, boats, shore, or other hazards; remove debris under the Blob; do not tow with anyone on it; towing speed must not exceed 5 mph; do not drag across abrasive surfaces; product must be properly anchored; not designed for tricks or gymnastics; do not allow somersaults; landing on head or neck can cause serious injury, paralysis, or death; do not use without a USCG-approved life vest; users must exercise caution and common sense.
 - Liability guidance: customers should read and understand all instructions and warnings before use; misuse can cause serious injury or death; follow the manual and all warnings; assembly and use should comply with law; release terms apply to the fullest extent permitted by law.`;
+
+function isBounceQuestion(message: string) {
+  return /\b(bounce|launch|airtime|air time|higher|height|difference|compare|originals?)\b/i.test(message) &&
+    /\b(originals?|weekender|family|blob|bounce|launch|airtime|air time)\b/i.test(message);
+}
+
+function bounceDifferenceAnswer() {
+  return 'The Originals are the bigger-launch blobs. The Family Blob / Weekender is friendlier and easier for younger kids or casual family use. The 30 ft Original gives the classic full-size Water Blob bounce. The 35 ft Original is a stronger jump for older kids, teens, and camps. The 40 ft Original is the biggest launch and most airtime. Bigger Originals have more length and air volume, so the jumper puts more energy into the blob and the person on the end gets sent higher when it is used safely and supervised.';
+}
 
 function buildResponseInput(message: string, config: unknown, conversationHistory: unknown): ResponseInputItem[] {
   const recent: ResponseInputItem[] = Array.isArray(conversationHistory)
@@ -73,11 +83,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
+    if (isBounceQuestion(message)) {
+      return NextResponse.json({ reply: bounceDifferenceAnswer() });
+    }
+
     const openai = getOpenAIClient();
     if (!openai) {
       return NextResponse.json({
-        reply:
-          'Love it. I saved that detail. For firm pricing, send the finished design or call us at (417) 864-8461.',
+        reply: 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.',
       });
     }
 
@@ -96,8 +109,7 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     return NextResponse.json({
-      reply:
-        'Love it. I saved that detail. For firm pricing, send the finished design or call us at (417) 864-8461.',
+      reply: 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.',
     });
   }
 }
