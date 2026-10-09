@@ -594,7 +594,6 @@ export default function WaterBlobAiPage() {
   const colorSyncTimersRef = useRef<number[]>([]);
 
   const modelPath = useMemo(() => modelForConfig(config), [config]);
-  const currentQuestion = questionForStep(step, config);
   const progress = Math.round(([
     'product',
     'size',
@@ -730,6 +729,8 @@ export default function WaterBlobAiPage() {
           message: answer,
           config,
           conversationHistory: messages,
+          nextQuestion: questionForStep(step, config),
+          helper: 'Answer the customer question first, then gently continue the current design conversation.',
         }),
       });
       const data = await response.json();
@@ -737,7 +738,7 @@ export default function WaterBlobAiPage() {
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: `${data.reply || 'Good question. I can help shape this Water Blob.'} ${questionForStep(step, config)}`,
+          text: data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`,
         },
       ]);
     } catch {
@@ -1039,7 +1040,7 @@ export default function WaterBlobAiPage() {
           <div className={styles.chatTop}>
             <div>
               <h2>Blobby Chat</h2>
-              <p>{currentQuestion}</p>
+              <p>Chat naturally. Blobby will guide the design and update the 3D preview as details come in.</p>
             </div>
             <span className={styles.status}>{progress}%</span>
           </div>
