@@ -38,6 +38,7 @@ export default function Navbar() {
             <Link href="/products" className="nav-dropdown-toggle">Products</Link>
             <div className="nav-dropdown-menu">
               <Link href="/products">Water Blob®s</Link>
+              <Link href="/water-blob-ai">Water Blob AI Builder</Link>
               <Link href="/waterslides">Water Slides</Link>
               <Link href="/skitubes">Ski Tubes</Link>
             </div>
