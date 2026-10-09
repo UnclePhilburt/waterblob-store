@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { getOpenAIClient } from '@/lib/openai';
 
-const SYSTEM_PROMPT = `You are Water Blob AI for customers.
+const SYSTEM_PROMPT = `You are Blobby, a friendly Water Blob quote helper for customers.
 
 Scope:
 - Help customers configure and ask questions about Water Blob products and Ski Tubes only.

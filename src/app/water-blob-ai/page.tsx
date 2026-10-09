@@ -619,9 +619,9 @@ export default function WaterBlobAiPage() {
       <section className={styles.header}>
         <div>
           <Link href="/products" className={styles.backLink}>Products</Link>
-          <h1>Water Blob AI Builder</h1>
+          <h1>Blobby</h1>
           <p>
-            Chat through a Water Blob or Ski Tube quote while the 3D preview updates in real time.
+            Chat with Blobby to build a Water Blob or Ski Tube quote while the 3D preview updates in real time.
           </p>
         </div>
         <a href="tel:+14178648461" className={styles.phoneLink}>(417) 864-8461</a>
@@ -660,7 +660,7 @@ export default function WaterBlobAiPage() {
         <div className={styles.chatPanel}>
           <div className={styles.chatTop}>
             <div>
-              <h2>Customer Chat</h2>
+              <h2>Blobby Chat</h2>
               <p>{currentQuestion}</p>
             </div>
             <span className={styles.status}>{progress}%</span>

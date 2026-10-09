@@ -2,7 +2,8 @@
   min-height: 100vh;
   background: #f7f8fb;
   color: #111827;
-  padding: 28px clamp(14px, 4vw, 44px) 52px;
+  padding: 128px clamp(14px, 4vw, 44px) 52px;
+  scroll-padding-top: 120px;
 }
 
 .header {
@@ -292,7 +293,7 @@
 
 @media (max-width: 640px) {
   .page {
-    padding: 18px 12px 34px;
+    padding: 112px 12px 34px;
   }
 
   .quoteSummary {
