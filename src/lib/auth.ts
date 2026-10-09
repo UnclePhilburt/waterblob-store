@@ -18,6 +18,54 @@ export const sessions = new Map<string, AdminSession>();
 /** In-memory customer sessions */
 export const customerSessions = new Map<string, CustomerSession>();
 
+/** Next midnight in America/Chicago, used for employee/admin workday sessions */
+export function getNextCentralMidnightTimestamp(): number {
+  const timeZone = 'America/Chicago';
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(now);
+
+  const year = Number(parts.find((part) => part.type === 'year')?.value);
+  const month = Number(parts.find((part) => part.type === 'month')?.value);
+  const day = Number(parts.find((part) => part.type === 'day')?.value);
+  const nextDayUtc = new Date(Date.UTC(year, month - 1, day + 1, 12));
+  const nextParts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(nextDayUtc);
+
+  const nextYear = Number(nextParts.find((part) => part.type === 'year')?.value);
+  const nextMonth = Number(nextParts.find((part) => part.type === 'month')?.value);
+  const nextDay = Number(nextParts.find((part) => part.type === 'day')?.value);
+  const midnightGuess = new Date(Date.UTC(nextYear, nextMonth - 1, nextDay));
+  const offsetParts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(midnightGuess);
+  const asLocalUtc = Date.UTC(
+    Number(offsetParts.find((part) => part.type === 'year')?.value),
+    Number(offsetParts.find((part) => part.type === 'month')?.value) - 1,
+    Number(offsetParts.find((part) => part.type === 'day')?.value),
+    Number(offsetParts.find((part) => part.type === 'hour')?.value) % 24,
+    Number(offsetParts.find((part) => part.type === 'minute')?.value),
+    Number(offsetParts.find((part) => part.type === 'second')?.value)
+  );
+  const offset = asLocalUtc - midnightGuess.getTime();
+  return Date.UTC(nextYear, nextMonth - 1, nextDay) - offset;
+}
+
 /** Extract bearer token from Authorization header */
 export function getBearerToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');

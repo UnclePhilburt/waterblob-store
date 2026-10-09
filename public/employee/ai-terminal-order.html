@@ -679,6 +679,7 @@
     <script>
         const API_BASE = window.location.origin;
         const STORAGE_KEY = 'waterblobTerminalChats';
+        const EMPLOYEE_EXPIRES_AT_KEY = 'employeeExpiresAt';
         let authToken = localStorage.getItem('employeeToken') || localStorage.getItem('authToken') || '';
         let conversations = [];
         let activeConversationId = null;
@@ -693,13 +694,37 @@
             return { ...extra, Authorization: `Bearer ${authToken}` };
         }
 
-        function expireSession() {
+        function clearEmployeeSession() {
             localStorage.removeItem('employeeToken');
             localStorage.removeItem('authToken');
+            localStorage.removeItem(EMPLOYEE_EXPIRES_AT_KEY);
             authToken = '';
+        }
+
+        function isEmployeeSessionExpired() {
+            const expiresAt = Number(localStorage.getItem(EMPLOYEE_EXPIRES_AT_KEY) || 0);
+            return Boolean(expiresAt && Date.now() >= expiresAt);
+        }
+
+        function scheduleMidnightLogout(expiresAtValue = localStorage.getItem(EMPLOYEE_EXPIRES_AT_KEY)) {
+            const expiresAt = Number(expiresAtValue || 0);
+            if (!expiresAt) return;
+            const delay = expiresAt - Date.now();
+            if (delay <= 0) {
+                expireSession('Employee session ended at midnight Central. Please log in again.');
+                return;
+            }
+            window.clearTimeout(window.employeeMidnightLogoutTimer);
+            window.employeeMidnightLogoutTimer = window.setTimeout(() => {
+                expireSession('Employee session ended at midnight Central. Please log in again.');
+            }, Math.min(delay, 2147483647));
+        }
+
+        function expireSession(message = 'Session expired after the server updated. Log in again and keep going.') {
+            clearEmployeeSession();
             setStatus('');
             showLogin();
-            setLoginStatus('Session expired after the server updated. Log in again and keep going.', 'bad');
+            setLoginStatus(message, 'bad');
         }
 
         async function apiFetch(url, options = {}) {
@@ -1134,6 +1159,10 @@
                 if (!response.ok) throw new Error(data.error || 'Login failed');
                 authToken = data.token;
                 localStorage.setItem('employeeToken', authToken);
+                if (data.expiresAt) {
+                    localStorage.setItem(EMPLOYEE_EXPIRES_AT_KEY, String(data.expiresAt));
+                    scheduleMidnightLogout(data.expiresAt);
+                }
                 showApp();
             } catch (error) {
                 setLoginStatus(error.message || 'Login failed', 'bad');
@@ -1161,16 +1190,20 @@
             renderAll();
         });
         el('logoutButton').addEventListener('click', () => {
-            localStorage.removeItem('employeeToken');
-            authToken = '';
+            clearEmployeeSession();
             showLogin();
         });
         el('sidebarToggle').addEventListener('click', () => {
             el('sidebar').classList.toggle('open');
         });
 
-        if (authToken) showApp();
-        else showLogin();
+        if (authToken && !isEmployeeSessionExpired()) {
+            scheduleMidnightLogout();
+            showApp();
+        } else {
+            if (authToken) clearEmployeeSession();
+            showLogin();
+        }
     </script>
 </body>
 </html>

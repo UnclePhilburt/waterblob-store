@@ -4094,6 +4094,142 @@
             border-color: rgba(16, 185, 129, 0.6);
         }
 
+        /* White refresh: aligns the portal shell with the AI Terminal chat UI */
+        :root {
+            --wb-bg: #ffffff;
+            --wb-panel: #f7f7f8;
+            --wb-panel-hover: #ececec;
+            --wb-border: rgba(13, 13, 13, 0.1);
+            --wb-text: #0d0d0d;
+            --wb-muted: #5d5d5d;
+            --wb-accent: #0d0d0d;
+        }
+
+        body {
+            background: var(--wb-bg) !important;
+            color: var(--wb-text) !important;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-layout {
+                background: var(--wb-bg) !important;
+                color: var(--wb-text) !important;
+                padding: 28px !important;
+            }
+
+            .desktop-header {
+                background: var(--wb-bg);
+                border-bottom: 1px solid var(--wb-border);
+                margin: -28px -28px 28px !important;
+                padding: 18px 28px !important;
+                position: sticky;
+                top: 0;
+                z-index: 20;
+            }
+
+            .desktop-logo {
+                background: none !important;
+                -webkit-text-fill-color: var(--wb-text) !important;
+                color: var(--wb-text) !important;
+                font-size: 24px !important;
+                letter-spacing: -0.02em;
+            }
+
+            .desktop-user-info,
+            .desktop-stat-card,
+            .desktop-card {
+                background: var(--wb-panel) !important;
+                border: 1px solid var(--wb-border) !important;
+                color: var(--wb-text) !important;
+                box-shadow: none !important;
+                backdrop-filter: none !important;
+            }
+
+            .desktop-user-avatar {
+                background: var(--wb-accent) !important;
+                color: #ffffff !important;
+            }
+
+            .desktop-card {
+                border-radius: 18px !important;
+                padding: 22px !important;
+            }
+
+            .desktop-card:hover {
+                background: var(--wb-panel-hover) !important;
+                transform: translateY(-2px) !important;
+                border-color: rgba(13, 13, 13, 0.18) !important;
+            }
+
+            .desktop-card::before {
+                display: none !important;
+            }
+
+            .desktop-card-title,
+            .desktop-stat-value {
+                color: var(--wb-text) !important;
+            }
+
+            .desktop-card-description,
+            .desktop-stat-label,
+            .desktop-user-info div,
+            .subtitle {
+                color: var(--wb-muted) !important;
+            }
+
+            .desktop-grid {
+                grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+                gap: 14px !important;
+                max-width: 1180px !important;
+            }
+
+            .desktop-stats-row {
+                max-width: 1180px !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            }
+
+            .desktop-card-icon {
+                filter: none !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .page {
+                background: var(--wb-bg) !important;
+                color: var(--wb-text) !important;
+            }
+
+            #pageMenu h1,
+            #pageSelectEmployee h1,
+            #pageEnterPin h1 {
+                color: var(--wb-text) !important;
+            }
+
+            .subtitle,
+            .menu-card-subtitle {
+                color: var(--wb-muted) !important;
+            }
+
+            .menu-card,
+            .employee-card {
+                background: var(--wb-panel) !important;
+                border: 1px solid var(--wb-border) !important;
+                color: var(--wb-text) !important;
+                box-shadow: none !important;
+            }
+
+            .menu-card-title,
+            .employee-name {
+                color: var(--wb-text) !important;
+            }
+
+            .logout-btn,
+            .back-btn,
+            .next-btn {
+                border-radius: 999px !important;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -7164,6 +7300,7 @@
 
     <script>
         const API_BASE = 'https://waterblob-store.onrender.com';
+        const EMPLOYEE_EXPIRES_AT_KEY = 'employeeExpiresAt';
 
         let currentFilter = 'all';
         let allWorkOrders = [];
@@ -7171,6 +7308,43 @@
         let authToken = null;
         let selectedUsername = '';
         let pinValue = '';
+
+        function saveEmployeeSession(token, username, expiresAt) {
+            authToken = token;
+            localStorage.setItem('employeeToken', token);
+            localStorage.setItem('employeeUsername', username);
+            if (expiresAt) {
+                localStorage.setItem(EMPLOYEE_EXPIRES_AT_KEY, String(expiresAt));
+                scheduleMidnightLogout(expiresAt);
+            }
+        }
+
+        function clearEmployeeSession() {
+            authToken = null;
+            localStorage.removeItem('employeeToken');
+            localStorage.removeItem('employeeUsername');
+            localStorage.removeItem(EMPLOYEE_EXPIRES_AT_KEY);
+        }
+
+        function isEmployeeSessionExpired() {
+            const expiresAt = Number(localStorage.getItem(EMPLOYEE_EXPIRES_AT_KEY) || 0);
+            return Boolean(expiresAt && Date.now() >= expiresAt);
+        }
+
+        function scheduleMidnightLogout(expiresAtValue = localStorage.getItem(EMPLOYEE_EXPIRES_AT_KEY)) {
+            const expiresAt = Number(expiresAtValue || 0);
+            if (!expiresAt) return;
+            const delay = expiresAt - Date.now();
+            if (delay <= 0) {
+                logout();
+                return;
+            }
+            window.clearTimeout(window.employeeMidnightLogoutTimer);
+            window.employeeMidnightLogoutTimer = window.setTimeout(() => {
+                alert('Employee session ended at midnight Central. Please log in again.');
+                logout();
+            }, Math.min(delay, 2147483647));
+        }
 
         // Google Maps Autocomplete using new API
         let autocomplete;
@@ -7448,12 +7622,8 @@
                 if (response.ok && data.token) {
                     // Success!
                     console.log('Login successful!');
-                    authToken = data.token;
                     selectedUsername = desktopSelectedUser;
-
-                    // Save to localStorage for auto-relogin
-                    localStorage.setItem('employeeToken', authToken);
-                    localStorage.setItem('employeeUsername', desktopSelectedUser);
+                    saveEmployeeSession(data.token, desktopSelectedUser, data.expiresAt);
 
                     // Close modal
                     document.getElementById('desktopPinModal').classList.remove('show');
@@ -7795,11 +7965,7 @@
 
                 if (response.ok) {
                     playSuccess();
-                    authToken = data.token;
-
-                    // Always remember the login
-                    localStorage.setItem('employeeToken', authToken);
-                    localStorage.setItem('employeeUsername', selectedUsername);
+                    saveEmployeeSession(data.token, selectedUsername, data.expiresAt);
 
                     goToPage('pageEnterPin', 'pageMenu', 'right');
                     loadWorkOrderStats();
@@ -7864,8 +8030,13 @@
             const savedUsername = localStorage.getItem('employeeUsername');
 
             if (savedToken && savedUsername) {
+                if (isEmployeeSessionExpired()) {
+                    clearEmployeeSession();
+                    return;
+                }
                 authToken = savedToken;
                 selectedUsername = savedUsername;
+                scheduleMidnightLogout();
 
                 // Instantly show menu without animation on page load
                 document.getElementById('pageSelectEmployee').classList.add('hidden-left');
@@ -7902,61 +8073,14 @@
         }
 
         function logout() {
-            authToken = null;
-            localStorage.removeItem('employeeToken');
-            localStorage.removeItem('employeeUsername');
+            clearEmployeeSession();
             goToPage('pageMenu', 'pageSelectEmployee', 'left');
         }
 
-        // Auto re-login when token expires (after server restart)
+        // Expired or restarted sessions should return to login instead of silently extending the day.
         async function autoRelogin() {
-            const savedUsername = localStorage.getItem('employeeUsername');
-            console.log('[Auth] autoRelogin called for username:', savedUsername);
-            if (!savedUsername) {
-                console.error('[Auth] No saved username found');
-                logout();
-                return null;
-            }
-
-            try {
-                // Attempt to login again with saved username
-                console.log('[Auth] Attempting relogin to', `${API_BASE}/api/employee/login`);
-                const response = await fetch(`${API_BASE}/api/employee/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: savedUsername,
-                        password: savedUsername // Employee portal uses username as password
-                    })
-                });
-
-                console.log('[Auth] Login response status:', response.status);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('[Auth] Login failed:', response.status, errorText);
-                    logout();
-                    return null;
-                }
-
-                const data = await response.json();
-                console.log('[Auth] Login response data:', data);
-                if (data.success) {
-                    authToken = data.token;
-                    localStorage.setItem('employeeToken', data.token);
-                    localStorage.setItem('employeeUsername', savedUsername); // Re-save username in case it was cleared
-                    console.log('[Auth] Auto re-login successful, new token saved');
-                    return data.token;
-                } else {
-                    console.error('[Auth] Login returned success=false');
-                    logout();
-                    return null;
-                }
-            } catch (error) {
-                console.error('[Auth] Auto re-login failed with error:', error);
-                logout();
-                return null;
-            }
+            logout();
+            return null;
         }
 
         function copyToClipboard(text, buttonElement) {

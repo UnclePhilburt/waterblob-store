@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sessions, generateToken } from '@/lib/auth';
+import { sessions, generateToken, getNextCentralMidnightTimestamp } from '@/lib/auth';
 import { applyRateLimit, authLimiter } from '@/lib/rate-limit';
 
 const VALID_USERNAMES = ['john', 'paul', 'lorie', 'cody'];
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const token = generateToken();
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+    const expiresAt = getNextCentralMidnightTimestamp();
 
     sessions.set(token, {
       user: { username: normalizedUsername, role: 'employee' },
