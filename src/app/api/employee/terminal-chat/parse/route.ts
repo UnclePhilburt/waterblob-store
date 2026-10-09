@@ -94,6 +94,10 @@ Rules:
 - unitPrice is dollars, not cents.
 - Use the product catalog prices when a matching item exists.
 - Use the extra notes text for accessory/custom pricing.
+- If the extra notes include an exact listed price for a finished item, use that exact price.
+- For custom vinyl by dimensions, calculate square feet and multiply by the correct vinyl square-foot rate from the extra notes.
+- For custom straps/webbing, use exact finished strap prices first. Only use per-foot webbing rates when the requested strap is custom or does not match a listed finished item.
+- Put any formula used in the item notes, for example "10 ft x 10 ft = 100 sq ft x $2.10".
 - If price is unknown, set unitPrice to 0, confidence to low, and add a question.
 - Do not invent prices. Employees will review before payment.
 

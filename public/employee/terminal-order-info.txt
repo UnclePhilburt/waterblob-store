@@ -1,9 +1,108 @@
-# Extra employee order/pricing notes for the AI Terminal Order page.
+# Water Blob employee AI Terminal Order price reference
 #
-# Add plain text lines here for items that are not in the products database.
-# Example format:
-# Black tarp 10x10 - $0.00 - replace with real price
-# Strap - $0.00 each - replace with real price
-#
-# The AI uses this file as reference material, but employees still review and
-# confirm prices before anything is sent to the Square terminal.
+# Employees must review and confirm every price before sending to Square.
+# Use exact listed item prices first. Only use formula prices when the order is
+# clearly custom or no exact listed item exists.
+
+GENERAL CUSTOM MATERIAL RATES
+- 22 oz vinyl: $2.10 per square foot.
+- 18 oz vinyl: $1.90 per square foot.
+- Custom strap webbing, 1 inch wide: $0.25 per foot.
+- Custom strap webbing, 2 inch wide: $0.50 per foot.
+- Custom strap webbing, 4 inch wide: $0.75 per foot.
+- If a customer gives width and length for custom vinyl, calculate square feet as width feet x length feet. If dimensions are in inches, convert inches to feet first.
+- For custom straps, use the listed finished strap prices below when the requested strap exactly matches a listed strap. Use the custom webbing per-foot rates only for custom strap/webbing requests that do not match a listed finished product.
+
+BLOB PRICE SHEET - JANUARY 2026
+Week-ender Blobs:
+- 25 ft blob with cord: $2035.00 plus freight.
+- 30 ft blob with cord: $2495.00 plus freight.
+- 35 ft blob with cord: $2662.00 plus freight.
+
+Classic Waterblobs:
+- 30 ft blob with bladder and cord: $4135.00 plus freight.
+- 35 ft blob with bladder and cord: $4465.00 plus freight.
+- 40 ft blob with bladder and cord: $4970.00 plus freight.
+
+Replacement bladders:
+- 30 ft bladder: $2135.00 plus freight.
+- 35 ft bladder: $2336.00 plus freight.
+- 40 ft bladder: $2585.00 plus freight.
+
+Replacement shells:
+- 30 ft shell with cord: $2587.00 plus freight.
+- 35 ft shell with cord: $2765.00 plus freight.
+- 40 ft shell with cord: $2950.00 plus freight.
+
+RV SKIRTING PRICES - 2026
+- 27 inch tall x 100 ft long complete kit, includes 5th wheel skirt: $1295.00.
+- 27 inch tall x 50 ft long RV skirt only: $585.00.
+- 27 inch tall x 100 ft long RV skirt only: $1065.00.
+- 32 to 44 inch tall x 100 ft long complete kit, includes wheel skirt: $1443.75.
+- 32 to 44 inch tall x 50 ft long RV skirt only: $642.00.
+- 32 to 44 inch tall x 100 ft long RV skirt only: $1123.50.
+- RV skirting pricing includes 50 ft to 100 ft of velcro depending on length of kit.
+- Additional skirting: $9.00 per foot.
+- Additional 2 inch adhesive hook and loop: $0.90 per foot.
+- Twist snaps: $1.85 each.
+- RV skirting material is 22 oz coated polyester vinyl.
+- RV skirting can fit gooseneck hitch, 5th wheel, custom, or homemade trailers.
+- RV skirting colors: white, gray, black, red, blue, green, brown.
+- RV skirting orders ship with white 1/4 inch braided nylon rope installed.
+
+VINYL, SHOCK CORD, VELCRO - 2025
+- 18 oz vinyl: $6.65 per yard if sold by the yard.
+- 22 oz vinyl: $10.00 per yard if sold by the yard.
+- 72 inch mesh: $7.75 per yard.
+- 3/8 inch shock cord: $0.68 per foot.
+- 2 inch adhesive hook, black: $0.60 per foot.
+- 2 inch adhesive loop, black: $0.60 per foot.
+- 2 inch adhesive hook, white: $0.55 per foot.
+- 2 inch adhesive loop, white: $0.55 per foot.
+- 2 inch sew-on hook, black: $0.27 per foot.
+- 2 inch sew-on loop, black: $0.27 per foot.
+- 2 inch sew-on hook, white: $0.31 per foot.
+- 2 inch sew-on loop, white: $0.31 per foot.
+
+TOW STRAP PRICING - 2025
+- 2 inch x 25 ft 1 ply tow strap, item 22025: $47.75.
+- 2 inch x 30 ft 1 ply tow strap, item 22030: $55.00.
+- 4 inch x 25 ft 1 ply tow strap, item 43625: $99.65.
+- 4 inch x 30 ft 1 ply tow strap, 36000 break, 18000 work load: $103.50.
+- 6 inch x 25 ft 1 ply tow strap, 54000 break, 27000 work load: $146.90.
+- 6 inch x 30 ft 1 ply tow strap: $167.85.
+- 8 inch x 25 ft 1 ply tow strap: $181.45.
+- 8 inch x 30 ft 1 ply tow strap: $208.00.
+- 12 inch x 25 ft 1 ply tow strap: $350.00.
+- 12 inch x 30 ft 1 ply tow strap: $328.25.
+
+RATCHET STRAPS, AXLE STRAPS, HOOKS, HARDWARE
+- 1 inch x 16 ft ratchet strap with s-hooks: $11.50.
+- 1-1/2 inch x 16 ft ratchet strap with s-hooks: $15.00.
+- 2 inch x 27 ft ratchet strap with flat hooks: $18.50.
+- 1 inch x 10 ft ratchet strap with handlebar loop and s-hook: $9.50.
+- 2 inch x 30 ft ratchet strap with flat hooks: $19.75.
+- 4 inch x 40 ft captive strap: $23.00.
+- 4 inch x 30 ft captive strap: $16.30.
+- 2 inch x 2 ft axle strap: $5.50.
+- 2 inch x 3 ft axle strap: $6.50.
+- 2 inch x 8 ft combination ratchet and axle strap with twisted flat snap hooks: $23.50.
+- 2 inch caddy strap: $18.50.
+- 2 inch flat hook: $2.50.
+- 4 inch flat hook: $3.50.
+- 2 inch wire hook: $2.35.
+- 2 inch light duty wire hook: $3.60.
+- 2 inch e-clips: $1.75.
+- 1 inch 1500 pound swivel hook: $2.25.
+- 1 inch light duty s-hook: $2.15.
+- 15 inch tarp strap: $1.70 each, or $85.00 per box of 50.
+- Grommets: $0.30 each.
+- 1 inch cam buckle: $2.85.
+- 2 inch spring e-clips: $2.75.
+- 2 inch 4400 pound ratchet: $7.50.
+- 2 inch long wide handle ratchet: $10.00.
+- 2 inch short wide handle ratchet: $9.80.
+- 2 inch standard handle short ratchet: $9.80.
+- 2 inch 12 pound tiedown web: $0.40 per foot.
+- 2 inch seatbelt web: $0.30 per foot.
+- 4 inch tiedown web: $0.60 per foot.
