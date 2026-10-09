@@ -472,18 +472,12 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
   if (size) {
     nextConfig.size = size;
     updated.add('size');
-  } else if (step === 'size' && !isQuestion) {
-    nextConfig.size = answer;
-    updated.add('size');
   }
 
   const stripeStyle = parseStripeStyle(answer);
 
   if (stripeStyle) {
     nextConfig.stripeStyle = stripeStyle;
-    updated.add('stripeStyle');
-  } else if (step === 'stripeStyle' && !isQuestion) {
-    nextConfig.stripeStyle = answer;
     updated.add('stripeStyle');
   }
 
