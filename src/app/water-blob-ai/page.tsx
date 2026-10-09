@@ -200,7 +200,7 @@ function parseSize(product: ProductType, text: string) {
   const saysThirty = /\b30\b|\bthirty\b/.test(normalized);
   if (
     product === 'waterblob' &&
-    /\b(most air ?time|biggest air ?time|max air ?time|maximum air ?time|biggest launch|highest launch|most launch|send.*highest|send.*flying)\b/.test(normalized)
+    /\b(serious air ?time|more air ?time|most air ?time|biggest air ?time|max air ?time|maximum air ?time|biggest launch|highest launch|most launch|send.*highest|send.*flying)\b/.test(normalized)
   ) {
     return '40 ft Original';
   }
@@ -434,6 +434,40 @@ function colorChangeSummary(config: Config, updated: Set<string>) {
 
 function cleanAssistantText(text: string) {
   return text.replace(/\*\*/g, '').trim();
+}
+
+function applyAssistantRecommendation(config: Config, reply: string) {
+  const nextConfig = { ...config };
+  const updated = new Set<string>();
+  const normalized = reply.toLowerCase();
+  const recommends = /\b(recommend|go with|choose|picked|locked|set|awesome choice|great choice|will give|biggest|most airtime|serious airtime)\b/.test(normalized);
+
+  if (!recommends) return { nextConfig, updated };
+
+  if (/\b40\s*(?:ft|foot|feet)\b/.test(normalized) && normalized.includes('original')) {
+    nextConfig.size = '40 ft Original';
+    updated.add('size');
+  } else if (/\b35\s*(?:ft|foot|feet)\b/.test(normalized) && normalized.includes('original')) {
+    nextConfig.size = '35 ft Original';
+    updated.add('size');
+  } else if (/\b30\s*(?:ft|foot|feet)\b/.test(normalized) && normalized.includes('original')) {
+    nextConfig.size = '30 ft Original';
+    updated.add('size');
+  } else if (/\b30\s*(?:ft|foot|feet)\b/.test(normalized) && normalized.includes('weekender')) {
+    nextConfig.size = '30 ft Weekender';
+    updated.add('size');
+  } else if (normalized.includes('family blob') || normalized.includes('weekender')) {
+    nextConfig.size = 'Family Blob / Weekender';
+    updated.add('size');
+  }
+
+  if (
+    getNamedColorTheme(reply) ||
+    /\b(?:for the body|body:|for the stripe|for the stripes|stripes?:|for the end cap|for the end caps|end caps?:|for the anchor|for the anchor patches|anchor patches?:)\b/i.test(reply)
+  ) {
+    applyColorLanguage(nextConfig, updated, 'baseColor', reply);
+  }
+  return { nextConfig, updated };
 }
 
 function parseStripeStyle(text: string) {
@@ -794,6 +828,11 @@ export default function WaterBlobAiPage() {
       });
       const data = await response.json();
       const reply = cleanAssistantText(data.reply || (helper ? `${helper} ${question}` : question));
+      const recommendation = applyAssistantRecommendation(nextConfig, reply);
+      if (recommendation.updated.size > 0) {
+        setConfig(recommendation.nextConfig);
+        syncViewerColors(viewerRef.current, recommendation.nextConfig);
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -833,6 +872,11 @@ export default function WaterBlobAiPage() {
       });
       const data = await response.json();
       const reply = cleanAssistantText(data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`);
+      const recommendation = applyAssistantRecommendation(config, reply);
+      if (recommendation.updated.size > 0) {
+        setConfig(recommendation.nextConfig);
+        syncViewerColors(viewerRef.current, recommendation.nextConfig);
+      }
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
