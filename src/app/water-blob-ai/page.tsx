@@ -167,7 +167,7 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'contact':
       return 'Who should we send this masterpiece to? Name, email, and phone please.';
     case 'notes':
-      return 'Any logo, stripe notes, or special details?';
+      return 'Any stripe notes, color placement notes, delivery timing, or special details?';
     default:
       return 'Give it one last look, then type "send design" when this blob is ready to swim.';
   }
