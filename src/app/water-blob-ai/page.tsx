@@ -44,6 +44,7 @@ type Config = {
   quantity: number;
   baseColor: string;
   stripeColor: string;
+  endCapColor: string;
   stripeStyle: string;
   useCase: string;
   waterDepth: string;
@@ -78,6 +79,7 @@ const INITIAL_CONFIG: Config = {
   quantity: 1,
   baseColor: 'Blue',
   stripeColor: 'Yellow',
+  endCapColor: 'Blue',
   stripeStyle: 'Single stripe',
   useCase: '',
   waterDepth: '',
@@ -119,6 +121,7 @@ function summarizeConfig(config: Config) {
     `Size: ${config.size || 'Not selected'}`,
     `Quantity: ${config.quantity}`,
     `Base color: ${config.baseColor}`,
+    `End cap color: ${config.endCapColor}`,
     `Stripe style: ${config.stripeStyle}`,
     `Stripe color: ${config.stripeColor}`,
     config.useCase ? `Use: ${config.useCase}` : '',
@@ -251,7 +254,7 @@ function looksLikeQuestion(text: string) {
 
 function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: string) {
   const nextConfig = { ...config };
-  const updated = new Set<ChatStep>();
+  const updated = new Set<string>();
   const normalized = answer.toLowerCase();
   const isQuestion = looksLikeQuestion(answer);
 
@@ -272,6 +275,10 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
 
   const colors = parseColors(answer);
   const stripeStyle = parseStripeStyle(answer);
+  const mentionsEndCaps = normalized.includes('end cap') || normalized.includes('endcap');
+  const mentionsBody = normalized.includes('body') || normalized.includes('main') || normalized.includes('base');
+  const mentionsStripe = normalized.includes('stripe');
+
   if (stripeStyle) {
     nextConfig.stripeStyle = stripeStyle;
     updated.add('stripeStyle');
@@ -281,13 +288,19 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
   }
 
   if (colors.length > 0) {
-    if (normalized.includes('stripe')) {
+    if (mentionsEndCaps) {
+      nextConfig.endCapColor = colors[colors.length - 1];
+      updated.add('endCapColor');
+    } else if (mentionsStripe) {
       nextConfig.stripeColor = colors[colors.length - 1];
       updated.add('stripeColor');
       if (colors.length > 1) {
         nextConfig.baseColor = colors[0];
         updated.add('baseColor');
       }
+    } else if (mentionsBody) {
+      nextConfig.baseColor = colors[0];
+      updated.add('baseColor');
     } else if (step === 'stripeColor') {
       nextConfig.stripeColor = colors[0];
       updated.add('stripeColor');
@@ -354,7 +367,7 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
   return { nextConfig, updated };
 }
 
-function nextUnansweredStep(current: ChatStep, updated: Set<ChatStep>) {
+function nextUnansweredStep(current: ChatStep, updated: Set<string>) {
   let next = nextStep(current);
   while (updated.has(next) && next !== 'ready') {
     next = nextStep(next);
@@ -372,6 +385,7 @@ export default function WaterBlobAiPage() {
   const [error, setError] = useState('');
   const viewerRef = useRef<ViewerInstance | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const colorSyncTimersRef = useRef<number[]>([]);
 
   const modelPath = useMemo(() => modelForConfig(config), [config]);
   const currentQuestion = questionForStep(step, config);
@@ -394,6 +408,7 @@ export default function WaterBlobAiPage() {
     if (!viewer?.setGroupColor || !viewer.partGroups?.length) return;
 
     const baseHex = COLOR_HEX[nextConfig.baseColor] || COLOR_HEX.Blue;
+    const endCapHex = COLOR_HEX[nextConfig.endCapColor] || baseHex;
     const stripeHex = nextConfig.stripeStyle === 'No stripes'
       ? baseHex
       : COLOR_HEX[nextConfig.stripeColor] || COLOR_HEX.Yellow;
@@ -404,10 +419,12 @@ export default function WaterBlobAiPage() {
         name.includes('primary') ||
         name.includes('main') ||
         name.includes('top') ||
-        name.includes('bottom') ||
-        name.includes('end cap')
+        name.includes('bottom')
       ) {
         viewer.setGroupColor?.(index, baseHex);
+      }
+      if (name.includes('end cap')) {
+        viewer.setGroupColor?.(index, endCapHex);
       }
       if (name.includes('secondary') || name.includes('side')) {
         viewer.setGroupColor?.(index, stripeHex);
@@ -418,11 +435,20 @@ export default function WaterBlobAiPage() {
     });
   }, []);
 
+  const clearColorSyncTimers = useCallback(() => {
+    colorSyncTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    colorSyncTimersRef.current = [];
+  }, []);
+
   const scheduleColorSync = useCallback((viewer: ViewerInstance | null, nextConfig: Config) => {
+    clearColorSyncTimers();
     [120, 350, 800, 1400, 2400, 3800, 5600].forEach((delay) => {
-      window.setTimeout(() => syncViewerColors(viewer, nextConfig), delay);
+      const timer = window.setTimeout(() => syncViewerColors(viewer, nextConfig), delay);
+      colorSyncTimersRef.current.push(timer);
     });
-  }, [syncViewerColors]);
+  }, [clearColorSyncTimers, syncViewerColors]);
+
+  useEffect(() => clearColorSyncTimers, [clearColorSyncTimers]);
 
   useEffect(() => {
     messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: 'smooth' });
@@ -507,7 +533,9 @@ export default function WaterBlobAiPage() {
         : 'Perfect, I will assume Water Blob.';
     }
     if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Got it.';
-    if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle')) helper = 'Nice, the preview is changing now.';
+    if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
+      helper = 'Nice, the preview is changing now.';
+    }
     if (updated.has('waterDepth') && nextConfig.product === 'waterblob') helper = 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.';
     if (updated.has('contact')) helper = nextConfig.email && nextConfig.phone ? 'Contact saved.' : 'I saved what I could.';
     if (updated.has('notes')) helper = 'Added.';
@@ -519,6 +547,10 @@ export default function WaterBlobAiPage() {
     const next = nextUnansweredStep(step, updated);
     if (updated.size === 0 && step !== 'ready') {
       askNext(step, nextConfig, "I am not sure I caught the quote detail from that.");
+      return;
+    }
+    if (!updated.has(step) && step !== 'product' && step !== 'notes' && step !== 'ready') {
+      askNext(step, nextConfig, helper);
       return;
     }
     if (step === 'notes') {
@@ -578,6 +610,7 @@ export default function WaterBlobAiPage() {
         product: productLabel(config.product),
         size: config.size,
         baseColor: config.baseColor,
+        endCapColor: config.endCapColor,
         stripeStyle: config.stripeStyle,
         stripeColor: config.stripeColor,
       });
@@ -650,6 +683,11 @@ export default function WaterBlobAiPage() {
                   viewerRef.current = viewer;
                   scheduleColorSync(viewer, config);
                 }}
+                onModelReady={(viewer) => {
+                  viewerRef.current = viewer;
+                  syncViewerColors(viewer, config);
+                  scheduleColorSync(viewer, config);
+                }}
               />
             </div>
             <div className={styles.previewMeta}>
@@ -658,6 +696,7 @@ export default function WaterBlobAiPage() {
               <span>
                 {config.size || 'Size pending'} · {config.baseColor}
                 {config.stripeStyle === 'No stripes' ? ' · no stripes' : ` with ${config.stripeColor} ${config.stripeStyle.toLowerCase()}`}
+                {` · ${config.endCapColor} end caps`}
               </span>
             </div>
           </div>
@@ -710,7 +749,7 @@ export default function WaterBlobAiPage() {
             </div>
             <div>
               <span>Look</span>
-              <strong>{config.baseColor} / {config.stripeColor}</strong>
+              <strong>{config.baseColor} / {config.stripeColor} / {config.endCapColor}</strong>
             </div>
             <div>
               <span>Contact</span>

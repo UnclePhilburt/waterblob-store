@@ -16,6 +16,7 @@ interface ProductBlobViewerWrapperProps {
   style?: React.CSSProperties;
   className?: string;
   onViewerReady?: (viewer: ViewerInstance) => void;
+  onModelReady?: (viewer: ViewerInstance) => void;
   onColorChange?: (colors: Record<string, string>) => void;
 }
 
@@ -36,10 +37,22 @@ export default function ProductBlobViewerWrapper({
   style,
   className,
   onViewerReady,
+  onModelReady,
   onColorChange,
 }: ProductBlobViewerWrapperProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<ViewerInstance | null>(null);
+  const onViewerReadyRef = useRef(onViewerReady);
+  const onModelReadyRef = useRef(onModelReady);
+  const onColorChangeRef = useRef(onColorChange);
+  const onAnchorClickRef = useRef(onAnchorClick);
+
+  useEffect(() => {
+    onViewerReadyRef.current = onViewerReady;
+    onModelReadyRef.current = onModelReady;
+    onColorChangeRef.current = onColorChange;
+    onAnchorClickRef.current = onAnchorClick;
+  }, [onViewerReady, onModelReady, onColorChange, onAnchorClick]);
 
   const destroyViewer = useCallback(() => {
     if (viewerRef.current) {
@@ -76,13 +89,18 @@ export default function ProductBlobViewerWrapper({
           quality,
           showAnchorHotspots,
           anchorIndices,
-          onAnchorClick,
-          onColorChange,
+          onAnchorClick: (...args: Parameters<NonNullable<ProductBlobViewerWrapperProps['onAnchorClick']>>) => {
+            onAnchorClickRef.current?.(...args);
+          },
+          onModelReady: (readyViewer: ViewerInstance) => {
+            onModelReadyRef.current?.(readyViewer);
+          },
+          onColorChange: (colors: Record<string, string>) => {
+            onColorChangeRef.current?.(colors);
+          },
         });
         viewerRef.current = viewer;
-        if (onViewerReady) {
-          onViewerReady(viewer);
-        }
+        onViewerReadyRef.current?.(viewer);
       } catch (err) {
         // silently handled
       }
@@ -94,7 +112,7 @@ export default function ProductBlobViewerWrapper({
       mounted = false;
       destroyViewer();
     };
-  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, showAnchorHotspots, anchorIndices, onAnchorClick, onViewerReady, onColorChange, destroyViewer]);
+  }, [containerId, modelPath, autoRotate, enableInteraction, enableColorCustomizer, showAllParts, quality, showAnchorHotspots, anchorIndices, destroyViewer]);
 
   return (
     <div

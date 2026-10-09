@@ -436,6 +436,10 @@ export class ProductBlobViewer {
                     this.buildPartGroups();
                 }
 
+                if (this.options.onModelReady) {
+                    this.options.onModelReady(this);
+                }
+
                 // Create color customizer UI if enabled and we have parts
                 if (this.options.enableColorCustomizer && this.colorableParts.length > 0) {
                     this.createColorCustomizerUI();
