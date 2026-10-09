@@ -4178,13 +4178,103 @@
             }
 
             .desktop-grid {
-                grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
-                gap: 14px !important;
+                grid-template-columns: repeat(6, minmax(120px, 1fr)) !important;
+                gap: 12px !important;
                 max-width: 1180px !important;
             }
 
             .desktop-card.login-card {
                 display: none !important;
+            }
+
+            .desktop-layout > .desktop-grid .dashboard-primary-card {
+                grid-column: 1 / -1;
+                min-height: 230px;
+                display: grid;
+                grid-template-columns: auto minmax(0, 1fr) auto;
+                align-items: center;
+                gap: 26px;
+                padding: 34px !important;
+                background: linear-gradient(135deg, #ffffff 0%, #f7fbff 52%, #eefbf6 100%) !important;
+                border-color: rgba(16, 163, 127, 0.28) !important;
+                box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12) !important;
+                opacity: 1 !important;
+                filter: none !important;
+            }
+
+            .desktop-layout > .desktop-grid .dashboard-primary-card:hover {
+                border-color: rgba(16, 163, 127, 0.55) !important;
+                box-shadow: 0 34px 90px rgba(15, 23, 42, 0.16) !important;
+                transform: translateY(-3px) !important;
+            }
+
+            .dashboard-primary-card .desktop-card-icon {
+                width: 84px;
+                height: 84px;
+                border-radius: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 !important;
+                background: #0d0d0d;
+                color: #ffffff;
+                font-size: 38px !important;
+                filter: none !important;
+            }
+
+            .dashboard-primary-card .desktop-card-title {
+                font-size: 36px !important;
+                line-height: 1;
+                letter-spacing: -0.03em;
+                margin-bottom: 12px;
+            }
+
+            .dashboard-primary-card .desktop-card-description {
+                max-width: 650px;
+                font-size: 18px !important;
+                line-height: 1.45;
+                color: #4b5563 !important;
+            }
+
+            .dashboard-primary-cta {
+                border-radius: 999px;
+                background: #0d0d0d;
+                color: #ffffff;
+                padding: 14px 22px;
+                font-size: 15px;
+                font-weight: 800;
+                white-space: nowrap;
+            }
+
+            .desktop-layout > .desktop-grid .dashboard-secondary-card {
+                min-height: 108px;
+                padding: 16px !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: flex-start;
+                opacity: 0.56;
+                filter: saturate(0.45);
+            }
+
+            .desktop-layout > .desktop-grid .dashboard-secondary-card:hover {
+                opacity: 0.98;
+                filter: none;
+            }
+
+            .dashboard-secondary-card .desktop-card-icon {
+                font-size: 22px !important;
+                margin-bottom: 8px !important;
+            }
+
+            .dashboard-secondary-card .desktop-card-title {
+                font-size: 15px !important;
+                margin-bottom: 4px !important;
+            }
+
+            .dashboard-secondary-card .desktop-card-description {
+                font-size: 12px !important;
+                line-height: 1.3 !important;
             }
 
             .quick-login {
@@ -4460,7 +4550,16 @@
             </div>
 
             <!-- After Login: Main Menu (hidden initially) -->
-            <div class="desktop-card menu-card" onclick="goToWorkOrders()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-primary-card" onclick="window.location.href='/employee/ai-terminal-order.html'" style="display: none;">
+                <div class="desktop-card-icon">💬</div>
+                <div>
+                    <div class="desktop-card-title">Water Blob AI</div>
+                    <div class="desktop-card-description">Type an order like “black tarp 10x10 and 4 straps,” review the cart, print the work order, and send payment straight to the Square Terminal.</div>
+                </div>
+                <div class="dashboard-primary-cta">Open chatbot</div>
+            </div>
+
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToWorkOrders()" style="display: none;">
                 <span class="desktop-card-badge" id="desktopIncompleteCount">0</span>
                 <div class="desktop-card-icon">📋</div>
                 <div class="desktop-card-title">Work Orders</div>
@@ -4468,46 +4567,40 @@
                 <span style="position: absolute; bottom: 12px; right: 12px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #c4b5fd;">W</span>
             </div>
 
-            <div class="desktop-card menu-card" onclick="goToSupplyRequest()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToSupplyRequest()" style="display: none;">
                 <div class="desktop-card-icon">📦</div>
                 <div class="desktop-card-title">Request Supplies</div>
                 <div class="desktop-card-description">Low on vinyl?</div>
                 <span style="position: absolute; bottom: 12px; right: 12px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #c4b5fd;">S</span>
             </div>
 
-            <div class="desktop-card menu-card" onclick="goToAIAssistant()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToAIAssistant()" style="display: none;">
                 <div class="desktop-card-icon">🎤</div>
                 <div class="desktop-card-title">Voice Assistant</div>
                 <div class="desktop-card-description">Speak to create, search, edit orders & supplies</div>
                 <span style="position: absolute; bottom: 12px; right: 12px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #c4b5fd;">V</span>
             </div>
 
-            <div class="desktop-card menu-card" onclick="goToCreateOrder()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToCreateOrder()" style="display: none;">
                 <div class="desktop-card-icon">➕</div>
                 <div class="desktop-card-title">Create Order</div>
                 <div class="desktop-card-description">Manual work order + invoice</div>
                 <span style="position: absolute; bottom: 12px; right: 12px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #c4b5fd;">N</span>
             </div>
 
-            <div class="desktop-card menu-card" onclick="window.location.href='/employee/ai-terminal-order.html'" style="display: none;">
-                <div class="desktop-card-icon">💳</div>
-                <div class="desktop-card-title">AI Terminal Order</div>
-                <div class="desktop-card-description">Type items, confirm total, send to Square Terminal</div>
-            </div>
-
-            <div class="desktop-card menu-card" id="desktopShippingCard" onclick="goToShippingSettings()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" id="desktopShippingCard" onclick="goToShippingSettings()" style="display: none;">
                 <div class="desktop-card-icon">🚚</div>
                 <div class="desktop-card-title">Shipping</div>
                 <div class="desktop-card-description">Configure freight settings</div>
             </div>
 
-            <div class="desktop-card menu-card" onclick="openDesktopCalendar()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="openDesktopCalendar()" style="display: none;">
                 <div class="desktop-card-icon">📅</div>
                 <div class="desktop-card-title">Calendar</div>
                 <div class="desktop-card-description">View orders by date</div>
             </div>
 
-            <div class="desktop-card menu-card" onclick="goToInventory()" style="display: none;">
+            <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToInventory()" style="display: none;">
                 <span class="desktop-card-badge" id="inventoryAlertBadge" style="display: none;">0</span>
                 <div class="desktop-card-icon">📊</div>
                 <div class="desktop-card-title">Inventory</div>
@@ -6020,9 +6113,9 @@
             </div>
 
             <div class="menu-card" onclick="window.location.href='/employee/ai-terminal-order.html'">
-                <div class="menu-card-icon">💳</div>
-                <div class="menu-card-title">AI Terminal Order</div>
-                <div class="menu-card-subtitle">Type items, confirm total, send to Square Terminal</div>
+                <div class="menu-card-icon">💬</div>
+                <div class="menu-card-title">Water Blob AI</div>
+                <div class="menu-card-subtitle">Type items, confirm total, print work order, send to Square</div>
             </div>
 
             <div class="menu-card" id="shippingMenuCard" onclick="goToShippingSettings()" style="display: none;">
@@ -7884,7 +7977,7 @@
                     });
                     document.querySelectorAll('.menu-card').forEach(card => {
                         console.log('Showing menu card:', card);
-                        card.style.display = 'block';
+                        showDashboardCard(card);
                     });
 
                     // Show shipping card for Cody
@@ -7907,6 +8000,17 @@
             }
         }
 
+        function showDashboardCard(card) {
+            if (!card) return;
+            if (card.classList.contains('dashboard-primary-card')) {
+                card.style.display = 'grid';
+            } else if (card.classList.contains('dashboard-secondary-card')) {
+                card.style.display = 'flex';
+            } else {
+                card.style.display = 'block';
+            }
+        }
+
         function finishEmployeeLogin(username, token, expiresAt, mode) {
             const normalizedUsername = username.toLowerCase();
             const displayName = formatEmployeeName(normalizedUsername);
@@ -7923,7 +8027,7 @@
                 card.style.display = 'none';
             });
             document.querySelectorAll('.menu-card').forEach(card => {
-                card.style.display = 'block';
+                showDashboardCard(card);
             });
 
             const desktopShippingCard = document.getElementById('desktopShippingCard');

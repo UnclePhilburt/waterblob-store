@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         customer.email || null,
         customer.phone || null,
         JSON.stringify(normalizedItems),
-        'Created from AI Terminal Order',
+        'Created from Water Blob AI',
         notes || null,
         total,
       ]
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         amount_money: { amount, currency: 'USD' },
         device_options: { device_id: deviceId },
         reference_id: `work-order-${workOrder.id}`,
-        note: `AI Terminal Order ${workOrder.work_order_number}`,
+        note: `Water Blob AI ${workOrder.work_order_number}`,
       },
     });
 

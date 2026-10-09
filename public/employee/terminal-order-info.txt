@@ -1,4 +1,4 @@
-# Water Blob employee AI Terminal Order price reference
+# Water Blob AI employee price reference
 #
 # Employees must review and confirm every price before sending to Square.
 # Use exact listed item prices first. Only use formula prices when the order is
