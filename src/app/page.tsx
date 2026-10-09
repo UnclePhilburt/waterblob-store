@@ -181,7 +181,7 @@ export default function Home() {
   /* ---- Scroll Animations ---- */
   useEffect(() => {
     const sections = document.querySelectorAll(
-      '.stats, .photo-gallery, .media-section, .features, .video-section, .cta'
+      '.stats, .blobby-home, .photo-gallery, .media-section, .features, .video-section, .cta'
     );
     const items = document.querySelectorAll(
       '.stat, .photo-item, .video-card, .feature-card'
@@ -403,6 +403,44 @@ export default function Home() {
                 <p>Memories Made</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* BLOBBY DESIGNER SECTION                                       */}
+        {/* ============================================================ */}
+        <section className="blobby-home" aria-labelledby="blobby-home-title">
+          <div className="container blobby-home-inner">
+            <div className="blobby-home-copy">
+              <span className="section-kicker">Need help choosing?</span>
+              <h2 id="blobby-home-title">Build Your Water Blob With Blobby</h2>
+              <p>
+                Answer a few easy questions about size, colors, and who will be jumping.
+                Blobby helps shape the design while you see it come together in 3D.
+              </p>
+              <div className="blobby-home-actions">
+                <Link href="/water-blob-ai" className="btn btn-primary">
+                  Start Designing
+                </Link>
+                <a href="tel:+14178648461" className="btn btn-secondary">
+                  Call Us Instead
+                </a>
+              </div>
+            </div>
+            <Link href="/water-blob-ai" className="blobby-home-preview" aria-label="Start designing a Water Blob with Blobby">
+              <div className="blobby-preview-card">
+                <Image
+                  src="/assets/homepage/blob/oceanblobjump.webp"
+                  alt="Water Blob launch on the lake"
+                  width={520}
+                  height={360}
+                />
+                <div className="blobby-preview-overlay">
+                  <span>Blobby asks:</span>
+                  <strong>Who is jumping, and how much airtime do you want?</strong>
+                </div>
+              </div>
+            </Link>
           </div>
         </section>
 
