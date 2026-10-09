@@ -192,6 +192,46 @@ function parseSize(product: ProductType, text: string) {
   }) || '';
 }
 
+function parseColor(text: string) {
+  const normalized = text.toLowerCase();
+  return COLORS.find((color) => normalized.includes(color.toLowerCase())) || '';
+}
+
+function parseColors(text: string) {
+  const normalized = text.toLowerCase();
+  return COLORS.filter((color) => normalized.includes(color.toLowerCase()));
+}
+
+function parseStripeStyle(text: string) {
+  const normalized = text.toLowerCase();
+  if (/\b(no|none|without)\b/.test(normalized) && normalized.includes('stripe')) return 'No stripes';
+  if (normalized.includes('side stripe')) return 'Side stripes';
+  if (normalized.includes('two stripe') || normalized.includes('2 stripe')) return 'Two stripes';
+  if (normalized.includes('custom') && normalized.includes('stripe')) return 'Custom stripe layout';
+  if (normalized.includes('stripe')) return 'Single stripe';
+  return '';
+}
+
+function parseUseCase(text: string) {
+  const normalized = text.toLowerCase();
+  return USE_CASES.find((item) => normalized.includes(item.toLowerCase())) || '';
+}
+
+function parseTimeline(text: string) {
+  const normalized = text.toLowerCase();
+  if (normalized.includes('asap') || normalized.includes('soon')) return 'ASAP';
+  return TIMELINES.find((item) => normalized.includes(item.toLowerCase())) || '';
+}
+
+function parseWaterDepth(text: string) {
+  return text.match(/\b\d+(?:\.\d+)?\s*(?:ft|feet|foot)\b/i)?.[0] || '';
+}
+
+function parseQuantity(text: string) {
+  const match = text.match(/\b(?:qty|quantity|quote|need|want)?\s*(\d+)\b/i);
+  return match ? Math.max(1, Number(match[1])) : 0;
+}
+
 function parseContact(text: string) {
   const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
   const phone = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/)?.[0] || '';
@@ -203,6 +243,123 @@ function parseContact(text: string) {
     .trim()
     .replace(/\s+/g, ' ');
   return { name, email, phone };
+}
+
+function looksLikeQuestion(text: string) {
+  return text.includes('?') || /^(what|how|can|do|does|is|are|which|why|where|tell me)\b/i.test(text.trim());
+}
+
+function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: string) {
+  const nextConfig = { ...config };
+  const updated = new Set<ChatStep>();
+  const normalized = answer.toLowerCase();
+  const isQuestion = looksLikeQuestion(answer);
+
+  if (normalized.includes('ski') || normalized.includes('blob') || (!nextConfig.product && !isQuestion)) {
+    nextConfig.product = parseProduct(answer);
+    updated.add('product');
+  }
+
+  const product = nextConfig.product || 'waterblob';
+  const size = parseSize(product, answer);
+  if (size) {
+    nextConfig.size = size;
+    updated.add('size');
+  } else if (step === 'size' && !isQuestion) {
+    nextConfig.size = answer;
+    updated.add('size');
+  }
+
+  const colors = parseColors(answer);
+  const stripeStyle = parseStripeStyle(answer);
+  if (stripeStyle) {
+    nextConfig.stripeStyle = stripeStyle;
+    updated.add('stripeStyle');
+  } else if (step === 'stripeStyle' && !isQuestion) {
+    nextConfig.stripeStyle = answer;
+    updated.add('stripeStyle');
+  }
+
+  if (colors.length > 0) {
+    if (normalized.includes('stripe')) {
+      nextConfig.stripeColor = colors[colors.length - 1];
+      updated.add('stripeColor');
+      if (colors.length > 1) {
+        nextConfig.baseColor = colors[0];
+        updated.add('baseColor');
+      }
+    } else if (step === 'stripeColor') {
+      nextConfig.stripeColor = colors[0];
+      updated.add('stripeColor');
+    } else {
+      nextConfig.baseColor = colors[0];
+      updated.add('baseColor');
+    }
+  } else if (step === 'baseColor' && !isQuestion) {
+    const color = parseColor(answer);
+    if (color) {
+      nextConfig.baseColor = color;
+      updated.add('baseColor');
+    }
+  }
+
+  const useCase = parseUseCase(answer);
+  if (useCase) {
+    nextConfig.useCase = useCase;
+    updated.add('useCase');
+  } else if (step === 'useCase' && !isQuestion) {
+    nextConfig.useCase = answer;
+    updated.add('useCase');
+  }
+
+  const waterDepth = parseWaterDepth(answer);
+  if (waterDepth) {
+    nextConfig.waterDepth = waterDepth;
+    updated.add('waterDepth');
+  } else if (step === 'waterDepth' && !isQuestion) {
+    nextConfig.waterDepth = answer;
+    updated.add('waterDepth');
+  }
+
+  const timeline = parseTimeline(answer);
+  if (timeline) {
+    nextConfig.timeline = timeline;
+    updated.add('timeline');
+  } else if (step === 'timeline' && !isQuestion) {
+    nextConfig.timeline = answer;
+    updated.add('timeline');
+  }
+
+  const quantity = parseQuantity(answer);
+  if (quantity && step === 'quantity') {
+    nextConfig.quantity = quantity;
+    updated.add('quantity');
+  }
+
+  if (step === 'contact') {
+    const contact = parseContact(answer);
+    nextConfig.name = contact.name || nextConfig.name;
+    nextConfig.email = contact.email || nextConfig.email;
+    nextConfig.phone = contact.phone || nextConfig.phone;
+    updated.add('contact');
+  }
+
+  if (step === 'notes') {
+    nextConfig.notes = /^(no|none|nope|nothing)$/i.test(answer)
+      ? nextConfig.notes
+      : [nextConfig.notes, answer].filter(Boolean).join('\n');
+    updated.add('notes');
+  }
+
+  return { nextConfig, updated };
+}
+
+function nextUnansweredStep(current: ChatStep, updated: Set<ChatStep>) {
+  let next = nextStep(current);
+  while (updated.has(next) && next !== 'ready') {
+    next = nextStep(next);
+  }
+  return next;
 }
 
 export default function WaterBlobAiPage() {
@@ -281,6 +438,42 @@ export default function WaterBlobAiPage() {
     setStep(next);
   }
 
+  async function answerConversationQuestion(answer: string) {
+    setMessages((prev) => [
+      ...prev,
+      { role: 'customer', text: answer },
+      { role: 'assistant', text: 'Thinking...' },
+    ]);
+
+    try {
+      const response = await fetch('/api/customer-product-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: answer,
+          config,
+          conversationHistory: messages,
+        }),
+      });
+      const data = await response.json();
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        {
+          role: 'assistant',
+          text: `${data.reply || 'Good question. I can help with Water Blob and Ski Tube quotes.'} ${questionForStep(step, config)}`,
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        {
+          role: 'assistant',
+          text: `Good question. I can help with Water Blob and Ski Tube quotes. ${questionForStep(step, config)}`,
+        },
+      ]);
+    }
+  }
+
   async function processAnswer(rawAnswer: string) {
     const answer = rawAnswer.trim();
     if (!answer) return;
@@ -295,72 +488,31 @@ export default function WaterBlobAiPage() {
       return;
     }
 
-    let nextConfig = { ...config };
-    let helper = '';
+    const { nextConfig, updated } = applyNaturalLanguageAnswer(config, step, answer);
+    if (looksLikeQuestion(answer) && updated.size === 0) {
+      await answerConversationQuestion(answer);
+      return;
+    }
 
-    if (step === 'product') {
-      const product = parseProduct(answer);
-      const parsedSize = parseSize(product, answer);
-      nextConfig = {
-        ...nextConfig,
-        product,
-        size: parsedSize,
-      };
-      helper = product === 'skitube'
+    let helper = 'Got it.';
+    if (updated.has('product')) {
+      helper = nextConfig.product === 'skitube'
         ? 'Perfect. Ski Tube selected.'
         : 'Perfect, I will assume Water Blob.';
-    } else if (step === 'size') {
-      nextConfig.size = answer;
-      helper = 'Got it.';
-    } else if (step === 'baseColor') {
-      nextConfig.baseColor = answer;
-      helper = 'Nice, the preview is changing now.';
-    } else if (step === 'stripeStyle') {
-      nextConfig.stripeStyle = answer;
-      helper = answer === 'No stripes' ? 'Clean look.' : 'Stripe layout saved.';
-    } else if (step === 'stripeColor') {
-      nextConfig.stripeColor = answer;
-      helper = 'Stripe color saved, and the model is updating.';
-    } else if (step === 'useCase') {
-      nextConfig.useCase = answer;
-      helper = 'That helps us quote it correctly.';
-    } else if (step === 'waterDepth') {
-      nextConfig.waterDepth = answer;
-      helper = nextConfig.product === 'waterblob'
-        ? 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.'
-        : 'Use location saved.';
-    } else if (step === 'timeline') {
-      nextConfig.timeline = answer;
-      helper = 'Timeline saved.';
-    } else if (step === 'quantity') {
-      const quantity = Number(answer.replace(/\D/g, '')) || 1;
-      nextConfig.quantity = Math.max(1, quantity);
-      helper = 'Quantity saved.';
-    } else if (step === 'contact') {
-      const contact = parseContact(answer);
-      nextConfig.name = contact.name || nextConfig.name;
-      nextConfig.email = contact.email || nextConfig.email;
-      nextConfig.phone = contact.phone || nextConfig.phone;
-      helper = contact.email && contact.phone
-        ? 'Contact saved.'
-        : 'I saved what I could. If name, email, or phone is missing, add it in the next note.';
-    } else if (step === 'notes') {
-      nextConfig.notes = answer === 'No extra notes'
-        ? nextConfig.notes
-        : [nextConfig.notes, answer].filter(Boolean).join('\n');
-      helper = 'Added.';
-    } else {
-      nextConfig.notes = [nextConfig.notes, answer].filter(Boolean).join('\n');
-      helper = 'Added that note.';
     }
+    if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Got it.';
+    if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle')) helper = 'Nice, the preview is changing now.';
+    if (updated.has('waterDepth') && nextConfig.product === 'waterblob') helper = 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.';
+    if (updated.has('contact')) helper = nextConfig.email && nextConfig.phone ? 'Contact saved.' : 'I saved what I could.';
+    if (updated.has('notes')) helper = 'Added.';
 
     setConfig(nextConfig);
     syncViewerColors(viewerRef.current, nextConfig);
     setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
 
-    const next = nextStep(step);
-    if (step === 'product' && nextConfig.size) {
-      askNext('baseColor', nextConfig, `${helper} I grabbed the size too.`);
+    const next = nextUnansweredStep(step, updated);
+    if (updated.size === 0 && step !== 'ready') {
+      askNext(step, nextConfig, "I am not sure I caught the quote detail from that.");
       return;
     }
     if (step === 'notes') {
