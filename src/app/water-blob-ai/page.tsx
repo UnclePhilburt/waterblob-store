@@ -184,11 +184,14 @@ function parseProduct(_text: string): ProductType {
 
 function parseSize(product: ProductType, text: string) {
   const normalized = text.toLowerCase();
-  if (product === 'waterblob' && (normalized.includes('family') || normalized.includes('personal'))) {
-    return 'Family Blob / Weekender';
-  }
   if (product === 'waterblob' && normalized.includes('weekender') && normalized.includes('30')) {
     return '30 ft Weekender';
+  }
+  if (
+    product === 'waterblob' &&
+    (normalized.includes('family') || normalized.includes('personal') || normalized.includes('weekender'))
+  ) {
+    return 'Family Blob / Weekender';
   }
   const options = sizeOptionsFor(product);
   return options.find((option) => {
