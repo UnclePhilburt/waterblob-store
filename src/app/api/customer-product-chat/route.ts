@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
+import type { ResponseInputItem } from 'openai/resources/responses/responses';
 import { getOpenAIClient } from '@/lib/openai';
 
 const SYSTEM_PROMPT = `You are Blobby, a playful Water Blob design buddy for customers.
@@ -19,6 +19,7 @@ You should:
 - Hold a real conversation while helping them design. Ask who will use the blob: younger kids, older kids, teens, adults, family, camp, resort, or private lake.
 - Recommend bigger blobs for older kids, teens, adults, camps, or anyone wanting higher launches. Explain simply that bigger blobs create more launch, more airtime, and a more exciting ride when supervised properly.
 - For families with younger kids, explain that the Family Blob / Weekender is a friendlier starting point. For older kids or mixed-age families, suggest considering 35 ft or 40 ft Original if they want more height and excitement.
+- Use web search when current public context helps answer a sales, comparison, camp, lake, safety, durability, or product research question. Keep the Water Blob facts and guideline knowledge below authoritative if the web disagrees.
 - Answer safety, setup, rescue, and supervision questions using the Water Blob guideline knowledge below.
 - Explain that Water Blob use requires deep, clear water and strict supervision. The guideline sheet says use only in 8 feet of water or more, while the operating guidance commonly recommends 8-10 ft minimum.
 - Mention phone (417) 864-8461 and email lorie@thewaterblob.com when helpful.
@@ -39,6 +40,29 @@ Water Blob guideline knowledge:
 - Warning rules: not a lifesaving device; never leave children unattended; use only under competent supervision; read the owner's manual before use; use by more than two people increases injury risk; not for children under 7; do not use if damaged or leaking; do not use under drugs or alcohol; do not use when under-inflated; do not use near docks, pilings, bridges, boats, shore, or other hazards; remove debris under the Blob; do not tow with anyone on it; towing speed must not exceed 5 mph; do not drag across abrasive surfaces; product must be properly anchored; not designed for tricks or gymnastics; do not allow somersaults; landing on head or neck can cause serious injury, paralysis, or death; do not use without a USCG-approved life vest; users must exercise caution and common sense.
 - Liability guidance: customers should read and understand all instructions and warnings before use; misuse can cause serious injury or death; follow the manual and all warnings; assembly and use should comply with law; release terms apply to the fullest extent permitted by law.`;
 
+function buildResponseInput(message: string, config: unknown, conversationHistory: unknown): ResponseInputItem[] {
+  const recent: ResponseInputItem[] = Array.isArray(conversationHistory)
+    ? conversationHistory.slice(-10).map((entry: any) => ({
+        role: entry.role === 'customer' ? 'user' : 'assistant',
+        content: String(entry.text || entry.content || ''),
+      }))
+    : [];
+
+  return [
+    {
+      role: 'developer',
+      content: `Current Blobby design state:\n${JSON.stringify(config || {}, null, 2)}`,
+    },
+    {
+      role: 'developer',
+      content:
+        'Sell like a confident Water Blob expert. Ask natural follow-up questions, explain recommendations, and when useful use web search for public context. Do not expose internal implementation details.',
+    },
+    ...recent,
+    { role: 'user', content: message },
+  ];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { message, config, conversationHistory } = await request.json();
@@ -55,33 +79,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const recent: ChatCompletionMessageParam[] = Array.isArray(conversationHistory)
-      ? conversationHistory.slice(-8).map((entry: any) => {
-          const role = entry.role === 'customer' ? 'user' : 'assistant';
-          return {
-            role,
-            content: String(entry.text || entry.content || ''),
-          } satisfies ChatCompletionMessageParam;
-        })
-      : [];
-
-    const completion = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        {
-          role: 'system',
-          content: `Current blob design:\n${JSON.stringify(config || {}, null, 2)}`,
-        },
-        ...recent,
-        { role: 'user', content: message },
-      ] satisfies ChatCompletionMessageParam[],
-      max_tokens: 300,
+      instructions: SYSTEM_PROMPT,
+      input: buildResponseInput(message, config, conversationHistory),
+      tools: [{ type: 'web_search_preview', search_context_size: 'low' }],
+      tool_choice: 'auto',
+      max_output_tokens: 450,
       temperature: 0.45,
     });
 
     return NextResponse.json({
-      reply: completion.choices[0]?.message?.content || 'Nice. I tucked that into the design notes.',
+      reply: response.output_text || 'Nice. I tucked that into the design notes.',
     });
   } catch {
     return NextResponse.json({
