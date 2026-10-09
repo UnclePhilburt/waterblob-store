@@ -277,6 +277,7 @@ function findColorForGroup(text: string, keywords: string[]) {
 }
 
 function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: ChatStep, answer: string) {
+  const normalized = answer.toLowerCase();
   const colors = parseColors(answer);
   if (colors.length === 0) return;
 
@@ -305,6 +306,19 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
   }
 
   if (hasExplicitGroups) return;
+
+  const wantsOneColor = /\b(all|everything|whole|entire|solid|same color|one color|single color)\b/.test(normalized);
+  if (colors.length === 1 && wantsOneColor) {
+    nextConfig.baseColor = colors[0];
+    nextConfig.stripeColor = colors[0];
+    nextConfig.endCapColor = colors[0];
+    nextConfig.anchorColor = colors[0];
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
 
   if (colors.length >= 3) {
     nextConfig.baseColor = colors[0];
@@ -354,6 +368,10 @@ function colorChangeSummary(config: Config, updated: Set<string>) {
 
   const changed = parts.length > 0 ? `I set ${parts.join(', ')}.` : 'The editable color groups are ready.';
   return `${changed} You can change these groups: body/main panels, stripes/side panels, end caps, and anchor patches.`;
+}
+
+function cleanAssistantText(text: string) {
+  return text.replace(/\*\*/g, '').trim();
 }
 
 function parseStripeStyle(text: string) {
@@ -713,11 +731,12 @@ export default function WaterBlobAiPage() {
         }),
       });
       const data = await response.json();
+      const reply = cleanAssistantText(data.reply || (helper ? `${helper} ${question}` : question));
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          text: data.reply || (helper ? `${helper} ${question}` : question),
+          text: reply,
         },
       ]);
     } catch {
@@ -751,11 +770,12 @@ export default function WaterBlobAiPage() {
         }),
       });
       const data = await response.json();
+      const reply = cleanAssistantText(data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`);
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`,
+          text: reply,
         },
       ]);
     } catch {
@@ -920,9 +940,10 @@ export default function WaterBlobAiPage() {
           }),
         });
         const data = await response.json();
+        const reply = cleanAssistantText(data.reply || 'I tucked that into the design notes.');
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', text: `${data.reply || 'I tucked that into the design notes.'} Type "send design" when this thing is ready.` },
+          { role: 'assistant', text: `${reply} Type "send design" when this thing is ready.` },
         ]);
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', text: 'I tucked that into the design notes. Type "send design" when this thing is ready.' }]);
@@ -1049,6 +1070,15 @@ export default function WaterBlobAiPage() {
                 {` · ${config.endCapColor} end caps`}
                 {` · ${config.anchorColor} anchor patches`}
               </span>
+              <div className={styles.groupGuide} aria-label="Water Blob color groups">
+                <span className={styles.groupGuideTitle}>Color groups Blobby can change</span>
+                <div className={styles.groupGuideGrid}>
+                  <span><strong>Body</strong> large main panels</span>
+                  <span><strong>Stripes</strong> bands or side panels</span>
+                  <span><strong>End caps</strong> rounded ends</span>
+                  <span><strong>Anchor patches</strong> reinforced patch spots</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

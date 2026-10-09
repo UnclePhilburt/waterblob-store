@@ -102,6 +102,36 @@
   font-size: 20px;
 }
 
+.groupGuide {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #eef2f7;
+}
+
+.groupGuideTitle {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0f766e;
+}
+
+.groupGuideGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.groupGuideGrid strong {
+  display: block;
+  font-size: 13px;
+  color: #111827;
+}
+
 .chatPanel {
   display: flex;
   flex-direction: column;
