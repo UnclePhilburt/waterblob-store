@@ -11,50 +11,27 @@
         }
 
         :root {
-            --bg: #07111f;
-            --panel: #101c2d;
-            --panel-2: #162338;
-            --line: #2b3e59;
-            --text: #f4f7fb;
-            --muted: #9fb1c8;
-            --accent: #16a34a;
-            --accent-2: #0ea5e9;
-            --warn: #f59e0b;
-            --danger: #ef4444;
+            --bg: #ffffff;
+            --sidebar: #f9f9f9;
+            --sidebar-hover: #ececec;
+            --line: rgba(13, 13, 13, 0.1);
+            --text: #0d0d0d;
+            --muted: #5d5d5d;
+            --soft: #f4f4f4;
+            --assistant: #ffffff;
+            --user: #f3f3f3;
+            --accent: #0d0d0d;
+            --accent-dark: #000000;
+            --danger: #dc2626;
+            --warning: #b45309;
         }
 
         body {
             margin: 0;
             min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
             background: var(--bg);
             color: var(--text);
-        }
-
-        header {
-            border-bottom: 1px solid var(--line);
-            background: #0c1728;
-            padding: 18px clamp(16px, 4vw, 42px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-        }
-
-        h1, h2 {
-            margin: 0;
-        }
-
-        h1 {
-            font-size: clamp(24px, 4vw, 38px);
-        }
-
-        h2 {
-            font-size: 20px;
-        }
-
-        a {
-            color: #b9ddff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         button, input, textarea {
@@ -63,11 +40,6 @@
 
         button {
             border: 0;
-            border-radius: 8px;
-            padding: 12px 16px;
-            background: var(--accent-2);
-            color: white;
-            font-weight: 800;
             cursor: pointer;
         }
 
@@ -76,181 +48,528 @@
             opacity: 0.55;
         }
 
-        .secondary {
-            background: var(--panel-2);
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .login-screen {
+            min-height: 100vh;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: #f7f7f8;
+        }
+
+        .login-screen.active {
+            display: flex;
+        }
+
+        .login-card {
+            width: min(460px, 100%);
+            background: white;
             border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
         }
 
-        .success {
-            background: var(--accent);
+        .login-card h1 {
+            margin: 0 0 8px;
+            font-size: 28px;
         }
 
-        .danger {
-            background: var(--danger);
-        }
-
-        main {
-            width: min(1180px, 100%);
-            margin: 0 auto;
-            padding: 24px clamp(14px, 3vw, 32px) 48px;
-            display: grid;
-            gap: 20px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
-            gap: 20px;
-        }
-
-        .panel {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            padding: 20px;
+        .login-card p {
+            margin: 0 0 20px;
+            color: var(--muted);
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin: 14px 0 7px;
             color: var(--muted);
+            font-size: 13px;
             font-weight: 700;
         }
 
-        textarea, input {
+        input, textarea {
             width: 100%;
             border: 1px solid var(--line);
-            border-radius: 8px;
-            background: #081321;
+            border-radius: 10px;
+            background: white;
             color: var(--text);
-            padding: 12px;
+            padding: 12px 13px;
+            outline: none;
         }
 
-        textarea {
-            min-height: 190px;
-            resize: vertical;
-            line-height: 1.45;
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.14);
         }
 
-        .row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            margin-top: 14px;
-        }
-
-        .status {
-            min-height: 24px;
-            color: var(--muted);
+        .primary-btn {
+            background: var(--accent);
+            color: white;
+            border-radius: 999px;
+            padding: 12px 16px;
             font-weight: 700;
         }
 
-        .status.good {
-            color: #86efac;
+        .primary-btn:hover {
+            background: var(--accent-dark);
         }
 
-        .status.bad {
-            color: #fca5a5;
+        .ghost-btn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 12px;
+            font-weight: 600;
         }
 
-        .questions {
-            margin-top: 14px;
-            display: none;
-            border: 1px solid rgba(245, 158, 11, 0.5);
-            background: rgba(245, 158, 11, 0.12);
-            color: #fed7aa;
-            padding: 12px;
+        .icon-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #0d0d0d;
+            color: white;
+            font-weight: 900;
+            font-size: 18px;
+        }
+
+        .danger-btn {
+            background: #fee2e2;
+            color: var(--danger);
             border-radius: 8px;
+            padding: 8px 10px;
+            font-weight: 800;
+        }
+
+        .app-shell {
+            display: none;
+            height: 100vh;
+            overflow: hidden;
+            background: white;
+        }
+
+        .app-shell.active {
+            display: grid;
+            grid-template-columns: 340px minmax(0, 1fr);
+        }
+
+        .sidebar {
+            background: var(--sidebar);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .sidebar-top {
+            padding: 14px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .brand-mark {
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #0d0d0d;
+            color: white;
+            font-size: 12px;
+        }
+
+        .new-chat {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            background: transparent;
+            border-radius: 10px;
+            padding: 11px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .new-chat:hover {
+            background: var(--sidebar-hover);
+        }
+
+        .conversation-list {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+
+        .sidebar-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            margin: 10px 10px 8px;
+        }
+
+        .conversation-item {
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border-radius: 10px;
+            color: var(--text);
+            padding: 10px 11px;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .conversation-item:hover, .conversation-item.active {
+            background: var(--sidebar-hover);
+        }
+
+        .sidebar-bottom {
+            padding: 14px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .main {
+            min-width: 0;
+            height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            background: white;
+        }
+
+        .topbar {
+            min-height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px clamp(16px, 3vw, 28px);
+        }
+
+        .topbar h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .topbar .sub {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .chat-scroll {
+            overflow: auto;
+            min-height: 0;
+        }
+
+        .empty-state {
+            min-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px 20px 120px;
+        }
+
+        .empty-state h2 {
+            font-size: clamp(30px, 5vw, 44px);
+            margin: 0 0 18px;
+            letter-spacing: -0.02em;
+            font-weight: 650;
+        }
+
+        .empty-state p {
+            max-width: 620px;
+            margin: 0 auto;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .suggestions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 24px;
+            width: min(620px, 100%);
+        }
+
+        .suggestion {
+            text-align: left;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: white;
+            padding: 13px 14px;
+            color: var(--text);
+        }
+
+        .suggestion span {
+            display: block;
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 3px;
+        }
+
+        .message {
+            border: 0;
+        }
+
+        .message-inner {
+            width: min(768px, 100%);
+            margin: 0 auto;
+            padding: 18px 20px;
+            display: grid;
+            grid-template-columns: 32px minmax(0, 1fr);
+            gap: 14px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 11px;
+            background: #111827;
+        }
+
+        .assistant .avatar {
+            background: #10a37f;
+        }
+
+        .message.assistant {
+            background: var(--assistant);
+        }
+
+        .message.user .message-inner {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message.user .avatar {
+            display: none;
+        }
+
+        .message.user .message-text {
+            max-width: min(70%, 620px);
+            background: var(--user);
+            border-radius: 20px;
+            padding: 10px 16px;
+        }
+
+        .message-text {
+            line-height: 1.55;
+            white-space: pre-wrap;
+        }
+
+        .cart-card {
+            margin-top: 16px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: white;
+            overflow: hidden;
+        }
+
+        .cart-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .cart-head strong {
+            font-size: 18px;
+        }
+
+        .cart-body {
+            padding: 0 16px 16px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 14px;
         }
 
         th, td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--line);
+            padding: 12px 6px;
+            border-bottom: 1px solid #ededf2;
             text-align: left;
             vertical-align: middle;
         }
 
         th {
             color: var(--muted);
-            font-size: 13px;
+            font-size: 12px;
+            text-transform: uppercase;
         }
 
         td input {
             padding: 9px;
+            border-radius: 8px;
         }
 
         .qty {
-            width: 82px;
+            width: 76px;
         }
 
         .money {
-            width: 110px;
+            width: 105px;
         }
 
-        .total-box {
-            margin-top: 16px;
-            padding: 18px;
-            border-radius: 8px;
-            background: #062716;
-            border: 1px solid rgba(22, 163, 74, 0.45);
+        .cart-footer {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 14px;
         }
 
-        .total-label {
-            color: #a7f3d0;
-            font-weight: 800;
-        }
-
-        .total-value {
-            display: block;
-            margin-top: 6px;
-            font-size: clamp(34px, 7vw, 58px);
-            line-height: 1;
+        .total {
+            font-size: 28px;
             font-weight: 900;
-            color: #4ade80;
         }
 
-        .small {
-            color: var(--muted);
-            font-size: 14px;
+        .questions {
+            margin-top: 14px;
+            color: var(--warning);
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 10px;
+            padding: 12px;
             line-height: 1.45;
         }
 
-        .login {
-            display: none;
-        }
-
-        .login.active {
-            display: block;
-        }
-
-        .app {
-            display: none;
-        }
-
-        .app.active {
+        .customer-strip {
+            width: min(768px, 100%);
+            margin: 0 auto;
+            padding: 6px 20px 0;
             display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
         }
 
-        @media (max-width: 860px) {
-            header {
-                align-items: flex-start;
-                flex-direction: column;
+        .composer-wrap {
+            background: white;
+            padding: 14px 20px 22px;
+        }
+
+        .composer {
+            width: min(768px, 100%);
+            margin: 0 auto;
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.09);
+            background: white;
+            padding: 10px 10px 8px;
+        }
+
+        .composer textarea {
+            border: 0;
+            box-shadow: none;
+            min-height: 54px;
+            max-height: 180px;
+            resize: none;
+            padding: 8px 12px 10px;
+            line-height: 1.45;
+            font-size: 16px;
+        }
+
+        .composer textarea:focus {
+            border: 0;
+            box-shadow: none;
+        }
+
+        .composer-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .status {
+            color: var(--muted);
+            font-size: 13px;
+            min-height: 20px;
+        }
+
+        .status.good {
+            color: #0e8f70;
+        }
+
+        .status.bad {
+            color: var(--danger);
+        }
+
+        .mobile-sidebar-toggle {
+            display: none;
+        }
+
+        @media (max-width: 820px) {
+            .app-shell.active {
+                grid-template-columns: 1fr;
             }
 
-            .grid, .row {
+            .sidebar {
+                position: fixed;
+                inset: 0 auto 0 0;
+                width: min(300px, 86vw);
+                z-index: 10;
+                transform: translateX(-100%);
+                transition: transform 0.2s ease;
+                box-shadow: 12px 0 40px rgba(0, 0, 0, 0.16);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .mobile-sidebar-toggle {
+                display: inline-flex;
+            }
+
+            .customer-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .message-inner {
+                grid-template-columns: 30px minmax(0, 1fr);
+                gap: 10px;
+            }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .message.user .message-text {
+                max-width: 88%;
+            }
+
+            .suggestions {
                 grid-template-columns: 1fr;
             }
 
@@ -263,8 +582,8 @@
             }
 
             tr {
-                border-bottom: 1px solid var(--line);
                 padding: 10px 0;
+                border-bottom: 1px solid #ededf2;
             }
 
             td {
@@ -275,163 +594,103 @@
     </style>
 </head>
 <body>
-    <header>
-        <div>
+    <section class="login-screen" id="loginPanel">
+        <div class="login-card">
             <h1>AI Terminal Order</h1>
-            <div class="small">Type the order, review every price, then send it to the Square terminal.</div>
-        </div>
-        <a href="/employee/employee-portal.html">Back to Employee Portal</a>
-    </header>
-
-    <main>
-        <section class="panel login" id="loginPanel">
-            <h2>Employee Login</h2>
-            <p class="small">Use the same employee login as the main portal.</p>
+            <p>Login with the same employee account, then type orders like a normal damn chat.</p>
             <form id="loginForm">
-                <div class="row">
-                    <div>
-                        <label for="username">Username</label>
-                        <input id="username" autocomplete="username" required>
-                    </div>
-                    <div>
-                        <label for="password">Password</label>
-                        <input id="password" type="password" autocomplete="current-password" required>
-                    </div>
-                    <div style="align-self: end;">
-                        <button type="submit">Login</button>
-                    </div>
+                <label for="username">Username</label>
+                <input id="username" autocomplete="username" required>
+                <label for="password">Password</label>
+                <input id="password" type="password" autocomplete="current-password" required>
+                <div style="margin-top: 18px;">
+                    <button class="primary-btn" type="submit">Login</button>
                 </div>
             </form>
             <div class="status bad" id="loginStatus"></div>
-        </section>
+        </div>
+    </section>
 
-        <section class="app" id="appPanel">
-            <div class="grid">
-                <section class="panel">
-                    <h2>1. Type The Order</h2>
-                    <p class="small">Examples: "black tarp 10x10 and 4 straps" or "two 30 foot commercial blobs, repair kit, and shipping note pickup Friday".</p>
-                    <label for="orderText">Order text</label>
-                    <textarea id="orderText" placeholder="black tarp 10x10, 4 straps"></textarea>
-                    <div class="row" style="margin-top: 12px;">
-                        <div>
-                            <label for="customerName">Customer name</label>
-                            <input id="customerName" placeholder="Terminal Customer">
-                        </div>
-                        <div>
-                            <label for="customerPhone">Phone</label>
-                            <input id="customerPhone" placeholder="Optional">
-                        </div>
-                        <div>
-                            <label for="customerEmail">Email</label>
-                            <input id="customerEmail" placeholder="Optional">
-                        </div>
-                    </div>
-                    <div class="actions">
-                        <button id="parseButton">Build Cart</button>
-                        <button class="secondary" id="clearButton">Clear</button>
-                    </div>
-                    <div class="status" id="parseStatus"></div>
-                    <div class="questions" id="questionsBox"></div>
-                </section>
-
-                <section class="panel">
-                    <h2>2. Review And Send</h2>
-                    <p class="small">Nothing charges until you confirm here and the customer pays on the Square machine.</p>
-                    <div id="cartEmpty" class="small" style="margin-top: 18px;">No cart yet.</div>
-                    <div id="cartWrap" style="display: none;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Qty</th>
-                                    <th>Each</th>
-                                    <th>Total</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody id="cartBody"></tbody>
-                        </table>
-                        <div class="actions">
-                            <button class="secondary" id="addLineButton">Add Line</button>
-                        </div>
-                        <label for="orderNotes" style="margin-top: 14px;">Internal notes</label>
-                        <textarea id="orderNotes" style="min-height: 80px;" placeholder="Optional notes for the work order"></textarea>
-                    </div>
-                    <div class="total-box">
-                        <span class="total-label">Total</span>
-                        <span class="total-value" id="totalValue">$0.00</span>
-                    </div>
-                    <div class="actions">
-                        <button class="success" id="sendButton" disabled>Confirm And Send To Terminal</button>
-                    </div>
-                    <div class="status" id="checkoutStatus"></div>
-                </section>
+    <section class="app-shell" id="appPanel">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="brand"><span class="brand-mark">WB</span><span>Water Blob AI</span></div>
+                <button class="new-chat" id="newChatButton">+ New terminal chat</button>
             </div>
-        </section>
-    </main>
+            <div class="conversation-list" id="conversationList"></div>
+            <div class="sidebar-bottom">
+                <a class="ghost-btn" href="/employee/employee-portal.html">Back to portal</a>
+                <button class="ghost-btn" id="logoutButton">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <button class="ghost-btn mobile-sidebar-toggle" id="sidebarToggle">Chats</button>
+                <div>
+                    <h1>AI Terminal Order</h1>
+                    <div class="sub">Review the cart before anything goes to the Square machine.</div>
+                </div>
+                <button class="ghost-btn" id="clearChatButton">Clear chat</button>
+            </header>
+
+            <section class="chat-scroll" id="chatScroll">
+                <div class="customer-strip">
+                    <div>
+                        <label for="customerName">Customer name</label>
+                        <input id="customerName" placeholder="Terminal Customer">
+                    </div>
+                    <div>
+                        <label for="customerPhone">Phone</label>
+                        <input id="customerPhone" placeholder="Optional">
+                    </div>
+                    <div>
+                        <label for="customerEmail">Email</label>
+                        <input id="customerEmail" placeholder="Optional">
+                    </div>
+                </div>
+                <div id="messages"></div>
+            </section>
+
+            <section class="composer-wrap">
+                <div class="composer">
+                    <textarea id="orderText" placeholder="Message Water Blob AI, like: black tarp 10x10 and 4 straps"></textarea>
+                    <div class="composer-actions">
+                        <div class="status" id="chatStatus"></div>
+                        <button class="icon-btn" id="sendPromptButton" title="Send order">↑</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </section>
 
     <script>
         const API_BASE = window.location.origin;
+        const STORAGE_KEY = 'waterblobTerminalChats';
         let authToken = localStorage.getItem('employeeToken') || localStorage.getItem('authToken') || '';
+        let conversations = [];
+        let activeConversationId = null;
         let cartItems = [];
+        let orderNotes = '';
         let activeCheckoutId = null;
 
         const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
-
         const el = (id) => document.getElementById(id);
 
         function authHeaders(extra = {}) {
-            return {
-                ...extra,
-                Authorization: `Bearer ${authToken}`,
-            };
+            return { ...extra, Authorization: `Bearer ${authToken}` };
         }
 
-        function showLogin() {
-            el('loginPanel').classList.add('active');
-            el('appPanel').classList.remove('active');
-        }
-
-        function showApp() {
-            el('loginPanel').classList.remove('active');
-            el('appPanel').classList.add('active');
-        }
-
-        function setStatus(id, text, kind = '') {
-            const node = el(id);
+        function setStatus(text, kind = '') {
+            const node = el('chatStatus');
             node.textContent = text || '';
             node.className = `status ${kind}`.trim();
         }
 
-        function getTotal() {
-            return cartItems.reduce((sum, item) => {
-                return sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
-            }, 0);
-        }
-
-        function updateTotals() {
-            el('totalValue').textContent = money.format(getTotal());
-            el('sendButton').disabled = cartItems.length === 0 || getTotal() <= 0;
-        }
-
-        function renderCart() {
-            const body = el('cartBody');
-            body.innerHTML = '';
-            cartItems.forEach((item, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input value="${escapeHtml(item.name)}" data-field="name" data-index="${index}"></td>
-                    <td><input class="qty" type="number" min="1" step="1" value="${item.quantity}" data-field="quantity" data-index="${index}"></td>
-                    <td><input class="money" type="number" min="0" step="0.01" value="${item.unitPrice}" data-field="unitPrice" data-index="${index}"></td>
-                    <td>${money.format((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}</td>
-                    <td><button class="danger" data-remove="${index}" title="Remove line">X</button></td>
-                `;
-                body.appendChild(tr);
-            });
-
-            el('cartEmpty').style.display = cartItems.length ? 'none' : 'block';
-            el('cartWrap').style.display = cartItems.length ? 'block' : 'none';
-            updateTotals();
+        function setLoginStatus(text, kind = 'bad') {
+            const node = el('loginStatus');
+            node.textContent = text || '';
+            node.className = `status ${kind}`.trim();
         }
 
         function escapeHtml(value) {
@@ -443,16 +702,270 @@
                 .replaceAll("'", '&#039;');
         }
 
-        async function parseOrder() {
-            const message = el('orderText').value.trim();
-            if (!message) {
-                setStatus('parseStatus', 'Type an order first.', 'bad');
+        function showLogin() {
+            el('loginPanel').classList.add('active');
+            el('appPanel').classList.remove('active');
+        }
+
+        function showApp() {
+            el('loginPanel').classList.remove('active');
+            el('appPanel').classList.add('active');
+            loadConversations();
+            if (!activeConversationId) createConversation();
+            renderAll();
+        }
+
+        function loadConversations() {
+            try {
+                conversations = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } catch {
+                conversations = [];
+            }
+            activeConversationId = conversations[0]?.id || null;
+        }
+
+        function saveConversations() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations.slice(0, 30)));
+        }
+
+        function getActiveConversation() {
+            return conversations.find((chat) => chat.id === activeConversationId) || null;
+        }
+
+        function createConversation() {
+            const chat = {
+                id: `chat-${Date.now()}`,
+                title: 'New terminal order',
+                createdAt: new Date().toISOString(),
+                messages: [],
+                cartItems: [],
+                orderNotes: ''
+            };
+            conversations.unshift(chat);
+            activeConversationId = chat.id;
+            cartItems = [];
+            orderNotes = '';
+            activeCheckoutId = null;
+            saveConversations();
+            renderAll();
+        }
+
+        function updateActiveConversation() {
+            const chat = getActiveConversation();
+            if (!chat) return;
+            chat.cartItems = cartItems;
+            chat.orderNotes = orderNotes;
+            chat.updatedAt = new Date().toISOString();
+            saveConversations();
+        }
+
+        function renderConversations() {
+            const list = el('conversationList');
+            list.innerHTML = '<div class="sidebar-label">Previous chats</div>';
+            conversations.forEach((chat) => {
+                const button = document.createElement('button');
+                button.className = `conversation-item ${chat.id === activeConversationId ? 'active' : ''}`;
+                button.textContent = chat.title || 'Terminal order';
+                button.addEventListener('click', () => {
+                    activeConversationId = chat.id;
+                    cartItems = [...(chat.cartItems || [])];
+                    orderNotes = chat.orderNotes || '';
+                    activeCheckoutId = null;
+                    el('sidebar').classList.remove('open');
+                    renderAll();
+                });
+                list.appendChild(button);
+            });
+        }
+
+        function renderMessages() {
+            const chat = getActiveConversation();
+            const wrap = el('messages');
+            if (!chat || !chat.messages.length) {
+                wrap.innerHTML = `
+                    <div class="empty-state">
+                        <div>
+                            <h2>What are we ringing up?</h2>
+                            <p>Type the items at the bottom. I will build a cart from your products, prices, and extra notes. You approve every damn total before it goes to Square.</p>
+                            <div class="suggestions">
+                                <button class="suggestion" data-example="black tarp 10x10 and 4 straps">Black tarp 10x10 <span>with 4 straps</span></button>
+                                <button class="suggestion" data-example="two 30 foot commercial blobs">Two 30 foot blobs <span>build a quick quote</span></button>
+                                <button class="suggestion" data-example="repair kit and pickup Friday">Repair kit <span>add pickup note</span></button>
+                                <button class="suggestion" data-example="custom cash sale for 25 dollars">Custom sale <span>simple terminal charge</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                bindExampleButtons();
                 return;
             }
 
-            setStatus('parseStatus', 'Building cart with AI...');
-            el('questionsBox').style.display = 'none';
-            el('parseButton').disabled = true;
+            wrap.innerHTML = chat.messages.map((message, index) => {
+                const isAssistant = message.role === 'assistant';
+                const cartHtml = message.cart ? renderCartCard() : '';
+                return `
+                    <article class="message ${isAssistant ? 'assistant' : 'user'}">
+                        <div class="message-inner">
+                            <div class="avatar">${isAssistant ? 'WB' : 'You'}</div>
+                            <div>
+                                <div class="message-text">${escapeHtml(message.text)}</div>
+                                ${cartHtml}
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            bindCartControls();
+            bindExampleButtons();
+            requestAnimationFrame(() => {
+                el('chatScroll').scrollTop = el('chatScroll').scrollHeight;
+            });
+        }
+
+        function bindExampleButtons() {
+            document.querySelectorAll('[data-example]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    el('orderText').value = button.dataset.example || '';
+                    el('orderText').focus();
+                });
+            });
+        }
+
+        function renderCartCard() {
+            const questions = getActiveConversation()?.questions || [];
+            const questionHtml = questions.length
+                ? `<div class="questions"><strong>Needs review:</strong><br>${questions.map(escapeHtml).join('<br>')}</div>`
+                : '';
+            const rows = cartItems.map((item, index) => `
+                <tr>
+                    <td><input value="${escapeHtml(item.name)}" data-field="name" data-index="${index}"></td>
+                    <td><input class="qty" type="number" min="1" step="1" value="${item.quantity}" data-field="quantity" data-index="${index}"></td>
+                    <td><input class="money" type="number" min="0" step="0.01" value="${item.unitPrice}" data-field="unitPrice" data-index="${index}"></td>
+                    <td>${money.format((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0))}</td>
+                    <td><button class="danger-btn" data-remove="${index}" title="Remove line">X</button></td>
+                </tr>
+            `).join('');
+
+            return `
+                <div class="cart-card">
+                    <div class="cart-head">
+                        <strong>Review cart</strong>
+                        <span class="status">Edit anything before sending.</span>
+                    </div>
+                    <div class="cart-body">
+                        ${questionHtml}
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Each</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows || '<tr><td colspan="5">No items yet.</td></tr>'}</tbody>
+                        </table>
+                        <label for="orderNotes">Internal notes</label>
+                        <textarea id="orderNotes" style="min-height: 80px;" placeholder="Optional notes for the work order">${escapeHtml(orderNotes)}</textarea>
+                        <div class="cart-footer">
+                            <button class="ghost-btn" id="addLineButton">Add line</button>
+                            <div class="total" id="totalValue">${money.format(getTotal())}</div>
+                            <button class="primary-btn" id="sendTerminalButton" ${getTotal() <= 0 ? 'disabled' : ''}>Confirm and send to terminal</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function bindCartControls() {
+            document.querySelectorAll('[data-field]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    const index = Number(input.dataset.index);
+                    const field = input.dataset.field;
+                    if (!Number.isInteger(index) || !cartItems[index]) return;
+                    cartItems[index][field] = field === 'name' ? input.value : Number(input.value);
+                    updateCartTotalsOnly();
+                    updateActiveConversation();
+                });
+                input.addEventListener('change', () => {
+                    renderAll();
+                });
+            });
+
+            document.querySelectorAll('[data-remove]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    cartItems.splice(Number(button.dataset.remove), 1);
+                    updateActiveConversation();
+                    renderAll();
+                });
+            });
+
+            const addLineButton = el('addLineButton');
+            if (addLineButton) {
+                addLineButton.addEventListener('click', () => {
+                    cartItems.push({ name: 'Custom item', quantity: 1, unitPrice: 0, notes: '', confidence: 'low' });
+                    updateActiveConversation();
+                    renderAll();
+                });
+            }
+
+            const notes = el('orderNotes');
+            if (notes) {
+                notes.addEventListener('input', () => {
+                    orderNotes = notes.value;
+                    updateActiveConversation();
+                });
+            }
+
+            const send = el('sendTerminalButton');
+            if (send) send.addEventListener('click', sendToTerminal);
+        }
+
+        function renderAll() {
+            const chat = getActiveConversation();
+            cartItems = [...(chat?.cartItems || cartItems || [])];
+            orderNotes = chat?.orderNotes || orderNotes || '';
+            renderConversations();
+            renderMessages();
+        }
+
+        function getTotal() {
+            return cartItems.reduce((sum, item) => {
+                return sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+            }, 0);
+        }
+
+        function updateCartTotalsOnly() {
+            const total = el('totalValue');
+            const send = el('sendTerminalButton');
+            if (total) total.textContent = money.format(getTotal());
+            if (send) send.disabled = getTotal() <= 0;
+        }
+
+        function addMessage(role, text, extra = {}) {
+            let chat = getActiveConversation();
+            if (!chat) {
+                createConversation();
+                chat = getActiveConversation();
+            }
+            chat.messages.push({ role, text, ...extra });
+            if (role === 'user' && (!chat.title || chat.title === 'New terminal order')) {
+                chat.title = text.slice(0, 46) || 'Terminal order';
+            }
+            saveConversations();
+            renderAll();
+        }
+
+        async function parseOrder() {
+            const message = el('orderText').value.trim();
+            if (!message) return;
+
+            el('orderText').value = '';
+            addMessage('user', message);
+            setStatus('Building cart with AI...');
+            el('sendPromptButton').disabled = true;
 
             try {
                 const response = await fetch(`${API_BASE}/api/employee/terminal-chat/parse`, {
@@ -461,10 +974,7 @@
                     body: JSON.stringify({ message }),
                 });
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.details || data.error || 'Failed to build cart');
-                }
+                if (!response.ok) throw new Error(data.details || data.error || 'Failed to build cart');
 
                 cartItems = (data.items || []).map((item) => ({
                     name: item.name || 'Custom item',
@@ -473,34 +983,40 @@
                     notes: item.notes || '',
                     confidence: item.confidence || 'low',
                 }));
+                orderNotes = data.notes || '';
 
-                if (data.questions?.length) {
-                    el('questionsBox').innerHTML = '<strong>Needs review:</strong><br>' + data.questions.map(escapeHtml).join('<br>');
-                    el('questionsBox').style.display = 'block';
-                }
-
-                if (data.notes) {
-                    el('orderNotes').value = data.notes;
-                }
-
-                renderCart();
-                setStatus('parseStatus', `Cart ready. Review the prices before sending.`, 'good');
+                const chat = getActiveConversation();
+                chat.cartItems = cartItems;
+                chat.orderNotes = orderNotes;
+                chat.questions = data.questions || [];
+                chat.messages.push({
+                    role: 'assistant',
+                    text: cartItems.length
+                        ? 'I built this cart from that order. Check the damn prices, fix anything weird, then send it to the terminal.'
+                        : 'I could not find priced items yet. Add a line or give me more detail.',
+                    cart: true
+                });
+                saveConversations();
+                renderAll();
+                setStatus('Cart ready.', 'good');
             } catch (error) {
-                setStatus('parseStatus', error.message || 'Failed to build cart.', 'bad');
+                addMessage('assistant', error.message || 'Failed to build cart.');
+                setStatus(error.message || 'Failed to build cart.', 'bad');
             } finally {
-                el('parseButton').disabled = false;
+                el('sendPromptButton').disabled = false;
             }
         }
 
         async function sendToTerminal() {
             const total = getTotal();
             if (!cartItems.length || total <= 0) {
-                setStatus('checkoutStatus', 'Add priced items before sending.', 'bad');
+                setStatus('Add priced items before sending.', 'bad');
                 return;
             }
 
-            setStatus('checkoutStatus', `Sending ${money.format(total)} to Square Terminal...`);
-            el('sendButton').disabled = true;
+            const send = el('sendTerminalButton');
+            if (send) send.disabled = true;
+            setStatus(`Sending ${money.format(total)} to Square Terminal...`);
 
             try {
                 const response = await fetch(`${API_BASE}/api/employee/terminal-chat/checkout`, {
@@ -513,21 +1029,20 @@
                             email: el('customerEmail').value.trim(),
                         },
                         items: cartItems,
-                        notes: el('orderNotes').value.trim(),
+                        notes: orderNotes,
                     }),
                 });
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.details || data.error || 'Failed to send to terminal');
-                }
+                if (!response.ok) throw new Error(data.details || data.error || 'Failed to send to terminal');
 
                 activeCheckoutId = data.checkoutId;
-                setStatus('checkoutStatus', `Sent to terminal. Waiting for card payment...`, 'good');
+                addMessage('assistant', `Sent ${money.format(Number(data.amount || total))} to the Square Terminal. Waiting for the card payment now.`);
+                setStatus('Waiting for terminal payment...', 'good');
                 await pollCheckout(data.checkoutId);
             } catch (error) {
-                setStatus('checkoutStatus', error.message || 'Terminal checkout failed.', 'bad');
-                el('sendButton').disabled = false;
+                addMessage('assistant', error.message || 'Terminal checkout failed.');
+                setStatus(error.message || 'Terminal checkout failed.', 'bad');
+                if (send) send.disabled = false;
             }
         }
 
@@ -538,13 +1053,11 @@
                     headers: authHeaders(),
                 });
                 const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.details || data.error || 'Failed to check payment status');
-                }
+                if (!response.ok) throw new Error(data.details || data.error || 'Failed to check payment status');
 
                 if (data.status === 'COMPLETED') {
-                    setStatus('checkoutStatus', 'Paid. Work order was marked paid automatically.', 'good');
+                    addMessage('assistant', 'Payment completed. The work order was marked paid automatically.');
+                    setStatus('Paid and marked complete.', 'good');
                     return;
                 }
 
@@ -552,7 +1065,7 @@
                     throw new Error(`Square checkout was ${data.status.toLowerCase()}.`);
                 }
 
-                setStatus('checkoutStatus', `Terminal status: ${data.status || 'pending'}...`);
+                setStatus(`Terminal status: ${data.status || 'pending'}...`);
             }
 
             throw new Error('Still waiting for Square. Check the terminal or work order status.');
@@ -560,7 +1073,7 @@
 
         el('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault();
-            setStatus('loginStatus', 'Logging in...');
+            setLoginStatus('Logging in...', '');
             try {
                 const response = await fetch(`${API_BASE}/api/employee/login`, {
                     method: 'POST',
@@ -575,57 +1088,42 @@
                 authToken = data.token;
                 localStorage.setItem('employeeToken', authToken);
                 showApp();
-                setStatus('loginStatus', '');
             } catch (error) {
-                setStatus('loginStatus', error.message || 'Login failed', 'bad');
+                setLoginStatus(error.message || 'Login failed', 'bad');
             }
         });
 
-        el('parseButton').addEventListener('click', parseOrder);
-        el('sendButton').addEventListener('click', sendToTerminal);
-        el('clearButton').addEventListener('click', () => {
-            el('orderText').value = '';
-            el('orderNotes').value = '';
+        el('sendPromptButton').addEventListener('click', parseOrder);
+        el('orderText').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                parseOrder();
+            }
+        });
+        el('newChatButton').addEventListener('click', createConversation);
+        el('clearChatButton').addEventListener('click', () => {
+            const chat = getActiveConversation();
+            if (!chat) return;
+            chat.messages = [];
+            chat.cartItems = [];
+            chat.questions = [];
+            chat.orderNotes = '';
             cartItems = [];
-            activeCheckoutId = null;
-            renderCart();
-            setStatus('parseStatus', '');
-            setStatus('checkoutStatus', '');
-            el('questionsBox').style.display = 'none';
+            orderNotes = '';
+            saveConversations();
+            renderAll();
         });
-        el('addLineButton').addEventListener('click', () => {
-            cartItems.push({ name: 'Custom item', quantity: 1, unitPrice: 0, notes: '', confidence: 'low' });
-            renderCart();
+        el('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('employeeToken');
+            authToken = '';
+            showLogin();
         });
-        el('cartBody').addEventListener('input', (event) => {
-            const input = event.target;
-            const index = Number(input.dataset.index);
-            const field = input.dataset.field;
-            if (!Number.isInteger(index) || !field || !cartItems[index]) return;
-            cartItems[index][field] = field === 'name' ? input.value : Number(input.value);
-            updateTotals();
-        });
-        el('cartBody').addEventListener('change', (event) => {
-            const input = event.target;
-            const index = Number(input.dataset.index);
-            const field = input.dataset.field;
-            if (!Number.isInteger(index) || !field || !cartItems[index]) return;
-            cartItems[index][field] = field === 'name' ? input.value : Number(input.value);
-            renderCart();
-        });
-        el('cartBody').addEventListener('click', (event) => {
-            const button = event.target.closest('button[data-remove]');
-            if (!button) return;
-            cartItems.splice(Number(button.dataset.remove), 1);
-            renderCart();
+        el('sidebarToggle').addEventListener('click', () => {
+            el('sidebar').classList.toggle('open');
         });
 
-        if (authToken) {
-            showApp();
-        } else {
-            showLogin();
-        }
-        renderCart();
+        if (authToken) showApp();
+        else showLogin();
     </script>
 </body>
 </html>
