@@ -93,7 +93,7 @@ const INITIAL_CONFIG: Config = {
 const START_MESSAGES: ChatMessage[] = [
   {
     role: 'assistant',
-    text: 'Hey, I am Blobby. Let us build your perfect Water Blob. What size are we starting with?',
+    text: 'Hey, I am Blobby. Let us build your perfect Water Blob. Who is this for: younger kids, older kids, teens, adults, a family, a camp, or something else?',
   },
 ];
 
@@ -135,9 +135,9 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'What size Water Blob are we starting with?';
+      return 'Who is this blob for: younger kids, older kids, teens, adults, a family, a camp, or something else?';
     case 'size':
-      return `Pick the blob size and I will shape the preview. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
+      return `Pick the blob size and I will shape the preview. Bigger blobs make more launch and airtime, especially for older kids and teens. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
       return `What main color should the body be? Options: ${COLORS.join(', ')}.`;
     case 'stripeStyle':
@@ -145,7 +145,7 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'stripeColor':
       return `What color should the stripe be? Options: ${COLORS.join(', ')}.`;
     case 'useCase':
-      return `Who is this for? Examples: ${USE_CASES.join(', ')}.`;
+      return `Tell me a little more about who will use it. Family with younger kids, older kids, teens, adults, summer camp, resort, private lake?`;
     case 'waterDepth':
       return 'How deep is the water where this will be used?';
     case 'timeline':
@@ -243,7 +243,31 @@ function parseStripeStyle(text: string) {
 
 function parseUseCase(text: string) {
   const normalized = text.toLowerCase();
+  if (/\b(family|families|younger kids|little kids|small kids|children|kids)\b/.test(normalized)) return text;
+  if (/\b(older kids|big kids|teens|teenagers|adults|college|youth group)\b/.test(normalized)) return text;
   return USE_CASES.find((item) => normalized.includes(item.toLowerCase())) || '';
+}
+
+function shouldRecommendBiggerBlob(text: string, config: Config) {
+  const normalized = text.toLowerCase();
+  const olderJumpers = /\b(older kids|big kids|teens|teenagers|adults|college|youth group)\b/.test(normalized);
+  const wantsAir = /\b(higher|air|airtime|launch|bigger bounce|more bounce|send them|fly)\b/.test(normalized);
+  const currentSize = config.size.toLowerCase();
+  const alreadyBig = currentSize.includes('35') || currentSize.includes('40');
+  return Boolean(config.size) && (olderJumpers || wantsAir) && !alreadyBig;
+}
+
+function buildBiggerBlobRecommendation(config: Config) {
+  const size = config.size || 'that size';
+  return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, so the 35 ft or 40 ft Original is usually the more exciting move. Want to switch to 35 or 40, or keep ${size}?`;
+}
+
+function parseBiggerBlobSwitch(text: string) {
+  const normalized = text.toLowerCase();
+  if (/\b40\b|\bforty\b/.test(normalized)) return '40 ft Original';
+  if (/\b35\b|\bthirty five\b|\bthirty-five\b/.test(normalized)) return '35 ft Original';
+  if (/\bkeep|stay|same|no\b/.test(normalized)) return 'keep';
+  return '';
 }
 
 function parseTimeline(text: string) {
@@ -287,6 +311,11 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
   if (normalized.includes('blob') || (!nextConfig.product && !isQuestion)) {
     nextConfig.product = parseProduct(answer);
     updated.add('product');
+  }
+
+  if (step === 'product' && !isQuestion) {
+    nextConfig.useCase = answer;
+    updated.add('useCase');
   }
 
   const product = nextConfig.product || 'waterblob';
@@ -401,6 +430,36 @@ function nextUnansweredStep(current: ChatStep, updated: Set<string>) {
   return next;
 }
 
+function isStepAlreadyAnswered(step: ChatStep, config: Config) {
+  switch (step) {
+    case 'product':
+      return Boolean(config.product);
+    case 'size':
+      return Boolean(config.size);
+    case 'useCase':
+      return Boolean(config.useCase);
+    case 'waterDepth':
+      return Boolean(config.waterDepth);
+    case 'timeline':
+      return Boolean(config.timeline);
+    case 'contact':
+      return Boolean(config.name && config.email && config.phone);
+    case 'notes':
+    case 'ready':
+      return false;
+    default:
+      return false;
+  }
+}
+
+function nextUnansweredStepForConfig(current: ChatStep, updated: Set<string>, config: Config) {
+  let next = nextUnansweredStep(current, updated);
+  while (isStepAlreadyAnswered(next, config) && next !== 'ready') {
+    next = nextStep(next);
+  }
+  return next;
+}
+
 export default function WaterBlobAiPage() {
   const [config, setConfig] = useState<Config>(INITIAL_CONFIG);
   const [messages, setMessages] = useState<ChatMessage[]>(START_MESSAGES);
@@ -410,6 +469,7 @@ export default function WaterBlobAiPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [needsThirtyFootClarification, setNeedsThirtyFootClarification] = useState(false);
+  const [needsBiggerBlobConfirmation, setNeedsBiggerBlobConfirmation] = useState(false);
   const viewerRef = useRef<ViewerInstance | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const colorSyncTimersRef = useRef<number[]>([]);
@@ -571,6 +631,29 @@ export default function WaterBlobAiPage() {
       return;
     }
 
+    if (needsBiggerBlobConfirmation) {
+      const sizeChoice = parseBiggerBlobSwitch(answer);
+      if (!sizeChoice) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'customer', text: answer },
+          { role: 'assistant', text: 'I can keep the current size, or switch this beast to a 35 ft or 40 ft Original for more launch. Which way are we going?' },
+        ]);
+        return;
+      }
+
+      const nextConfig = {
+        ...config,
+        size: sizeChoice === 'keep' ? config.size : sizeChoice,
+      };
+      setNeedsBiggerBlobConfirmation(false);
+      setConfig(nextConfig);
+      syncViewerColors(viewerRef.current, nextConfig);
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+      askNext(nextUnansweredStepForConfig(step, new Set(['size']), nextConfig), nextConfig, sizeChoice === 'keep' ? 'You got it, we will keep that size.' : 'Excellent choice. More blob, more launch.');
+      return;
+    }
+
     if ((step === 'product' || step === 'size') && mentionsAmbiguousThirtyFoot(answer)) {
       setNeedsThirtyFootClarification(true);
       setMessages((prev) => [
@@ -603,7 +686,18 @@ export default function WaterBlobAiPage() {
     syncViewerColors(viewerRef.current, nextConfig);
     setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
 
-    const next = nextUnansweredStep(step, updated);
+    const recommendationContext = `${answer} ${nextConfig.useCase}`;
+    if ((updated.has('useCase') || updated.has('size')) && shouldRecommendBiggerBlob(recommendationContext, nextConfig)) {
+      setNeedsBiggerBlobConfirmation(true);
+      setStep('size');
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: buildBiggerBlobRecommendation(nextConfig) },
+      ]);
+      return;
+    }
+
+    const next = nextUnansweredStepForConfig(step, updated, nextConfig);
     if (updated.size === 0 && step !== 'ready') {
       askNext(step, nextConfig, "I am not sure I caught that design detail.");
       return;
