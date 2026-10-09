@@ -62,6 +62,16 @@ const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', '
 const USE_CASES = ['Summer camp', 'Resort', 'Private lake', 'Rental business', 'Marina', 'Other'];
 const TIMELINES = ['ASAP', 'This month', '1-3 months', 'Before summer', 'Just planning'];
 const THIRTY_FOOT_CLARIFICATION = 'Do you mean the 30 ft Weekender / Family Blob, or the 30 ft Original?';
+const PRICE_ESTIMATES: Record<string, number> = {
+  'Family Blob / Weekender': 2035,
+  '25 ft Weekender': 2035,
+  '30 ft Weekender': 2495,
+  '30 ft Original': 4135,
+  '35 ft Original': 4465,
+  '40 ft Original': 4970,
+};
+const SUGGESTION_CHIPS = ['More airtime', 'Family friendly', 'Make it bold', 'Try random', 'Undo that', 'Show popular looks', 'Print summary'];
+const PRESET_CHIPS = ['Classic look', 'Fire colors', 'Ocean colors', 'Halloween colors', 'Patriotic colors', 'Camp colors', 'Stealth look', 'Rainbow'];
 
 const COLOR_HEX: Record<string, string> = {
   Blue: '#0044AA',
@@ -131,12 +141,25 @@ function summarizeConfig(config: Config) {
     `Anchor patch color: ${config.anchorColor}`,
     `Stripe style: ${config.stripeStyle}`,
     `Stripe color: ${config.stripeColor}`,
+    `Estimate: ${priceEstimate(config)}`,
     config.useCase ? `Use: ${config.useCase}` : '',
     config.waterDepth ? `Water depth: ${config.waterDepth}` : '',
     config.timeline ? `Timeline: ${config.timeline}` : '',
     config.notes ? `Notes: ${config.notes}` : '',
   ].filter(Boolean);
   return parts.join('\n');
+}
+
+function priceEstimate(config: Config) {
+  const price = PRICE_ESTIMATES[config.size];
+  if (!price) return 'Price pending';
+  return `Starting at $${price.toLocaleString()} plus freight`;
+}
+
+function designMemorySentence(config: Config) {
+  const size = config.size || 'size pending';
+  const stripe = config.stripeStyle === 'No stripes' ? 'no stripes' : `${config.stripeColor} ${config.stripeStyle.toLowerCase()}`;
+  return `Right now we have a ${size}, ${config.baseColor} body/main panels, ${stripe}, ${config.endCapColor} end caps, and ${config.anchorColor} anchor patches. ${priceEstimate(config)}.`;
 }
 
 function questionForStep(step: ChatStep, config: Config) {
@@ -220,7 +243,7 @@ function parseSize(product: ProductType, text: string) {
   }
   if (
     product === 'waterblob' &&
-    (normalized.includes('family') || normalized.includes('personal') || normalized.includes('weekender'))
+    (normalized.includes('family friendly') || normalized.includes('family') || normalized.includes('personal') || normalized.includes('weekender'))
   ) {
     return 'Family Blob / Weekender';
   }
@@ -266,6 +289,7 @@ const COLOR_THEMES = [
   { pattern: /\b(thanksgiving|fall|autumn|harvest)\b/i, colors: ['Orange', 'Red', 'Yellow', 'Black'] },
   { pattern: /\b(winter|snow|snowy|arctic)\b/i, colors: ['White', 'Blue', 'Gray', 'White'] },
   { pattern: /\b(summer|sunshine|sunny)\b/i, colors: ['Yellow', 'Orange', 'Blue', 'White'] },
+  { pattern: /\b(camp colors|camp look|summer camp colors|camp theme)\b/i, colors: ['Blue', 'Yellow', 'White', 'Blue'] },
   { pattern: /\b(ocean|lake|water|wave|waves|nautical|splash)\b/i, colors: ['Blue', 'White', 'Blue', 'White'] },
   { pattern: /\b(tropical|island|beach)\b/i, colors: ['Blue', 'Orange', 'Yellow', 'Green'] },
   { pattern: /\b(sunset|sunrise)\b/i, colors: ['Orange', 'Red', 'Yellow', 'White'] },
@@ -277,6 +301,7 @@ const COLOR_THEMES = [
   { pattern: /\b(whiteout|clean white|all white)\b/i, colors: ['White', 'White', 'White', 'White'] },
   { pattern: /\b(rainbow|multi color|multicolor|colorful|all colors)\b/i, colors: ['Blue', 'Red', 'Yellow', 'Green'] },
   { pattern: /\b(neon|bright|electric)\b/i, colors: ['Green', 'Orange', 'Yellow', 'Blue'] },
+  { pattern: /\b(bold|make it bold|loud|high contrast|pop)\b/i, colors: ['Red', 'Black', 'Yellow', 'White'] },
   { pattern: /\b(princess|candy|cotton candy)\b/i, colors: ['White', 'Blue', 'Yellow', 'White'] },
   { pattern: /\b(unicorn|magic|magical)\b/i, colors: ['White', 'Blue', 'Yellow', 'Green'] },
   { pattern: /\b(mermaid|seafoam)\b/i, colors: ['Blue', 'Green', 'White', 'Blue'] },
@@ -294,6 +319,22 @@ function getNamedColorTheme(text: string) {
 
 function wantsRandomColors(text: string) {
   return /\b(random|randomize|shuffle|mix it up|surprise me|wild card|wildcard)\b/i.test(text);
+}
+
+function wantsUndo(text: string) {
+  return /\b(undo|go back|revert|back up|change it back)\b/i.test(text);
+}
+
+function wantsTryAnother(text: string) {
+  return /\b(try another|another one|roll again|reroll|different random|new random)\b/i.test(text);
+}
+
+function wantsPopularLooks(text: string) {
+  return /\b(show popular|popular looks|preset|presets|gallery|ideas|examples)\b/i.test(text);
+}
+
+function wantsPrintSummary(text: string) {
+  return /\b(print|pdf|summary|save as pdf|printable)\b/i.test(text);
 }
 
 function randomColor(exclude: string[] = []) {
@@ -753,6 +794,7 @@ export default function WaterBlobAiPage() {
   const viewerRef = useRef<ViewerInstance | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const colorSyncTimersRef = useRef<number[]>([]);
+  const configHistoryRef = useRef<Config[]>([]);
 
   const modelPath = useMemo(() => modelForConfig(config), [config]);
   const progress = Math.round(([
@@ -828,6 +870,96 @@ export default function WaterBlobAiPage() {
     scheduleColorSync(viewerRef.current, config);
   }, [config, modelPath, scheduleColorSync]);
 
+  function saveHistory() {
+    configHistoryRef.current = [...configHistoryRef.current.slice(-9), { ...config }];
+  }
+
+  function applyConfig(nextConfig: Config, remember = true) {
+    if (remember) saveHistory();
+    setConfig(nextConfig);
+    syncViewerColors(viewerRef.current, nextConfig);
+  }
+
+  function applyRandomColors(message = 'I rolled a fresh random combo.') {
+    const randomTheme = getRandomColorTheme();
+    const nextConfig = {
+      ...config,
+      product: config.product || 'waterblob',
+      baseColor: randomTheme.baseColor,
+      stripeColor: randomTheme.stripeColor,
+      endCapColor: randomTheme.endCapColor,
+      anchorColor: randomTheme.anchorColor,
+    };
+    applyConfig(nextConfig);
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', text: `${message} ${designMemorySentence(nextConfig)}` },
+    ]);
+  }
+
+  function undoLastChange() {
+    const previous = configHistoryRef.current.pop();
+    if (!previous) {
+      setMessages((prev) => [...prev, { role: 'assistant', text: 'I do not have a previous design move to undo yet.' }]);
+      return;
+    }
+    setConfig(previous);
+    syncViewerColors(viewerRef.current, previous);
+    setMessages((prev) => [...prev, { role: 'assistant', text: `Undone. ${designMemorySentence(previous)}` }]);
+  }
+
+  function printSummary() {
+    const image = viewerRef.current?.captureScreenshot?.(720, 480) || '';
+    const safe = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char] || char));
+    const win = window.open('', '_blank', 'noopener,noreferrer,width=900,height=900');
+    if (!win) {
+      setError('Popup blocked. Allow popups to print the summary.');
+      return;
+    }
+    win.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>Water Blob Design Summary</title>
+          <style>
+            body { font-family: Arial, sans-serif; color: #111827; margin: 32px; line-height: 1.45; }
+            h1 { margin-bottom: 4px; }
+            .muted { color: #6b7280; }
+            .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 22px 0; }
+            .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 12px; }
+            .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; font-weight: 700; }
+            img { max-width: 100%; border-radius: 14px; border: 1px solid #d1d5db; }
+            @media print { button { display: none; } body { margin: 18px; } }
+          </style>
+        </head>
+        <body>
+          <button onclick="window.print()">Print / Save as PDF</button>
+          <h1>Water Blob Design Summary</h1>
+          <p class="muted">${safe(designMemorySentence(config))}</p>
+          ${image ? `<img src="${image}" alt="Water Blob preview" />` : ''}
+          <div class="grid">
+            <div class="box"><div class="label">Size</div>${safe(config.size || 'Pending')}</div>
+            <div class="box"><div class="label">Quantity</div>${config.quantity || 1}</div>
+            <div class="box"><div class="label">Body</div>${safe(config.baseColor)}</div>
+            <div class="box"><div class="label">Stripes / side panels</div>${safe(config.stripeStyle)} ${safe(config.stripeColor)}</div>
+            <div class="box"><div class="label">End caps</div>${safe(config.endCapColor)}</div>
+            <div class="box"><div class="label">Anchor patches</div>${safe(config.anchorColor)}</div>
+            <div class="box"><div class="label">Water depth</div>${safe(config.waterDepth || 'Pending')}</div>
+            <div class="box"><div class="label">Timeline</div>${safe(config.timeline || 'Pending')}</div>
+            <div class="box"><div class="label">Customer</div>${safe(config.name || 'Pending')}<br>${safe(config.email || '')}<br>${safe(config.phone || '')}</div>
+            <div class="box"><div class="label">Estimate</div>${safe(priceEstimate(config))}</div>
+          </div>
+          <h2>Notes</h2>
+          <p>${safe(config.notes || 'None')}</p>
+          <h2>Safety Notes</h2>
+          <p>Use only with competent supervision, USCG-approved life vests, and deep clear water. Water Blob guidance calls for 8 ft or more, commonly 8-10 ft minimum. Final use, placement, anchoring, and supervision must follow the owner manual.</p>
+        </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+  }
+
   function askNext(next: ChatStep, nextConfig: Config, extra?: string) {
     const question = questionForStep(next, nextConfig);
     setMessages((prev) => [
@@ -860,8 +992,7 @@ export default function WaterBlobAiPage() {
       const reply = cleanAssistantText(data.reply || (helper ? `${helper} ${question}` : question));
       const recommendation = applyAssistantRecommendation(nextConfig, reply);
       if (recommendation.updated.size > 0) {
-        setConfig(recommendation.nextConfig);
-        syncViewerColors(viewerRef.current, recommendation.nextConfig);
+        applyConfig(recommendation.nextConfig);
       }
       setMessages((prev) => [
         ...prev,
@@ -904,8 +1035,7 @@ export default function WaterBlobAiPage() {
       const reply = cleanAssistantText(data.reply || `Good question. I can help shape this Water Blob. ${questionForStep(step, config)}`);
       const recommendation = applyAssistantRecommendation(config, reply);
       if (recommendation.updated.size > 0) {
-        setConfig(recommendation.nextConfig);
-        syncViewerColors(viewerRef.current, recommendation.nextConfig);
+        applyConfig(recommendation.nextConfig);
       }
       setMessages((prev) => [
         ...prev.slice(0, -1),
@@ -933,6 +1063,33 @@ export default function WaterBlobAiPage() {
     setSubmitted(false);
     setInput('');
 
+    if (wantsUndo(answer)) {
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+      undoLastChange();
+      return;
+    }
+
+    if (wantsTryAnother(answer) || wantsRandomColors(answer)) {
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+      applyRandomColors(wantsTryAnother(answer) ? 'Here is another combo.' : 'I randomized the colors.');
+      return;
+    }
+
+    if (wantsPopularLooks(answer)) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'customer', text: answer },
+        { role: 'assistant', text: `Here are popular looks I can apply: ${PRESET_CHIPS.join(', ')}. Type one of those, or tap a suggestion below.` },
+      ]);
+      return;
+    }
+
+    if (wantsPrintSummary(answer)) {
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }, { role: 'assistant', text: 'Opening a printable design summary. Use Print to save it as a PDF.' }]);
+      printSummary();
+      return;
+    }
+
     if (step === 'ready' && /\b(send|done|finished|ready|submit)\b/i.test(answer)) {
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
       await sendInquiry();
@@ -956,8 +1113,7 @@ export default function WaterBlobAiPage() {
         size: clarifiedSize,
       };
       setNeedsThirtyFootClarification(false);
-      setConfig(nextConfig);
-      syncViewerColors(viewerRef.current, nextConfig);
+      applyConfig(nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
       await askNextDynamic('baseColor', nextConfig, answer, `${explainSizeChoice(nextConfig)} Now the fun part.`);
       return;
@@ -979,8 +1135,7 @@ export default function WaterBlobAiPage() {
         size: sizeChoice === 'keep' ? config.size : sizeChoice,
       };
       setNeedsBiggerBlobConfirmation(false);
-      setConfig(nextConfig);
-      syncViewerColors(viewerRef.current, nextConfig);
+      applyConfig(nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
       await askNextDynamic(
         nextUnansweredStepForConfig(step, new Set(['size']), nextConfig),
@@ -1040,9 +1195,11 @@ export default function WaterBlobAiPage() {
     if (updated.has('waterDepth') && nextConfig.product === 'waterblob') helper = 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.';
     if (updated.has('contact')) helper = nextConfig.email && nextConfig.phone ? 'Contact saved.' : 'I saved what I could.';
     if (updated.has('notes')) helper = 'Added.';
+    if (updated.size > 0 && !helper.includes('Right now')) {
+      helper = `${helper} ${designMemorySentence(nextConfig)}`;
+    }
 
-    setConfig(nextConfig);
-    syncViewerColors(viewerRef.current, nextConfig);
+    applyConfig(nextConfig);
     setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
 
     const recommendationContext = `${answer} ${nextConfig.useCase}`;
@@ -1144,6 +1301,7 @@ export default function WaterBlobAiPage() {
           productImage: '/assets/homepage/blob/oceanblobjump.webp',
           customization,
           customImage,
+          source: 'blobby-ai',
           _t: Date.now() - 5000,
         }),
       });
@@ -1182,6 +1340,12 @@ export default function WaterBlobAiPage() {
         {config.product && (
           <div className={styles.viewerPanel}>
             <div className={styles.modelStage}>
+              <div className={styles.partLabels} aria-label="3D preview part labels">
+                <span className={styles.labelBody}>Body</span>
+                <span className={styles.labelStripes}>Stripes</span>
+                <span className={styles.labelEndCaps}>End caps</span>
+                <span className={styles.labelAnchors}>Anchor patches</span>
+              </div>
               <ProductBlobViewerWrapper
                 key={`${config.product}-${config.size || 'default'}`}
                 containerId="customer-ai-product-viewer"
@@ -1245,6 +1409,20 @@ export default function WaterBlobAiPage() {
           </div>
 
           <div className={styles.chatComposer}>
+            <div className={styles.suggestionRow} aria-label="Smart suggestions">
+              {SUGGESTION_CHIPS.map((chip) => (
+                <button key={chip} type="button" onClick={() => processAnswer(chip)}>
+                  {chip}
+                </button>
+              ))}
+            </div>
+            <div className={styles.presetRow} aria-label="Popular looks">
+              {PRESET_CHIPS.map((chip) => (
+                <button key={chip} type="button" onClick={() => processAnswer(chip)}>
+                  {chip}
+                </button>
+              ))}
+            </div>
             <form className={styles.freeText} onSubmit={handleTypedSubmit}>
               <input
                 value={input}
@@ -1276,6 +1454,10 @@ export default function WaterBlobAiPage() {
             <div>
               <span>Contact</span>
               <strong>{config.name || 'Pending'}</strong>
+            </div>
+            <div>
+              <span>Estimate</span>
+              <strong>{priceEstimate(config)}</strong>
             </div>
           </div>
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getBrevoClient } from '@/lib/brevo';
+import { getPool } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 async function fetchImageAsBase64(imageUrl: string): Promise<string | null> {
   try {
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
       productImage,
       customization,
       customImage,
+      source,
       _hp,
       _hp2,
       _hp3,
@@ -104,6 +107,47 @@ export async function POST(request: NextRequest) {
 
     const brevoClient = getBrevoClient();
     const contactEmail = process.env.WORK_ORDER_EMAIL || 'lorie@thewaterblob.com';
+    const pool = getPool();
+
+    if (pool) {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS product_inquiries (
+            id SERIAL PRIMARY KEY,
+            source TEXT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            product_size TEXT,
+            quantity INTEGER DEFAULT 1,
+            message TEXT,
+            customization TEXT,
+            custom_image TEXT,
+            created_at TIMESTAMPTZ DEFAULT NOW()
+          )
+        `);
+        await pool.query(
+          `INSERT INTO product_inquiries
+           (source, name, email, phone, product_name, product_size, quantity, message, customization, custom_image)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [
+            source || 'product-inquiry',
+            name,
+            email,
+            phone,
+            productName,
+            productSize || null,
+            Number(quantity || 1),
+            message || null,
+            customization || null,
+            customImage || null,
+          ]
+        );
+      } catch {
+        // DB storage should not block email delivery
+      }
+    }
 
     if (brevoClient && contactEmail) {
       try {
@@ -147,5 +191,42 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'Thank you! We will be in touch shortly.' });
   } catch {
     return NextResponse.json({ error: 'Failed to submit inquiry' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth instanceof NextResponse) return auth;
+
+  const pool = getPool();
+  if (!pool) return NextResponse.json({ inquiries: [] });
+
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS product_inquiries (
+        id SERIAL PRIMARY KEY,
+        source TEXT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        product_name TEXT NOT NULL,
+        product_size TEXT,
+        quantity INTEGER DEFAULT 1,
+        message TEXT,
+        customization TEXT,
+        custom_image TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    const result = await pool.query(
+      `SELECT id, source, name, email, phone, product_name, product_size, quantity, message, customization, custom_image, created_at
+       FROM product_inquiries
+       WHERE source = 'blobby-ai' OR product_name ILIKE '%AI Design%'
+       ORDER BY created_at DESC
+       LIMIT 100`
+    );
+    return NextResponse.json({ inquiries: result.rows });
+  } catch {
+    return NextResponse.json({ error: 'Failed to load inquiries' }, { status: 500 });
   }
 }
