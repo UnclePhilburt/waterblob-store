@@ -10,7 +10,7 @@ const ProductBlobViewerWrapper = dynamic(
   { ssr: false }
 );
 
-type ProductType = 'waterblob' | 'skitube';
+type ProductType = 'waterblob';
 type ChatStep =
   | 'product'
   | 'size'
@@ -56,7 +56,6 @@ type Config = {
 };
 
 const WATER_BLOB_SIZES = ['Family Blob / Weekender', '25 ft Weekender', '30 ft Weekender', '30 ft Original', '35 ft Original', '40 ft Original'];
-const SKI_TUBE_SIZES = ['Standard ski tube', 'Custom ski tube'];
 const COLORS = ['Blue', 'Yellow', 'Red', 'Green', 'Black', 'White', 'Gray', 'Orange'];
 const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', 'Custom stripe layout'];
 const USE_CASES = ['Summer camp', 'Resort', 'Private lake', 'Rental business', 'Marina', 'Other'];
@@ -93,18 +92,16 @@ const INITIAL_CONFIG: Config = {
 const START_MESSAGES: ChatMessage[] = [
   {
     role: 'assistant',
-    text: 'Hi, I can build your Water Blob quote. What size are you looking for? If you need a Ski Tube instead, just say Ski Tube.',
+    text: 'Hi, I am Blobby. I can build your Water Blob quote. What size are you looking for?',
   },
 ];
 
 function productLabel(product: ProductType | '') {
-  if (product === 'skitube') return 'Ski Tube';
   if (product === 'waterblob') return 'Water Blob';
   return 'Water Blob';
 }
 
 function modelForConfig(config: Config) {
-  if (config.product === 'skitube') return '/assets/skitube3dmodel/skitube.glb';
   if (config.size.toLowerCase().includes('family')) return '/assets/weekender.glb';
   if (config.size.toLowerCase().includes('weekender')) return '/assets/weekender.glb';
   if (config.size.includes('25')) return '/assets/weekender.glb';
@@ -114,7 +111,7 @@ function modelForConfig(config: Config) {
 }
 
 function sizeOptionsFor(product: ProductType | '') {
-  return product === 'skitube' ? SKI_TUBE_SIZES : WATER_BLOB_SIZES;
+  return WATER_BLOB_SIZES;
 }
 
 function summarizeConfig(config: Config) {
@@ -137,7 +134,7 @@ function summarizeConfig(config: Config) {
 function questionForStep(step: ChatStep, config: Config) {
   switch (step) {
     case 'product':
-      return 'What size Water Blob are you looking for? If you need a Ski Tube instead, just say Ski Tube.';
+      return 'What size Water Blob are you looking for?';
     case 'size':
       return `What size ${productLabel(config.product)} do you want? Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
@@ -149,9 +146,7 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'useCase':
       return `Who is this for? Examples: ${USE_CASES.join(', ')}.`;
     case 'waterDepth':
-      return config.product === 'waterblob'
-        ? 'How deep is the water where this will be used?'
-        : 'Where will the ski tube mostly be used?';
+      return 'How deep is the water where this will be used?';
     case 'timeline':
       return `When do you need it? Options: ${TIMELINES.join(', ')}.`;
     case 'quantity':
@@ -183,8 +178,8 @@ function nextStep(current: ChatStep): ChatStep {
   return flow[Math.min(flow.indexOf(current) + 1, flow.length - 1)];
 }
 
-function parseProduct(text: string): ProductType {
-  return text.toLowerCase().includes('ski') ? 'skitube' : 'waterblob';
+function parseProduct(_text: string): ProductType {
+  return 'waterblob';
 }
 
 function parseSize(product: ProductType, text: string) {
@@ -266,7 +261,7 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
   const normalized = answer.toLowerCase();
   const isQuestion = looksLikeQuestion(answer);
 
-  if (normalized.includes('ski') || normalized.includes('blob') || (!nextConfig.product && !isQuestion)) {
+  if (normalized.includes('blob') || (!nextConfig.product && !isQuestion)) {
     nextConfig.product = parseProduct(answer);
     updated.add('product');
   }
@@ -500,7 +495,7 @@ export default function WaterBlobAiPage() {
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: `${data.reply || 'Good question. I can help with Water Blob and Ski Tube quotes.'} ${questionForStep(step, config)}`,
+          text: `${data.reply || 'Good question. I can help with Water Blob quotes.'} ${questionForStep(step, config)}`,
         },
       ]);
     } catch {
@@ -508,7 +503,7 @@ export default function WaterBlobAiPage() {
         ...prev.slice(0, -1),
         {
           role: 'assistant',
-          text: `Good question. I can help with Water Blob and Ski Tube quotes. ${questionForStep(step, config)}`,
+          text: `Good question. I can help with Water Blob quotes. ${questionForStep(step, config)}`,
         },
       ]);
     }
@@ -536,9 +531,7 @@ export default function WaterBlobAiPage() {
 
     let helper = 'Got it.';
     if (updated.has('product')) {
-      helper = nextConfig.product === 'skitube'
-        ? 'Perfect. Ski Tube selected.'
-        : 'Perfect, I will assume Water Blob.';
+      helper = 'Perfect, I will assume Water Blob.';
     }
     if (updated.has('size')) helper = updated.has('product') ? `${helper} I grabbed the size too.` : 'Got it.';
     if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
@@ -635,9 +628,7 @@ export default function WaterBlobAiPage() {
           productPrice: 0,
           productSize: config.size,
           quantity: config.quantity,
-          productImage: config.product === 'skitube'
-            ? '/assets/homepage/skitube/Ski-Tube-Blue.webp'
-            : '/assets/homepage/blob/oceanblobjump.webp',
+          productImage: '/assets/homepage/blob/oceanblobjump.webp',
           customization,
           customImage,
           _t: Date.now() - 5000,
@@ -668,7 +659,7 @@ export default function WaterBlobAiPage() {
           <Link href="/products" className={styles.backLink}>Products</Link>
           <h1>Blobby</h1>
           <p>
-            Chat with Blobby to build a Water Blob or Ski Tube quote while the 3D preview updates in real time.
+            Chat with Blobby to build a Water Blob quote while the 3D preview updates in real time.
           </p>
         </div>
         <a href="tel:+14178648461" className={styles.phoneLink}>(417) 864-8461</a>
