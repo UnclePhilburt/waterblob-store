@@ -198,6 +198,20 @@ function parseProduct(_text: string): ProductType {
 function parseSize(product: ProductType, text: string) {
   const normalized = text.toLowerCase();
   const saysThirty = /\b30\b|\bthirty\b/.test(normalized);
+  if (
+    product === 'waterblob' &&
+    /\b(most air ?time|biggest air ?time|max air ?time|maximum air ?time|biggest launch|highest launch|most launch|send.*highest|send.*flying)\b/.test(normalized)
+  ) {
+    return '40 ft Original';
+  }
+  if (
+    product === 'waterblob' &&
+    normalized.includes('original') &&
+    /\b(adults?|teens?|older kids|big kids|stronger jumpers)\b/.test(normalized) &&
+    !saysThirty
+  ) {
+    return '35 ft Original';
+  }
   if (product === 'waterblob' && saysThirty && normalized.includes('original')) {
     return '30 ft Original';
   }
@@ -570,6 +584,9 @@ function isStepAlreadyAnswered(step: ChatStep, config: Config) {
 }
 
 function nextUnansweredStepForConfig(current: ChatStep, updated: Set<string>, config: Config) {
+  if (!config.product && current !== 'product' && !updated.has('product')) return 'product';
+  if (!config.size && current !== 'size' && !updated.has('size')) return 'size';
+
   let next = nextUnansweredStep(current, updated);
   while (isStepAlreadyAnswered(next, config) && next !== 'ready') {
     next = nextStep(next);
