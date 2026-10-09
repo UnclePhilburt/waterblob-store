@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import BlobbyDesigner from '@/components/BlobbyDesigner';
 
 const HERO_IMAGES = [
   { src: '/images/homepage4.jpg', alt: 'Person launched high in the air from a Water Blob' },
@@ -410,7 +411,7 @@ export default function Home() {
         {/* BLOBBY DESIGNER SECTION                                       */}
         {/* ============================================================ */}
         <section className="blobby-home" aria-labelledby="blobby-home-title">
-          <div className="container blobby-home-inner">
+          <div className="container">
             <div className="blobby-home-copy">
               <span className="section-kicker">Need help choosing?</span>
               <h2 id="blobby-home-title">Build Your Water Blob With Blobby</h2>
@@ -418,29 +419,10 @@ export default function Home() {
                 Answer a few easy questions about size, colors, and who will be jumping.
                 Blobby helps shape the design while you see it come together in 3D.
               </p>
-              <div className="blobby-home-actions">
-                <Link href="/water-blob-ai" className="btn btn-primary">
-                  Start Designing
-                </Link>
-                <a href="tel:+14178648461" className="btn btn-secondary">
-                  Call Us Instead
-                </a>
-              </div>
             </div>
-            <Link href="/water-blob-ai" className="blobby-home-preview" aria-label="Start designing a Water Blob with Blobby">
-              <div className="blobby-preview-card">
-                <Image
-                  src="/assets/homepage/blob/oceanblobjump.webp"
-                  alt="Water Blob launch on the lake"
-                  width={520}
-                  height={360}
-                />
-                <div className="blobby-preview-overlay">
-                  <span>Blobby asks:</span>
-                  <strong>Who is jumping, and how much airtime do you want?</strong>
-                </div>
-              </div>
-            </Link>
+            <div className="blobby-home-embed">
+              <BlobbyDesigner embedded />
+            </div>
           </div>
         </section>
 

@@ -2888,13 +2888,6 @@ html:not([data-theme="dark"]) .hero,
     overflow: hidden;
 }
 
-.blobby-home-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
-    gap: clamp(2rem, 5vw, 4rem);
-    align-items: center;
-}
-
 .section-kicker {
     display: inline-flex;
     width: fit-content;
@@ -2912,7 +2905,7 @@ html:not([data-theme="dark"]) .hero,
 
 .blobby-home-copy h2 {
     margin: 0;
-    max-width: 620px;
+    max-width: 760px;
     font-size: clamp(2.25rem, 5vw, 4.4rem);
     line-height: 0.95;
     letter-spacing: -0.04em;
@@ -2920,75 +2913,20 @@ html:not([data-theme="dark"]) .hero,
 }
 
 .blobby-home-copy p {
-    max-width: 580px;
+    max-width: 760px;
     margin: 1.25rem 0 0;
     color: var(--text-secondary);
     font-size: clamp(1.03rem, 2vw, 1.2rem);
     line-height: 1.65;
 }
 
-.blobby-home-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.85rem;
-    margin-top: 1.75rem;
-}
-
-.blobby-home-preview {
-    display: block;
-    color: inherit;
-    text-decoration: none;
-}
-
-.blobby-preview-card {
-    position: relative;
+.blobby-home-embed {
+    margin-top: 2rem;
     overflow: hidden;
-    border-radius: 2rem;
     border: 1px solid var(--border-subtle);
-    background: var(--bg-card);
+    border-radius: 2rem;
+    background: #ffffff;
     box-shadow: var(--shadow-lg);
-    min-height: 360px;
-}
-
-.blobby-preview-card img {
-    width: 100%;
-    height: 100%;
-    min-height: 360px;
-    display: block;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.blobby-home-preview:hover img {
-    transform: scale(1.04);
-}
-
-.blobby-preview-overlay {
-    position: absolute;
-    left: 1.25rem;
-    right: 1.25rem;
-    bottom: 1.25rem;
-    display: grid;
-    gap: 0.35rem;
-    padding: 1rem 1.1rem;
-    border-radius: 1.25rem;
-    background: rgba(255, 255, 255, 0.9);
-    color: #111827;
-    box-shadow: 0 16px 45px rgba(15, 23, 42, 0.18);
-    backdrop-filter: blur(12px);
-}
-
-.blobby-preview-overlay span {
-    color: #0f766e;
-    font-size: 0.78rem;
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.blobby-preview-overlay strong {
-    font-size: clamp(1.05rem, 2vw, 1.35rem);
-    line-height: 1.25;
 }
 
 /* Layered wave patterns for depth */
@@ -3176,29 +3114,10 @@ footer p {
         padding: 4rem 0;
     }
 
-    .blobby-home-inner {
-        grid-template-columns: 1fr;
-        gap: 1.75rem;
-    }
-
-    .blobby-home-actions {
-        flex-direction: column;
-    }
-
-    .blobby-home-actions .btn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .blobby-preview-card,
-    .blobby-preview-card img {
-        min-height: 280px;
-    }
-
-    .blobby-preview-overlay {
-        left: 0.85rem;
-        right: 0.85rem;
-        bottom: 0.85rem;
+    .blobby-home-embed {
+        margin-left: -0.25rem;
+        margin-right: -0.25rem;
+        border-radius: 1.25rem;
     }
 
     /* Navigation */

@@ -6,6 +6,13 @@
   scroll-padding-top: 120px;
 }
 
+.embeddedPage {
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  scroll-padding-top: 0;
+}
+
 .header {
   max-width: 1240px;
   margin: 0 auto 18px;
@@ -53,6 +60,28 @@
   gap: 16px;
   align-items: stretch;
   transition: grid-template-columns 260ms ease;
+}
+
+.embeddedPage .builder {
+  max-width: none;
+}
+
+.embeddedPage .viewerPanel,
+.embeddedPage .chatPanel {
+  box-shadow: none;
+}
+
+.embeddedPage .viewerPanel,
+.embeddedPage .chatPanel {
+  min-height: 560px;
+}
+
+.embeddedPage .modelStage {
+  min-height: 430px;
+}
+
+.embeddedPage .messages {
+  max-height: 340px;
 }
 
 .chatOnly {
