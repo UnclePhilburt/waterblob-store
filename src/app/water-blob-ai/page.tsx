@@ -55,7 +55,7 @@ type Config = {
   notes: string;
 };
 
-const WATER_BLOB_SIZES = ['25 ft Weekender', '30 ft Original', '35 ft Original', '40 ft Original'];
+const WATER_BLOB_SIZES = ['Family Blob / Weekender', '25 ft Weekender', '30 ft Weekender', '30 ft Original', '35 ft Original', '40 ft Original'];
 const SKI_TUBE_SIZES = ['Standard ski tube', 'Custom ski tube'];
 const COLORS = ['Blue', 'Yellow', 'Red', 'Green', 'Black', 'White', 'Gray', 'Orange'];
 const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', 'Custom stripe layout'];
@@ -105,6 +105,8 @@ function productLabel(product: ProductType | '') {
 
 function modelForConfig(config: Config) {
   if (config.product === 'skitube') return '/assets/skitube3dmodel/skitube.glb';
+  if (config.size.toLowerCase().includes('family')) return '/assets/weekender.glb';
+  if (config.size.toLowerCase().includes('weekender')) return '/assets/weekender.glb';
   if (config.size.includes('25')) return '/assets/weekender.glb';
   if (config.size.includes('35')) return '/assets/blob35.glb';
   if (config.size.includes('40')) return '/assets/blob.glb';
@@ -187,6 +189,12 @@ function parseProduct(text: string): ProductType {
 
 function parseSize(product: ProductType, text: string) {
   const normalized = text.toLowerCase();
+  if (product === 'waterblob' && (normalized.includes('family') || normalized.includes('personal'))) {
+    return 'Family Blob / Weekender';
+  }
+  if (product === 'waterblob' && normalized.includes('weekender') && normalized.includes('30')) {
+    return '30 ft Weekender';
+  }
   const options = sizeOptionsFor(product);
   return options.find((option) => {
     const optionText = option.toLowerCase();
