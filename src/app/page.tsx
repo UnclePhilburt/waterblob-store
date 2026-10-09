@@ -481,6 +481,13 @@ export default function Home() {
             </Link>
           </div>
         </section>
+
+        <section className="employee-entry" aria-label="Employee access">
+          <div className="container employee-entry-inner">
+            <span>Water Blob team?</span>
+            <Link href="/employee/employee-portal.html">Employee Portal</Link>
+          </div>
+        </section>
       </main>
 
       {/* ============================================================== */}

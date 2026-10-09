@@ -2967,6 +2967,36 @@ footer p {
     color: var(--text-tertiary);
 }
 
+.employee-entry {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-subtle);
+    padding: 1.25rem 0;
+}
+
+.employee-entry-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--text-tertiary);
+    font-size: 0.9rem;
+}
+
+.employee-entry a {
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    padding: 0.45rem 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.employee-entry a:hover {
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {
