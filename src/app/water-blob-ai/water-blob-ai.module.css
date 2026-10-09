@@ -83,52 +83,10 @@
 .modelStage {
   min-height: 540px;
   flex: 1;
-  position: relative;
   background:
     linear-gradient(180deg, rgba(16, 185, 129, 0.08), transparent 42%),
     radial-gradient(circle at 50% 38%, rgba(14, 165, 233, 0.16), transparent 35%),
     #fbfdff;
-}
-
-.partLabels {
-  position: absolute;
-  inset: 14px;
-  pointer-events: none;
-  z-index: 2;
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.partLabels span {
-  position: absolute;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(15, 23, 42, 0.72);
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 6px 9px;
-  backdrop-filter: blur(8px);
-}
-
-.labelBody {
-  top: 46%;
-  left: 44%;
-}
-
-.labelStripes {
-  top: 30%;
-  left: 52%;
-}
-
-.labelEndCaps {
-  top: 48%;
-  right: 8%;
-}
-
-.labelAnchors {
-  bottom: 16%;
-  left: 12%;
 }
 
 .previewMeta {
@@ -250,39 +208,6 @@
   padding: 15px 18px 18px;
   display: grid;
   gap: 12px;
-}
-
-.suggestionRow,
-.presetRow {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.suggestionRow button,
-.presetRow button {
-  flex: 0 0 auto;
-  border: 1px solid #dbe2ea;
-  background: #ffffff;
-  color: #111827;
-  border-radius: 999px;
-  padding: 8px 11px;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.presetRow button {
-  background: #f8fafc;
-  color: #475569;
-}
-
-.suggestionRow button:hover,
-.presetRow button:hover {
-  border-color: #0f766e;
-  color: #0f766e;
 }
 
 .freeText {

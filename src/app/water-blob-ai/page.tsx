@@ -70,8 +70,7 @@ const PRICE_ESTIMATES: Record<string, number> = {
   '35 ft Original': 4465,
   '40 ft Original': 4970,
 };
-const SUGGESTION_CHIPS = ['More airtime', 'Family friendly', 'Make it bold', 'Try random', 'Undo that', 'Show popular looks', 'Print summary'];
-const PRESET_CHIPS = ['Classic look', 'Fire colors', 'Ocean colors', 'Halloween colors', 'Patriotic colors', 'Camp colors', 'Stealth look', 'Rainbow'];
+const POPULAR_LOOKS_TEXT = 'Classic look, Fire colors, Ocean colors, Halloween colors, Patriotic colors, Camp colors, Stealth look, Rainbow, or Try random';
 
 const COLOR_HEX: Record<string, string> = {
   Blue: '#0044AA',
@@ -171,8 +170,8 @@ function questionForStep(step: ChatStep, config: Config) {
       return 'Tell me who gets to launch off this thing. Younger kids, older kids, teens, adults, a family, a camp, or somebody else?';
     case 'size':
       return wantsBiggerRide
-        ? 'Adults and stronger jumpers are Original territory. The 35 ft Original gives a strong launch, and the 40 ft Original is the biggest airtime ride. Which way are you leaning: 35 ft Original or 40 ft Original?'
-        : 'Let us match the size to the people using it. Family Blob / Weekender is the easy family start; Originals are for bigger launch. Are you thinking Family Blob / Weekender, 30 ft Original, 35 ft Original, or 40 ft Original?';
+        ? 'Adults and stronger jumpers are Original territory. I would look first at the 40 ft Original because it gives the biggest launch and most airtime. If you need a little less size, the 35 ft Original is the next step down. Are we going 40 ft Original?'
+        : 'Let us match the size to the people using it. My favorite starting recommendation is the 40 ft Original when there is room for it, because it gives the full Water Blob experience. If you want something easiergoing, we can go smaller: Family Blob / Weekender, 30 ft Original, or 35 ft Original.';
     case 'baseColor':
       return `Alright, now we get to dress it up. The color groups I can change are body/main panels, stripes/side panels, end caps, and anchor patches. What main body color should we start with? ${COLORS.join(', ')} all work.`;
     case 'stripeStyle':
@@ -233,7 +232,7 @@ function parseSize(product: ProductType, text: string) {
     /\b(adults?|teens?|older kids|big kids|stronger jumpers)\b/.test(normalized) &&
     !saysThirty
   ) {
-    return '35 ft Original';
+    return '40 ft Original';
   }
   if (product === 'waterblob' && saysThirty && normalized.includes('original')) {
     return '30 ft Original';
@@ -569,7 +568,7 @@ function shouldRecommendBiggerBlob(text: string, config: Config) {
 
 function buildBiggerBlobRecommendation(config: Config) {
   const size = config.size || 'that size';
-  return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, so the 35 ft or 40 ft Original is usually the more exciting move. Want to switch to 35 or 40, or keep ${size}?`;
+  return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, and the 40 ft Original is the one I would push hardest if you have the space and water depth. Want to switch to 40, go 35, or keep ${size}?`;
 }
 
 function explainSizeChoice(config: Config) {
@@ -1079,7 +1078,7 @@ export default function WaterBlobAiPage() {
       setMessages((prev) => [
         ...prev,
         { role: 'customer', text: answer },
-        { role: 'assistant', text: `Here are popular looks I can apply: ${PRESET_CHIPS.join(', ')}. Type one of those, or tap a suggestion below.` },
+        { role: 'assistant', text: `Here are popular looks I can apply: ${POPULAR_LOOKS_TEXT}. Type one of those and I will change the preview.` },
       ]);
       return;
     }
@@ -1125,7 +1124,7 @@ export default function WaterBlobAiPage() {
         setMessages((prev) => [
           ...prev,
           { role: 'customer', text: answer },
-          { role: 'assistant', text: 'I can keep the current size, or switch this beast to a 35 ft or 40 ft Original for more launch. Which way are we going?' },
+          { role: 'assistant', text: 'I can keep the current size, but my pick for launch is the 40 ft Original. If that is too much, 35 ft Original is the next step down. Which way are we going?' },
         ]);
         return;
       }
@@ -1340,12 +1339,6 @@ export default function WaterBlobAiPage() {
         {config.product && (
           <div className={styles.viewerPanel}>
             <div className={styles.modelStage}>
-              <div className={styles.partLabels} aria-label="3D preview part labels">
-                <span className={styles.labelBody}>Body</span>
-                <span className={styles.labelStripes}>Stripes</span>
-                <span className={styles.labelEndCaps}>End caps</span>
-                <span className={styles.labelAnchors}>Anchor patches</span>
-              </div>
               <ProductBlobViewerWrapper
                 key={`${config.product}-${config.size || 'default'}`}
                 containerId="customer-ai-product-viewer"
@@ -1409,20 +1402,6 @@ export default function WaterBlobAiPage() {
           </div>
 
           <div className={styles.chatComposer}>
-            <div className={styles.suggestionRow} aria-label="Smart suggestions">
-              {SUGGESTION_CHIPS.map((chip) => (
-                <button key={chip} type="button" onClick={() => processAnswer(chip)}>
-                  {chip}
-                </button>
-              ))}
-            </div>
-            <div className={styles.presetRow} aria-label="Popular looks">
-              {PRESET_CHIPS.map((chip) => (
-                <button key={chip} type="button" onClick={() => processAnswer(chip)}>
-                  {chip}
-                </button>
-              ))}
-            </div>
             <form className={styles.freeText} onSubmit={handleTypedSubmit}>
               <input
                 value={input}
