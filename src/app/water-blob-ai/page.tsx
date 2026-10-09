@@ -60,6 +60,7 @@ const COLORS = ['Blue', 'Yellow', 'Red', 'Green', 'Black', 'White', 'Gray', 'Ora
 const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', 'Custom stripe layout'];
 const USE_CASES = ['Summer camp', 'Resort', 'Private lake', 'Rental business', 'Marina', 'Other'];
 const TIMELINES = ['ASAP', 'This month', '1-3 months', 'Before summer', 'Just planning'];
+const THIRTY_FOOT_CLARIFICATION = 'Do you mean the 30 ft Weekender / Family Blob, or the 30 ft Original?';
 
 const COLOR_HEX: Record<string, string> = {
   Blue: '#0044AA',
@@ -184,7 +185,11 @@ function parseProduct(_text: string): ProductType {
 
 function parseSize(product: ProductType, text: string) {
   const normalized = text.toLowerCase();
-  if (product === 'waterblob' && normalized.includes('weekender') && normalized.includes('30')) {
+  const saysThirty = /\b30\b|\bthirty\b/.test(normalized);
+  if (product === 'waterblob' && saysThirty && normalized.includes('original')) {
+    return '30 ft Original';
+  }
+  if (product === 'waterblob' && saysThirty && normalized.includes('weekender')) {
     return '30 ft Weekender';
   }
   if (
@@ -199,6 +204,21 @@ function parseSize(product: ProductType, text: string) {
     const number = option.match(/\d+/)?.[0];
     return normalized.includes(optionText) || Boolean(number && normalized.includes(number));
   }) || '';
+}
+
+function mentionsAmbiguousThirtyFoot(text: string) {
+  const normalized = text.toLowerCase();
+  const saysThirty = /\b30\b|\bthirty\b/.test(normalized);
+  const saysFoot = /\b(?:ft|foot|feet|footer)\b/.test(normalized);
+  const clarifiesModel = /\b(?:weekender|family|original)\b/.test(normalized);
+  return saysThirty && saysFoot && !clarifiesModel;
+}
+
+function parseThirtyFootClarification(text: string) {
+  const normalized = text.toLowerCase();
+  if (/\b(?:weekender|family|personal)\b/.test(normalized)) return '30 ft Weekender';
+  if (normalized.includes('original')) return '30 ft Original';
+  return '';
 }
 
 function parseColor(text: string) {
@@ -389,6 +409,7 @@ export default function WaterBlobAiPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [needsThirtyFootClarification, setNeedsThirtyFootClarification] = useState(false);
   const viewerRef = useRef<ViewerInstance | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
   const colorSyncTimersRef = useRef<number[]>([]);
@@ -523,6 +544,40 @@ export default function WaterBlobAiPage() {
     if (step === 'ready' && /\b(send|submit|quote|request)\b/i.test(answer)) {
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
       await sendInquiry();
+      return;
+    }
+
+    if (needsThirtyFootClarification) {
+      const clarifiedSize = parseThirtyFootClarification(answer);
+      if (!clarifiedSize) {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'customer', text: answer },
+          { role: 'assistant', text: THIRTY_FOOT_CLARIFICATION },
+        ]);
+        return;
+      }
+
+      const nextConfig = {
+        ...config,
+        product: 'waterblob' as ProductType,
+        size: clarifiedSize,
+      };
+      setNeedsThirtyFootClarification(false);
+      setConfig(nextConfig);
+      syncViewerColors(viewerRef.current, nextConfig);
+      setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+      askNext('baseColor', nextConfig, 'Got it.');
+      return;
+    }
+
+    if ((step === 'product' || step === 'size') && mentionsAmbiguousThirtyFoot(answer)) {
+      setNeedsThirtyFootClarification(true);
+      setMessages((prev) => [
+        ...prev,
+        { role: 'customer', text: answer },
+        { role: 'assistant', text: THIRTY_FOOT_CLARIFICATION },
+      ]);
       return;
     }
 
