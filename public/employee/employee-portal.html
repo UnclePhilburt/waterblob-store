@@ -4192,12 +4192,30 @@
                 margin: 0 auto 22px;
                 background: var(--wb-panel);
                 border: 1px solid var(--wb-border);
-                border-radius: 22px;
-                padding: 22px;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 18px;
+                border-radius: 28px;
+                padding: 28px;
+                display: grid;
+                grid-template-columns: minmax(260px, 0.9fr) minmax(360px, 1.1fr);
+                align-items: stretch;
+                gap: 22px;
+                box-shadow: 0 24px 80px rgba(15, 23, 42, 0.08);
+                overflow: hidden;
+                position: relative;
+            }
+
+            .quick-login::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background:
+                    radial-gradient(circle at 15% 10%, rgba(16, 163, 127, 0.14), transparent 34%),
+                    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.86));
+                pointer-events: none;
+            }
+
+            .quick-login > * {
+                position: relative;
+                z-index: 1;
             }
 
             .quick-login.hidden {
@@ -4214,27 +4232,82 @@
                 color: var(--wb-muted);
                 font-size: 14px;
                 margin-top: 4px;
+                max-width: 360px;
             }
 
-            .quick-login-actions {
+            .portal-login-form {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
-                justify-content: flex-end;
+                flex-direction: column;
+                gap: 12px;
             }
 
-            .quick-login-btn {
+            .portal-login-fields {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .portal-login-input {
                 border: 1px solid var(--wb-border);
-                border-radius: 999px;
                 background: #ffffff;
                 color: var(--wb-text);
-                padding: 11px 16px;
-                font-weight: 700;
-                cursor: pointer;
+                border-radius: 16px;
+                padding: 15px 16px;
+                font-size: 15px;
+                outline: none;
+                transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
             }
 
-            .quick-login-btn:hover {
-                background: var(--wb-panel-hover);
+            .portal-login-input:focus {
+                border-color: rgba(16, 163, 127, 0.65);
+                box-shadow: 0 0 0 4px rgba(16, 163, 127, 0.13);
+                transform: translateY(-1px);
+            }
+
+            .portal-login-submit {
+                border: 0;
+                border-radius: 16px;
+                background: #0d0d0d;
+                color: #ffffff;
+                min-height: 52px;
+                padding: 0 18px;
+                font-size: 16px;
+                font-weight: 800;
+                cursor: pointer;
+                transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            }
+
+            .portal-login-submit:hover {
+                background: #111827;
+                box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+                transform: translateY(-1px);
+            }
+
+            .portal-login-submit:disabled {
+                cursor: not-allowed;
+                opacity: 0.55;
+                transform: none;
+                box-shadow: none;
+            }
+
+            .portal-login-error {
+                display: none;
+                color: #b42318;
+                background: #fff4f2;
+                border: 1px solid #ffd1cc;
+                border-radius: 14px;
+                padding: 10px 12px;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .portal-login-error.show {
+                display: block;
+            }
+
+            .portal-login-hint {
+                color: var(--wb-muted);
+                font-size: 13px;
             }
 
             .desktop-stats-row {
@@ -4272,28 +4345,24 @@
                 box-shadow: none !important;
             }
 
-            .employee-grid {
-                display: flex !important;
+            .mobile-login-panel {
+                width: min(100%, 390px);
+                background: #ffffff;
+                border: 1px solid var(--wb-border);
+                border-radius: 28px;
+                padding: 22px;
+                box-shadow: 0 24px 80px rgba(15, 23, 42, 0.1);
+                margin-top: 18px;
+            }
+
+            .mobile-login-panel .portal-login-fields {
+                display: flex;
                 flex-direction: column;
-                max-width: 340px !important;
-                gap: 8px !important;
             }
 
-            .employee-card {
-                aspect-ratio: auto !important;
-                border-radius: 999px !important;
-                padding: 12px 14px !important;
-                flex-direction: row !important;
-                justify-content: flex-start !important;
-                gap: 10px !important;
-            }
-
-            .employee-avatar {
-                width: 34px !important;
-                height: 34px !important;
-                margin: 0 !important;
-                background: var(--wb-accent) !important;
-                font-size: 14px !important;
+            .mobile-login-panel .portal-login-input {
+                min-height: 54px;
+                font-size: 16px;
             }
 
             .menu-card-title,
@@ -4345,15 +4414,18 @@
 
         <div class="quick-login" id="desktopQuickLogin">
             <div>
-                <div class="quick-login-title">Sign in for today</div>
-                <div class="quick-login-subtitle">Pick your name, enter PIN, and stay signed in until midnight Central.</div>
+                <div class="quick-login-title">Employee sign in</div>
+                <div class="quick-login-subtitle">Use your username and the password saved in Render. This session lasts until midnight Central.</div>
             </div>
-            <div class="quick-login-actions">
-                <button class="quick-login-btn" onclick="desktopSelectEmployee('john')">John</button>
-                <button class="quick-login-btn" onclick="desktopSelectEmployee('paul')">Paul</button>
-                <button class="quick-login-btn" onclick="desktopSelectEmployee('lorie')">Lorie</button>
-                <button class="quick-login-btn" onclick="desktopSelectEmployee('cody')">Cody</button>
-            </div>
+            <form class="portal-login-form" onsubmit="handleTypedEmployeeLogin(event, 'desktop')">
+                <div class="portal-login-fields">
+                    <input class="portal-login-input" id="desktopLoginUsername" name="username" autocomplete="username" placeholder="Username" required>
+                    <input class="portal-login-input" id="desktopLoginPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
+                </div>
+                <button class="portal-login-submit" id="desktopLoginSubmit" type="submit">Sign in</button>
+                <div class="portal-login-error" id="desktopLoginError"></div>
+                <div class="portal-login-hint">Change passwords by updating the matching Render environment key.</div>
+            </form>
         </div>
 
         <div class="desktop-grid">
@@ -5862,30 +5934,18 @@
 
     <!-- Page 1: Select Employee -->
     <div class="page" id="pageSelectEmployee">
-        <h1>Who are you?</h1>
-        <p class="subtitle">Tap your name</p>
+        <h1>Employee Login</h1>
+        <p class="subtitle">Sign in with the username and password from Render</p>
 
-        <div class="employee-grid">
-            <div class="employee-card" onclick="selectEmployee('john')">
-                <div class="employee-avatar">J</div>
-                <div class="employee-name">John</div>
+        <form class="mobile-login-panel portal-login-form" onsubmit="handleTypedEmployeeLogin(event, 'mobile')">
+            <div class="portal-login-fields">
+                <input class="portal-login-input" id="mobileLoginUsername" name="username" autocomplete="username" placeholder="Username" required>
+                <input class="portal-login-input" id="mobileLoginPassword" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
             </div>
-
-            <div class="employee-card" onclick="selectEmployee('paul')">
-                <div class="employee-avatar">P</div>
-                <div class="employee-name">Paul</div>
-            </div>
-
-            <div class="employee-card" onclick="selectEmployee('lorie')">
-                <div class="employee-avatar">L</div>
-                <div class="employee-name">Lorie</div>
-            </div>
-
-            <div class="employee-card" onclick="selectEmployee('cody')">
-                <div class="employee-avatar">C</div>
-                <div class="employee-name">Cody</div>
-            </div>
-        </div>
+            <button class="portal-login-submit" id="mobileLoginSubmit" type="submit">Sign in</button>
+            <div class="portal-login-error" id="mobileLoginError"></div>
+            <div class="portal-login-hint">It will automatically log out at midnight Central.</div>
+        </form>
     </div>
 
     <!-- Page 2: Enter PIN -->
@@ -7437,6 +7497,97 @@
             }, Math.min(delay, 2147483647));
         }
 
+        let isPortalHistoryNavigation = false;
+
+        function formatEmployeeName(username) {
+            if (!username) return 'Employee';
+            return username.charAt(0).toUpperCase() + username.slice(1).toLowerCase();
+        }
+
+        function setLoginError(mode, message = '') {
+            const errorEl = document.getElementById(`${mode}LoginError`);
+            if (!errorEl) return;
+            errorEl.textContent = message;
+            errorEl.classList.toggle('show', Boolean(message));
+        }
+
+        function setPortalHistory(type, id, replace = false) {
+            if (isPortalHistoryNavigation || !id) return;
+            const state = { employeePortal: true, type, id };
+            const url = `${window.location.pathname}#${id}`;
+            if (replace) {
+                window.history.replaceState(state, '', url);
+            } else {
+                window.history.pushState(state, '', url);
+            }
+        }
+
+        function setMobilePage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden-right');
+                page.classList.remove('hidden-left');
+            });
+
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.classList.remove('hidden-left', 'hidden-right');
+            }
+        }
+
+        function openDesktopDashboard(replaceHistory = false) {
+            document.querySelectorAll('.desktop-page').forEach(page => page.style.display = 'none');
+            const grid = document.querySelector('.desktop-grid');
+            const stats = document.querySelector('.desktop-stats-row');
+            const header = document.querySelector('.desktop-header');
+            const quickLogin = document.getElementById('desktopQuickLogin');
+
+            if (grid) grid.style.display = 'grid';
+            if (stats) stats.style.display = 'flex';
+            if (header) header.style.display = 'flex';
+            if (quickLogin && !authToken) quickLogin.classList.remove('hidden');
+
+            setPortalHistory('desktop', 'desktopDashboard', replaceHistory);
+        }
+
+        function openDesktopPage(pageId, replaceHistory = false) {
+            document.querySelectorAll('.desktop-page').forEach(page => page.style.display = 'none');
+            const grid = document.querySelector('.desktop-grid');
+            const stats = document.querySelector('.desktop-stats-row');
+            const header = document.querySelector('.desktop-header');
+
+            if (grid) grid.style.display = 'none';
+            if (stats) stats.style.display = 'none';
+            if (header) header.style.display = 'none';
+
+            const page = document.getElementById(pageId);
+            if (page) {
+                page.style.display = 'block';
+                setPortalHistory('desktop', pageId, replaceHistory);
+            }
+        }
+
+        function applyPortalHistoryState(state) {
+            if (!state || !state.employeePortal) return;
+            isPortalHistoryNavigation = true;
+            try {
+                if (state.type === 'desktop') {
+                    if (state.id === 'desktopDashboard') {
+                        openDesktopDashboard(true);
+                    } else {
+                        openDesktopPage(state.id, true);
+                    }
+                } else if (state.type === 'mobile') {
+                    setMobilePage(state.id);
+                }
+            } finally {
+                isPortalHistoryNavigation = false;
+            }
+        }
+
+        window.addEventListener('popstate', event => {
+            applyPortalHistoryState(event.state);
+        });
+
         // Google Maps Autocomplete using new API
         let autocomplete;
         async function initAutocomplete() {
@@ -7756,6 +7907,88 @@
             }
         }
 
+        function finishEmployeeLogin(username, token, expiresAt, mode) {
+            const normalizedUsername = username.toLowerCase();
+            const displayName = formatEmployeeName(normalizedUsername);
+            selectedUsername = normalizedUsername;
+            saveEmployeeSession(token, normalizedUsername, expiresAt);
+
+            const desktopUserName = document.getElementById('desktopUserName');
+            const desktopUserAvatar = document.getElementById('desktopUserAvatar');
+            if (desktopUserName) desktopUserName.textContent = displayName;
+            if (desktopUserAvatar) desktopUserAvatar.textContent = displayName[0];
+
+            document.getElementById('desktopQuickLogin')?.classList.add('hidden');
+            document.querySelectorAll('.login-card').forEach(card => {
+                card.style.display = 'none';
+            });
+            document.querySelectorAll('.menu-card').forEach(card => {
+                card.style.display = 'block';
+            });
+
+            const desktopShippingCard = document.getElementById('desktopShippingCard');
+            if (desktopShippingCard) {
+                desktopShippingCard.style.display = normalizedUsername === 'cody' ? 'flex' : 'none';
+            }
+
+            if (mode === 'mobile') {
+                goToPage('pageSelectEmployee', 'pageMenu', 'right');
+                loadWorkOrderStats();
+                updateMenuPermissions();
+            } else {
+                openDesktopDashboard(true);
+                loadDesktopWorkOrders();
+                updateInventoryBadge();
+            }
+        }
+
+        async function handleTypedEmployeeLogin(event, mode) {
+            event.preventDefault();
+
+            const usernameInput = document.getElementById(`${mode}LoginUsername`);
+            const passwordInput = document.getElementById(`${mode}LoginPassword`);
+            const submitButton = document.getElementById(`${mode}LoginSubmit`);
+            const username = usernameInput?.value.trim().toLowerCase();
+            const password = passwordInput?.value || '';
+
+            setLoginError(mode);
+
+            if (!username || !password) {
+                setLoginError(mode, 'Enter both username and password.');
+                return;
+            }
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Signing in...';
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/employee/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.token) {
+                    throw new Error(data.error || 'Invalid username or password');
+                }
+
+                playSuccess();
+                if (passwordInput) passwordInput.value = '';
+                finishEmployeeLogin(data.user?.username || username, data.token, data.expiresAt, mode);
+            } catch (error) {
+                playError();
+                setLoginError(mode, error.message || 'Login failed. Check the Render password.');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Sign in';
+                }
+            }
+        }
+
         async function loadDesktopWorkOrders() {
             try {
                 const response = await fetch(`${API_BASE}/api/work-orders`, {
@@ -7985,6 +8218,7 @@
 
             fromPage.classList.add(direction === 'right' ? 'hidden-left' : 'hidden-right');
             toPage.classList.remove('hidden-left', 'hidden-right');
+            setPortalHistory('mobile', toId);
         }
 
         // Employee Selection
@@ -8110,16 +8344,12 @@
             }
         });
 
-        // Check if already logged in (mobile only)
+        // Check if already logged in
         function checkAuth() {
-            // Only auto-login on mobile - desktop shows login cards
-            if (window.innerWidth >= 768) {
-                console.log('[Desktop mode] Skipping auto-login, showing login cards');
-                return;
-            }
-
             const savedToken = localStorage.getItem('employeeToken');
             const savedUsername = localStorage.getItem('employeeUsername');
+
+            setPortalHistory(window.innerWidth >= 768 ? 'desktop' : 'mobile', window.innerWidth >= 768 ? 'desktopDashboard' : 'pageSelectEmployee', true);
 
             if (savedToken && savedUsername) {
                 if (isEmployeeSessionExpired()) {
@@ -8130,9 +8360,15 @@
                 selectedUsername = savedUsername;
                 scheduleMidnightLogout();
 
+                if (window.innerWidth >= 768) {
+                    finishEmployeeLogin(savedUsername, savedToken, localStorage.getItem(EMPLOYEE_EXPIRES_AT_KEY), 'desktop');
+                    return;
+                }
+
                 // Instantly show menu without animation on page load
                 document.getElementById('pageSelectEmployee').classList.add('hidden-left');
                 document.getElementById('pageMenu').classList.remove('hidden-right');
+                setPortalHistory('mobile', 'pageMenu', true);
 
                 // Disable transitions briefly to prevent flash
                 document.getElementById('pageSelectEmployee').style.transition = 'none';
@@ -8153,11 +8389,11 @@
 
         // Show/hide menu items based on employee permissions
         function updateMenuPermissions() {
-            const username = localStorage.getItem('employeeUsername');
+            const username = (localStorage.getItem('employeeUsername') || '').toLowerCase();
             const shippingCard = document.getElementById('shippingMenuCard');
 
             // Only show shipping settings for Cody
-            if (username === 'Cody') {
+            if (username === 'cody') {
                 shippingCard.style.display = 'block';
             } else {
                 shippingCard.style.display = 'none';
@@ -8166,11 +8402,27 @@
 
         function logout() {
             clearEmployeeSession();
+            selectedUsername = '';
+            ['desktop', 'mobile'].forEach(mode => {
+                const password = document.getElementById(`${mode}LoginPassword`);
+                const error = document.getElementById(`${mode}LoginError`);
+                if (password) password.value = '';
+                if (error) error.classList.remove('show');
+            });
+            const desktopUserName = document.getElementById('desktopUserName');
+            const desktopUserAvatar = document.getElementById('desktopUserAvatar');
+            if (desktopUserName) desktopUserName.textContent = 'Not signed in';
+            if (desktopUserAvatar) desktopUserAvatar.textContent = '?';
             document.getElementById('desktopQuickLogin')?.classList.remove('hidden');
             document.querySelectorAll('.menu-card').forEach(card => {
                 card.style.display = 'none';
             });
-            goToPage('pageMenu', 'pageSelectEmployee', 'left');
+            if (window.innerWidth >= 768) {
+                openDesktopDashboard(true);
+            } else {
+                setMobilePage('pageSelectEmployee');
+                setPortalHistory('mobile', 'pageSelectEmployee', true);
+            }
         }
 
         // Expired or restarted sessions should return to login instead of silently extending the day.
@@ -8211,9 +8463,7 @@
 
             // On desktop, show desktop work orders page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopWorkOrders').style.display = 'block';
+                openDesktopPage('desktopWorkOrders');
                 loadDesktopWorkOrdersPage();
             } else {
                 goToPage('pageMenu', 'pageWorkOrders', 'right');
@@ -8223,13 +8473,7 @@
         }
 
         function backToDesktopDashboard() {
-            // Hide all desktop pages
-            document.querySelectorAll('.desktop-page').forEach(page => page.style.display = 'none');
-            // Show desktop grid and stats
-            const grid = document.querySelector('.desktop-grid');
-            const stats = document.querySelector('.desktop-stats-row');
-            if (grid) grid.style.display = 'grid';
-            if (stats) stats.style.display = 'flex';
+            openDesktopDashboard();
         }
 
         async function loadDesktopWorkOrdersPage() {
@@ -8549,9 +8793,7 @@
         function goToSupplyRequest() {
             // On desktop, show desktop supply request page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopSupplyRequest').style.display = 'block';
+                openDesktopPage('desktopSupplyRequest');
             } else {
                 goToPage('pageMenu', 'pageSupplyCategory', 'right');
                 playClick();
@@ -8568,9 +8810,7 @@
         function goToAIAssistant() {
             // On desktop, show desktop AI assistant page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopAIAssistant').style.display = 'block';
+                openDesktopPage('desktopAIAssistant');
             } else {
                 goToPage('pageMenu', 'pageAIAssistant', 'right');
                 playClick();
@@ -9788,11 +10028,7 @@
 
             // Check if desktop
             if (window.innerWidth >= 768) {
-                // Hide work orders page
-                document.getElementById('desktopWorkOrders').style.display = 'none';
-
-                // Show edit page
-                document.getElementById('desktopEditOrder').style.display = 'block';
+                openDesktopPage('desktopEditOrder');
 
                 // Set order number
                 document.getElementById('editOrderNumber').textContent = `#${order.work_order_number || order.id}`;
@@ -9838,8 +10074,7 @@
         }
 
         function backToDesktopEditFromEdit() {
-            document.getElementById('desktopEditOrder').style.display = 'none';
-            document.getElementById('desktopWorkOrders').style.display = 'block';
+            openDesktopPage('desktopWorkOrders');
             editingWorkOrderId = null;
         }
 
@@ -10034,8 +10269,7 @@
                 orderItems = [];
 
                 // Go back to work orders
-                document.getElementById('desktopEditOrder').style.display = 'none';
-                document.getElementById('desktopWorkOrders').style.display = 'block';
+                openDesktopPage('desktopWorkOrders');
 
                 // Reload work orders
                 await loadDesktopWorkOrdersPage();
@@ -12043,9 +12277,7 @@
 
             // On desktop, show desktop create order page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopCreateOrder').style.display = 'block';
+                openDesktopPage('desktopCreateOrder');
 
                 // Clear form fields
                 document.getElementById('createCustomerName').value = '';
@@ -14567,9 +14799,7 @@
         async function goToInventory() {
             // On desktop, show desktop inventory page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopInventory').style.display = 'block';
+                openDesktopPage('desktopInventory');
                 await loadInventory();
             }
         }
@@ -15375,27 +15605,7 @@
 
         async function openDesktopCalendar() {
             console.log('[Calendar] Opening desktop calendar');
-
-            // Hide the main menu cards and stats (but keep desktop-layout visible)
-            const grid = document.querySelector('.desktop-grid');
-            const stats = document.querySelector('.desktop-stats-row');
-            if (grid) {
-                grid.style.display = 'none';
-                console.log('[Calendar] Desktop grid hidden');
-            }
-            if (stats) {
-                stats.style.display = 'none';
-                console.log('[Calendar] Desktop stats hidden');
-            }
-
-            // Show the calendar page
-            const calendarPage = document.getElementById('desktopCalendar');
-            if (calendarPage) {
-                calendarPage.style.display = 'block';
-                console.log('[Calendar] Calendar page shown');
-            } else {
-                console.error('[Calendar] Calendar page not found!');
-            }
+            openDesktopPage('desktopCalendar');
 
             await loadDesktopCalendarData();
         }
@@ -15701,9 +15911,7 @@
         function goToShippingSettings() {
             // On desktop, show desktop shipping page
             if (window.innerWidth >= 768) {
-                document.querySelector('.desktop-grid').style.display = 'none';
-                document.querySelector('.desktop-header').style.display = 'none';
-                document.getElementById('desktopShipping').style.display = 'block';
+                openDesktopPage('desktopShipping');
             } else {
                 loadShippingSettings();
                 goToPage('pageMenu', 'pageShippingSettings', 'right');
