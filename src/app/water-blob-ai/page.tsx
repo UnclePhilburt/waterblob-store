@@ -45,6 +45,7 @@ type Config = {
   baseColor: string;
   stripeColor: string;
   endCapColor: string;
+  anchorColor: string;
   stripeStyle: string;
   useCase: string;
   waterDepth: string;
@@ -80,6 +81,7 @@ const INITIAL_CONFIG: Config = {
   baseColor: 'Blue',
   stripeColor: 'Yellow',
   endCapColor: 'Blue',
+  anchorColor: 'Blue',
   stripeStyle: 'Single stripe',
   useCase: '',
   waterDepth: '',
@@ -126,6 +128,7 @@ function summarizeConfig(config: Config) {
     `Quantity: ${config.quantity}`,
     `Base color: ${config.baseColor}`,
     `End cap color: ${config.endCapColor}`,
+    `Anchor patch color: ${config.anchorColor}`,
     `Stripe style: ${config.stripeStyle}`,
     `Stripe color: ${config.stripeColor}`,
     config.useCase ? `Use: ${config.useCase}` : '',
@@ -143,11 +146,11 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'size':
       return `Pick the blob size and I will shape the preview. Bigger blobs make more launch and airtime, especially for older kids and teens. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
-      return `What main color should the body be? Options: ${COLORS.join(', ')}.`;
+      return `You can change these color groups: body/main panels, stripes/side panels, end caps, and anchor patches. What main body color should we start with? Options: ${COLORS.join(', ')}.`;
     case 'stripeStyle':
       return `How do you want the stripes laid out? Options: ${STRIPES.join(', ')}.`;
     case 'stripeColor':
-      return `What color should the stripe be? Options: ${COLORS.join(', ')}.`;
+      return `What color should the stripe or side panels be? You can also say it all at once, like "red body, white stripe, blue end caps." Options: ${COLORS.join(', ')}.`;
     case 'useCase':
       return `Tell me a little more about who will use it. Family with younger kids, older kids, teens, adults, summer camp, resort, private lake?`;
     case 'waterDepth':
@@ -225,14 +228,113 @@ function parseThirtyFootClarification(text: string) {
   return '';
 }
 
-function parseColor(text: string) {
-  const normalized = text.toLowerCase();
-  return COLORS.find((color) => normalized.includes(color.toLowerCase())) || '';
-}
-
 function parseColors(text: string) {
   const normalized = text.toLowerCase();
-  return COLORS.filter((color) => normalized.includes(color.toLowerCase()));
+  return COLORS
+    .map((color) => ({ color, index: normalized.indexOf(color.toLowerCase()) }))
+    .filter((entry) => entry.index >= 0)
+    .sort((a, b) => a.index - b.index)
+    .map((entry) => entry.color);
+}
+
+function escapedRegex(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function findColorForGroup(text: string, keywords: string[]) {
+  const normalized = text.toLowerCase();
+  for (const color of COLORS) {
+    const colorText = color.toLowerCase();
+    for (const keyword of keywords) {
+      const keywordPattern = escapedRegex(keyword.toLowerCase());
+      const colorBeforeGroup = new RegExp(`\\b${colorText}\\b(?:\\W+\\w+){0,3}\\W+${keywordPattern}\\b`);
+      const groupBeforeColor = new RegExp(`\\b${keywordPattern}\\b(?:\\W+\\w+){0,3}\\W+${colorText}\\b`);
+      if (colorBeforeGroup.test(normalized) || groupBeforeColor.test(normalized)) {
+        return color;
+      }
+    }
+  }
+  return '';
+}
+
+function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: ChatStep, answer: string) {
+  const colors = parseColors(answer);
+  if (colors.length === 0) return;
+
+  const explicitBodyColor = findColorForGroup(answer, ['body', 'main', 'base', 'primary', 'main panels']);
+  const explicitStripeColor = findColorForGroup(answer, ['stripe', 'stripes', 'side', 'side panels', 'secondary']);
+  const explicitEndCapColor = findColorForGroup(answer, ['end cap', 'end caps', 'endcap', 'endcaps', 'caps']);
+  const explicitAnchorColor = findColorForGroup(answer, ['anchor', 'anchors', 'anchor points', 'patch', 'patches', 'grommet', 'grommets']);
+
+  const hasExplicitGroups = Boolean(explicitBodyColor || explicitStripeColor || explicitEndCapColor || explicitAnchorColor);
+
+  if (explicitBodyColor) {
+    nextConfig.baseColor = explicitBodyColor;
+    updated.add('baseColor');
+  }
+  if (explicitStripeColor) {
+    nextConfig.stripeColor = explicitStripeColor;
+    updated.add('stripeColor');
+  }
+  if (explicitEndCapColor) {
+    nextConfig.endCapColor = explicitEndCapColor;
+    updated.add('endCapColor');
+  }
+  if (explicitAnchorColor) {
+    nextConfig.anchorColor = explicitAnchorColor;
+    updated.add('anchorColor');
+  }
+
+  if (hasExplicitGroups) return;
+
+  if (colors.length >= 3) {
+    nextConfig.baseColor = colors[0];
+    nextConfig.stripeColor = colors[1];
+    nextConfig.endCapColor = colors[2];
+    nextConfig.anchorColor = colors[3] || colors[2];
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
+
+  if (colors.length === 2) {
+    nextConfig.baseColor = colors[0];
+    nextConfig.stripeColor = colors[1];
+    nextConfig.endCapColor = colors[0];
+    nextConfig.anchorColor = colors[1];
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
+
+  if (step === 'stripeColor') {
+    nextConfig.stripeColor = colors[0];
+    updated.add('stripeColor');
+    return;
+  }
+  if (step === 'baseColor') {
+    nextConfig.baseColor = colors[0];
+    updated.add('baseColor');
+    return;
+  }
+
+  nextConfig.baseColor = colors[0];
+  updated.add('baseColor');
+}
+
+function colorChangeSummary(config: Config, updated: Set<string>) {
+  const parts = [];
+  if (updated.has('baseColor')) parts.push(`body/main panels ${config.baseColor}`);
+  if (updated.has('stripeColor')) parts.push(`stripes/side panels ${config.stripeColor}`);
+  if (updated.has('endCapColor')) parts.push(`end caps ${config.endCapColor}`);
+  if (updated.has('anchorColor')) parts.push(`anchor patches ${config.anchorColor}`);
+
+  const changed = parts.length > 0 ? `I set ${parts.join(', ')}.` : 'The editable color groups are ready.';
+  return `${changed} You can change these groups: body/main panels, stripes/side panels, end caps, and anchor patches.`;
 }
 
 function parseStripeStyle(text: string) {
@@ -375,11 +477,7 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
     updated.add('size');
   }
 
-  const colors = parseColors(answer);
   const stripeStyle = parseStripeStyle(answer);
-  const mentionsEndCaps = normalized.includes('end cap') || normalized.includes('endcap');
-  const mentionsBody = normalized.includes('body') || normalized.includes('main') || normalized.includes('base');
-  const mentionsStripe = normalized.includes('stripe');
 
   if (stripeStyle) {
     nextConfig.stripeStyle = stripeStyle;
@@ -389,34 +487,7 @@ function applyNaturalLanguageAnswer(config: Config, step: ChatStep, answer: stri
     updated.add('stripeStyle');
   }
 
-  if (colors.length > 0) {
-    if (mentionsEndCaps) {
-      nextConfig.endCapColor = colors[colors.length - 1];
-      updated.add('endCapColor');
-    } else if (mentionsStripe) {
-      nextConfig.stripeColor = colors[colors.length - 1];
-      updated.add('stripeColor');
-      if (colors.length > 1) {
-        nextConfig.baseColor = colors[0];
-        updated.add('baseColor');
-      }
-    } else if (mentionsBody) {
-      nextConfig.baseColor = colors[0];
-      updated.add('baseColor');
-    } else if (step === 'stripeColor') {
-      nextConfig.stripeColor = colors[0];
-      updated.add('stripeColor');
-    } else {
-      nextConfig.baseColor = colors[0];
-      updated.add('baseColor');
-    }
-  } else if (step === 'baseColor' && !isQuestion) {
-    const color = parseColor(answer);
-    if (color) {
-      nextConfig.baseColor = color;
-      updated.add('baseColor');
-    }
-  }
+  applyColorLanguage(nextConfig, updated, step, answer);
 
   const useCase = parseUseCase(answer);
   if (useCase) {
@@ -548,6 +619,7 @@ export default function WaterBlobAiPage() {
     const stripeHex = nextConfig.stripeStyle === 'No stripes'
       ? baseHex
       : COLOR_HEX[nextConfig.stripeColor] || COLOR_HEX.Yellow;
+    const anchorHex = COLOR_HEX[nextConfig.anchorColor] || stripeHex;
 
     viewer.partGroups.forEach((group, index) => {
       const name = group.name.toLowerCase();
@@ -565,8 +637,11 @@ export default function WaterBlobAiPage() {
       if (name.includes('secondary') || name.includes('side')) {
         viewer.setGroupColor?.(index, stripeHex);
       }
-      if (name.includes('handles')) {
-        viewer.setGroupColor?.(index, stripeHex);
+      if (name.includes('handles') || name.includes('anchor')) {
+        viewer.setGroupColor?.(index, anchorHex);
+      }
+      if (name.includes('patch')) {
+        viewer.setGroupColor?.(index, anchorHex);
       }
     });
   }, []);
@@ -737,8 +812,16 @@ export default function WaterBlobAiPage() {
     if (qualityPitch && !helper.includes('Quality note')) {
       helper = `${helper} ${qualityPitch}`;
     }
-    if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
-      helper = 'Nice, the blob is coming alive.';
+    if (
+      updated.has('baseColor') ||
+      updated.has('stripeColor') ||
+      updated.has('stripeStyle') ||
+      updated.has('endCapColor') ||
+      updated.has('anchorColor')
+    ) {
+      helper = updated.has('stripeStyle') && updated.size === 1
+        ? 'Nice, the stripe layout is set.'
+        : colorChangeSummary(nextConfig, updated);
     }
     if (updated.has('waterDepth') && nextConfig.product === 'waterblob') helper = 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.';
     if (updated.has('contact')) helper = nextConfig.email && nextConfig.phone ? 'Contact saved.' : 'I saved what I could.';
@@ -826,6 +909,7 @@ export default function WaterBlobAiPage() {
         size: config.size,
         baseColor: config.baseColor,
         endCapColor: config.endCapColor,
+        anchorColor: config.anchorColor,
         stripeStyle: config.stripeStyle,
         stripeColor: config.stripeColor,
       });
@@ -910,6 +994,7 @@ export default function WaterBlobAiPage() {
                 {config.size || 'Size pending'} · {config.baseColor}
                 {config.stripeStyle === 'No stripes' ? ' · no stripes' : ` with ${config.stripeColor} ${config.stripeStyle.toLowerCase()}`}
                 {` · ${config.endCapColor} end caps`}
+                {` · ${config.anchorColor} anchor patches`}
               </span>
             </div>
           </div>
@@ -962,7 +1047,7 @@ export default function WaterBlobAiPage() {
             </div>
             <div>
               <span>Look</span>
-              <strong>{config.baseColor} / {config.stripeColor} / {config.endCapColor}</strong>
+              <strong>{config.baseColor} / {config.stripeColor} / {config.endCapColor} / {config.anchorColor}</strong>
             </div>
             <div>
               <span>Contact</span>
