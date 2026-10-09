@@ -256,12 +256,40 @@ function parseColors(text: string) {
     .map((entry) => entry.color);
 }
 
-function wantsAmericanColors(text: string) {
-  return /\b(american|patriotic|usa|u\.s\.a\.|america|fourth of july|4th of july|red white and blue|red, white, and blue)\b/i.test(text);
-}
+const COLOR_THEMES = [
+  { pattern: /\b(american|patriotic|usa|u\.s\.a\.|america|fourth of july|4th of july|red white and blue|red, white, and blue)\b/i, colors: ['Blue', 'Red', 'White', 'White'] },
+  { pattern: /\b(christmas|xmas|holiday|festive)\b/i, colors: ['Red', 'Green', 'White', 'White'] },
+  { pattern: /\b(halloween|spooky|pumpkin)\b/i, colors: ['Orange', 'Black', 'White', 'Black'] },
+  { pattern: /\b(easter|spring pastel|pastel)\b/i, colors: ['Yellow', 'White', 'Blue', 'Green'] },
+  { pattern: /\b(valentine|valentines|love)\b/i, colors: ['Red', 'White', 'Red', 'White'] },
+  { pattern: /\b(st patrick|st\. patrick|saint patrick|irish)\b/i, colors: ['Green', 'White', 'Orange', 'Green'] },
+  { pattern: /\b(thanksgiving|fall|autumn|harvest)\b/i, colors: ['Orange', 'Red', 'Yellow', 'Black'] },
+  { pattern: /\b(winter|snow|snowy|arctic)\b/i, colors: ['White', 'Blue', 'Gray', 'White'] },
+  { pattern: /\b(summer|sunshine|sunny)\b/i, colors: ['Yellow', 'Orange', 'Blue', 'White'] },
+  { pattern: /\b(ocean|lake|water|wave|waves|nautical|splash)\b/i, colors: ['Blue', 'White', 'Blue', 'White'] },
+  { pattern: /\b(tropical|island|beach)\b/i, colors: ['Blue', 'Orange', 'Yellow', 'Green'] },
+  { pattern: /\b(sunset|sunrise)\b/i, colors: ['Orange', 'Red', 'Yellow', 'White'] },
+  { pattern: /\b(fire|flame|flames|hot rod)\b/i, colors: ['Red', 'Orange', 'Yellow', 'Black'] },
+  { pattern: /\b(ice|frozen|glacier)\b/i, colors: ['Blue', 'White', 'Gray', 'White'] },
+  { pattern: /\b(forest|woods|nature|earth|earthy)\b/i, colors: ['Green', 'Black', 'Orange', 'Green'] },
+  { pattern: /\b(camo|camouflage|military|army|tactical)\b/i, colors: ['Green', 'Black', 'Orange', 'Gray'] },
+  { pattern: /\b(stealth|ninja|dark|blackout|murdered out)\b/i, colors: ['Black', 'Gray', 'Black', 'Gray'] },
+  { pattern: /\b(whiteout|clean white|all white)\b/i, colors: ['White', 'White', 'White', 'White'] },
+  { pattern: /\b(rainbow|multi color|multicolor|colorful|all colors)\b/i, colors: ['Blue', 'Red', 'Yellow', 'Green'] },
+  { pattern: /\b(neon|bright|electric)\b/i, colors: ['Green', 'Orange', 'Yellow', 'Blue'] },
+  { pattern: /\b(princess|candy|cotton candy)\b/i, colors: ['White', 'Blue', 'Yellow', 'White'] },
+  { pattern: /\b(unicorn|magic|magical)\b/i, colors: ['White', 'Blue', 'Yellow', 'Green'] },
+  { pattern: /\b(mermaid|seafoam)\b/i, colors: ['Blue', 'Green', 'White', 'Blue'] },
+  { pattern: /\b(shark|storm|stormy)\b/i, colors: ['Gray', 'Black', 'White', 'Blue'] },
+  { pattern: /\b(classic|original look|traditional)\b/i, colors: ['Blue', 'Yellow', 'Blue', 'Blue'] },
+  { pattern: /\b(team|sporty|sports)\b/i, colors: ['Blue', 'White', 'Black', 'Blue'] },
+] as const;
 
-function wantsChristmasColors(text: string) {
-  return /\b(christmas|xmas|holiday|festive)\b/i.test(text);
+function getNamedColorTheme(text: string) {
+  const match = COLOR_THEMES.find((theme) => theme.pattern.test(text));
+  if (!match) return null;
+  const [baseColor, stripeColor, endCapColor, anchorColor] = match.colors;
+  return { baseColor, stripeColor, endCapColor, anchorColor };
 }
 
 function looksLikeAgreement(text: string) {
@@ -296,23 +324,12 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
   const normalized = answer.toLowerCase();
   const colors = parseColors(answer);
 
-  if (wantsAmericanColors(answer) && colors.length === 0) {
-    nextConfig.baseColor = 'Blue';
-    nextConfig.stripeColor = 'Red';
-    nextConfig.endCapColor = 'White';
-    nextConfig.anchorColor = 'White';
-    updated.add('baseColor');
-    updated.add('stripeColor');
-    updated.add('endCapColor');
-    updated.add('anchorColor');
-    return;
-  }
-
-  if (wantsChristmasColors(answer) && colors.length === 0) {
-    nextConfig.baseColor = 'Red';
-    nextConfig.stripeColor = 'Green';
-    nextConfig.endCapColor = 'White';
-    nextConfig.anchorColor = 'White';
+  const namedTheme = getNamedColorTheme(answer);
+  if (namedTheme && colors.length < 2) {
+    nextConfig.baseColor = namedTheme.baseColor;
+    nextConfig.stripeColor = namedTheme.stripeColor;
+    nextConfig.endCapColor = namedTheme.endCapColor;
+    nextConfig.anchorColor = namedTheme.anchorColor;
     updated.add('baseColor');
     updated.add('stripeColor');
     updated.add('endCapColor');
