@@ -140,11 +140,16 @@ function summarizeConfig(config: Config) {
 }
 
 function questionForStep(step: ChatStep, config: Config) {
+  const useCase = config.useCase.toLowerCase();
+  const wantsBiggerRide = /\b(adults?|teens?|older kids|camp|resort|airtime|launch|higher)\b/.test(useCase);
+
   switch (step) {
     case 'product':
       return 'Tell me who gets to launch off this thing. Younger kids, older kids, teens, adults, a family, a camp, or somebody else?';
     case 'size':
-      return `Now let us find the right size. If it is mostly younger kids or a smaller family, the Family Blob / Weekender is a friendly place to start. If older kids, teens, or adults want bigger launches, I would look harder at the 35 ft or 40 ft Original. What are you picturing? Sizes I can build here: ${sizeOptionsFor(config.product).join(', ')}.`;
+      return wantsBiggerRide
+        ? 'Adults and stronger jumpers are Original territory. The 35 ft Original gives a strong launch, and the 40 ft Original is the biggest airtime ride. Which way are you leaning: 35 ft Original or 40 ft Original?'
+        : 'Let us match the size to the people using it. Family Blob / Weekender is the easy family start; Originals are for bigger launch. Are you thinking Family Blob / Weekender, 30 ft Original, 35 ft Original, or 40 ft Original?';
     case 'baseColor':
       return `Alright, now we get to dress it up. The color groups I can change are body/main panels, stripes/side panels, end caps, and anchor patches. What main body color should we start with? ${COLORS.join(', ')} all work.`;
     case 'stripeStyle':

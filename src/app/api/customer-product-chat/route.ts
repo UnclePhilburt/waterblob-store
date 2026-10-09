@@ -52,8 +52,15 @@ function bounceDifferenceAnswer() {
   return 'The Originals are the bigger-launch blobs. The Family Blob / Weekender is friendlier and easier for younger kids or casual family use. The 30 ft Original gives the classic full-size Water Blob bounce. The 35 ft Original is a stronger jump for older kids, teens, and camps. The 40 ft Original is the biggest launch and most airtime. Bigger Originals have more length and air volume, so the jumper puts more energy into the blob and the person on the end gets sent higher when it is used safely and supervised.';
 }
 
-function fallbackReply(nextQuestion?: string, helper?: string) {
+function fallbackReply(message?: string, nextQuestion?: string, helper?: string) {
+  const normalized = (message || '').toLowerCase();
   if (nextQuestion) {
+    if (nextQuestion.toLowerCase().includes('35 ft original') && nextQuestion.toLowerCase().includes('40 ft original')) {
+      if (/\b(adults?|teens?|older kids|airtime|launch|higher|biggest)\b/.test(normalized)) {
+        return 'For that kind of rider, I would stay in the Original line. The 35 ft Original is a strong launch, and the 40 ft Original is the biggest airtime ride. Are you leaning 35 ft or 40 ft?';
+      }
+      return 'Let us match the size to the people using it. Family Blob / Weekender is the friendly family start, while the Originals are for bigger launch. Are you thinking Family Blob / Weekender, 30 ft Original, 35 ft Original, or 40 ft Original?';
+    }
     return `${helper || 'I saved that detail.'} ${nextQuestion}`;
   }
   return 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.';
@@ -98,11 +105,13 @@ function buildResponseInput(
 }
 
 export async function POST(request: NextRequest) {
+  let messageForFallback = '';
   let nextQuestionForFallback = '';
   let helperForFallback = '';
 
   try {
     const { message, config, conversationHistory, nextQuestion, helper } = await request.json();
+    messageForFallback = typeof message === 'string' ? message : '';
     nextQuestionForFallback = typeof nextQuestion === 'string' ? nextQuestion : '';
     helperForFallback = typeof helper === 'string' ? helper : '';
 
@@ -117,7 +126,7 @@ export async function POST(request: NextRequest) {
     const openai = getOpenAIClient();
     if (!openai) {
       return NextResponse.json({
-        reply: fallbackReply(nextQuestion, helper),
+        reply: fallbackReply(message, nextQuestion, helper),
       });
     }
 
@@ -136,7 +145,7 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     return NextResponse.json({
-      reply: fallbackReply(nextQuestionForFallback, helperForFallback),
+      reply: fallbackReply(messageForFallback, nextQuestionForFallback, helperForFallback),
     });
   }
 }
