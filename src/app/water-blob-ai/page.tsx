@@ -90,12 +90,16 @@ const INITIAL_CONFIG: Config = {
   notes: '',
 };
 
-const START_MESSAGES: ChatMessage[] = [
-  {
-    role: 'assistant',
-    text: 'Hey, I am Blobby. Let us build your perfect Water Blob. This is the original: heavy 22 oz vinyl, two-layer shell-and-bladder construction, and the real deal instead of a flimsy knockoff. Who is it for: younger kids, older kids, teens, adults, a family, a camp, or something else?',
-  },
+const STARTER_MESSAGES = [
+  'Hey, I am Blobby. Let us build a Water Blob that fits your crew. Who is it for: younger kids, older kids, teens, adults, a family, a camp, or something else?',
+  'Hi, I am Blobby. Tell me who will be jumping and I will help shape the perfect Water Blob.',
+  'Ready to design a Water Blob? Start with the people using it: family, camp, younger kids, older kids, teens, adults, or something else?',
+  'Let us make something fun. Who is this Water Blob for, and how wild do you want the launches to feel?',
 ];
+
+function starterMessage() {
+  return STARTER_MESSAGES[Math.floor(Math.random() * STARTER_MESSAGES.length)];
+}
 
 function productLabel(product: ProductType | '') {
   if (product === 'waterblob') return 'Water Blob';
@@ -137,7 +141,7 @@ function questionForStep(step: ChatStep, config: Config) {
     case 'product':
       return 'Who is this blob for: younger kids, older kids, teens, adults, a family, a camp, or something else?';
     case 'size':
-      return `Pick the blob size and I will shape the preview. Bigger blobs make more launch and airtime, especially for older kids and teens. Every one is the real two-layer Water Blob: 22 oz vinyl shell plus bladder. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
+      return `Pick the blob size and I will shape the preview. Bigger blobs make more launch and airtime, especially for older kids and teens. Options: ${sizeOptionsFor(config.product).join(', ')}.`;
     case 'baseColor':
       return `What main color should the body be? Options: ${COLORS.join(', ')}.`;
     case 'stripeStyle':
@@ -259,7 +263,7 @@ function shouldRecommendBiggerBlob(text: string, config: Config) {
 
 function buildBiggerBlobRecommendation(config: Config) {
   const size = config.size || 'that size';
-  return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, and this is the real two-layer Water Blob build, not a thin online knockoff. The 35 ft or 40 ft Original is usually the more exciting move. Want to switch to 35 or 40, or keep ${size}?`;
+  return `For older kids and stronger jumpers, I would lean bigger than ${size}. Bigger blobs give more launch and more airtime, so the 35 ft or 40 ft Original is usually the more exciting move. Want to switch to 35 or 40, or keep ${size}?`;
 }
 
 function explainSizeChoice(config: Config) {
@@ -269,22 +273,40 @@ function explainSizeChoice(config: Config) {
   if (!size) return '';
   if (size === 'Family Blob / Weekender') {
     return useCase.includes('family')
-      ? 'I picked the Family Blob / Weekender because you said family, and that is the friendlier family-size starting point. It is still the real Water Blob build: heavy 22 oz vinyl with a shell and bladder, not some flimsy knockoff.'
-      : 'I picked the Family Blob / Weekender, which is the friendlier starter blob when you want something manageable and easygoing. Same real 22 oz vinyl shell-and-bladder construction.';
+      ? 'I picked the Family Blob / Weekender because you said family, and that is the friendlier family-size starting point.'
+      : 'I picked the Family Blob / Weekender, which is the friendlier starter blob when you want something manageable and easygoing.';
   }
   if (size === '30 ft Weekender') {
-    return 'I picked the 30 ft Weekender because it keeps the Weekender / family style but gives you more room than the smaller family setup. It is built like the real deal with 22 oz vinyl and a separate bladder inside the shell.';
+    return 'I picked the 30 ft Weekender because it keeps the Weekender / family style but gives you more room than the smaller family setup.';
   }
   if (size === '30 ft Original') {
-    return 'I picked the 30 ft Original because it is the classic full-size Water Blob feel without jumping all the way to the biggest launch. This is the original-style two-layer blob, not a cheap one-piece imitation.';
+    return 'I picked the 30 ft Original because it is the classic full-size Water Blob feel without jumping all the way to the biggest launch.';
   }
   if (size === '35 ft Original') {
-    return 'I picked the 35 ft Original because bigger blobs give more launch and airtime, which is better for older kids, teens, and stronger jumpers. The heavy 22 oz vinyl shell plus bladder is exactly why this thing is the real deal.';
+    return 'I picked the 35 ft Original because bigger blobs give more launch and airtime, which is better for older kids, teens, and stronger jumpers.';
   }
   if (size === '40 ft Original') {
-    return 'I picked the 40 ft Original because it gives the most room, the biggest launch, and the most airtime for supervised older kids, teens, and adults. It is the big-dog original Water Blob style: 22 oz vinyl, shell and bladder, built for serious fun.';
+    return 'I picked the 40 ft Original because it gives the most room, the biggest launch, and the most airtime for supervised older kids, teens, and adults.';
   }
   return `I picked ${size} based on what you told me.`;
+}
+
+function qualityPitchForStep(step: ChatStep, config: Config, answer: string) {
+  const normalized = `${answer} ${config.useCase} ${config.notes}`.toLowerCase();
+  const shouldPitchQuality =
+    step === 'notes' ||
+    normalized.includes('durable') ||
+    normalized.includes('quality') ||
+    normalized.includes('cheap') ||
+    normalized.includes('amazon') ||
+    normalized.includes('knockoff') ||
+    normalized.includes('camp') ||
+    normalized.includes('resort') ||
+    normalized.includes('commercial') ||
+    normalized.includes('last');
+
+  if (!shouldPitchQuality) return '';
+  return 'Quality note: this is the original-style Water Blob build, with heavy 22 oz vinyl and a two-layer shell-and-bladder setup, so it is the real deal for serious supervised use.';
 }
 
 function parseBiggerBlobSwitch(text: string) {
@@ -487,7 +509,9 @@ function nextUnansweredStepForConfig(current: ChatStep, updated: Set<string>, co
 
 export default function WaterBlobAiPage() {
   const [config, setConfig] = useState<Config>(INITIAL_CONFIG);
-  const [messages, setMessages] = useState<ChatMessage[]>(START_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [
+    { role: 'assistant', text: starterMessage() },
+  ]);
   const [step, setStep] = useState<ChatStep>('product');
   const [input, setInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -708,6 +732,10 @@ export default function WaterBlobAiPage() {
     if (updated.has('size')) {
       const sizeReason = explainSizeChoice(nextConfig);
       helper = sizeReason || 'Nice, I locked in that size.';
+    }
+    const qualityPitch = qualityPitchForStep(step, nextConfig, answer);
+    if (qualityPitch && !helper.includes('Quality note')) {
+      helper = `${helper} ${qualityPitch}`;
     }
     if (updated.has('baseColor') || updated.has('stripeColor') || updated.has('stripeStyle') || updated.has('endCapColor')) {
       helper = 'Nice, the blob is coming alive.';
