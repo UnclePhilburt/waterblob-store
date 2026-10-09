@@ -256,6 +256,14 @@ function parseColors(text: string) {
     .map((entry) => entry.color);
 }
 
+function wantsAmericanColors(text: string) {
+  return /\b(american|patriotic|usa|u\.s\.a\.|america|fourth of july|4th of july|red white and blue|red, white, and blue)\b/i.test(text);
+}
+
+function looksLikeAgreement(text: string) {
+  return /\b(yes|yeah|yep|sure|ok|okay|correct|right|that works|sounds good|do that|lets do that|let's do that|go with that|use that|perfect)\b/i.test(text);
+}
+
 function escapedRegex(text: string) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -279,6 +287,19 @@ function findColorForGroup(text: string, keywords: string[]) {
 function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: ChatStep, answer: string) {
   const normalized = answer.toLowerCase();
   const colors = parseColors(answer);
+
+  if (wantsAmericanColors(answer) && colors.length === 0) {
+    nextConfig.baseColor = 'Blue';
+    nextConfig.stripeColor = 'Red';
+    nextConfig.endCapColor = 'White';
+    nextConfig.anchorColor = 'White';
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
+
   if (colors.length === 0) return;
 
   const explicitBodyColor = findColorForGroup(answer, ['body', 'main', 'base', 'primary', 'main panels']);
@@ -867,7 +888,11 @@ export default function WaterBlobAiPage() {
       return;
     }
 
-    const { nextConfig, updated } = applyNaturalLanguageAnswer(config, step, answer);
+    const lastAssistantSuggestion = [...messages].reverse().find((message) => message.role === 'assistant')?.text || '';
+    const answerForParsing = looksLikeAgreement(answer) && lastAssistantSuggestion
+      ? `${answer}. ${lastAssistantSuggestion}`
+      : answer;
+    const { nextConfig, updated } = applyNaturalLanguageAnswer(config, step, answerForParsing);
     if (looksLikeQuestion(answer) && updated.size === 0) {
       await answerConversationQuestion(answer);
       return;
