@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getSquareClient } from '@/lib/square';
 
+function getSquareErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object' && 'result' in error) {
+    const result = (error as { result?: { errors?: Array<{ detail?: string; code?: string }> } }).result;
+    const first = result?.errors?.[0];
+    if (first?.detail || first?.code) {
+      return [first.code, first.detail].filter(Boolean).join(': ');
+    }
+  }
+
+  return error instanceof Error ? error.message : 'Unknown Square error';
+}
+
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth instanceof NextResponse) return auth;
@@ -28,6 +40,8 @@ export async function POST(request: NextRequest) {
       deviceCodeId: deviceCode.id,
     });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create device code' }, { status: 500 });
+    const details = getSquareErrorMessage(error);
+    console.error('Failed to create Square device code:', error);
+    return NextResponse.json({ error: 'Failed to create device code', details }, { status: 500 });
   }
 }
