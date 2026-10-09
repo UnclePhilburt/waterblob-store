@@ -675,6 +675,41 @@ export default function WaterBlobAiPage() {
     setStep(next);
   }
 
+  async function askNextDynamic(next: ChatStep, nextConfig: Config, answer: string, helper?: string) {
+    const question = questionForStep(next, nextConfig);
+    setStep(next);
+
+    try {
+      const response = await fetch('/api/customer-product-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: answer,
+          config: nextConfig,
+          conversationHistory: messages,
+          nextQuestion: question,
+          helper,
+        }),
+      });
+      const data = await response.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: data.reply || (helper ? `${helper} ${question}` : question),
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          text: helper ? `${helper} ${question}` : question,
+        },
+      ]);
+    }
+  }
+
   async function answerConversationQuestion(answer: string) {
     setMessages((prev) => [
       ...prev,
@@ -745,7 +780,7 @@ export default function WaterBlobAiPage() {
       setConfig(nextConfig);
       syncViewerColors(viewerRef.current, nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
-      askNext('baseColor', nextConfig, `${explainSizeChoice(nextConfig)} Now the fun part.`);
+      await askNextDynamic('baseColor', nextConfig, answer, `${explainSizeChoice(nextConfig)} Now the fun part.`);
       return;
     }
 
@@ -768,9 +803,10 @@ export default function WaterBlobAiPage() {
       setConfig(nextConfig);
       syncViewerColors(viewerRef.current, nextConfig);
       setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
-      askNext(
+      await askNextDynamic(
         nextUnansweredStepForConfig(step, new Set(['size']), nextConfig),
         nextConfig,
+        answer,
         sizeChoice === 'keep'
           ? `${explainSizeChoice(nextConfig)} We will keep it there.`
           : `${explainSizeChoice(nextConfig)} Excellent choice.`
@@ -838,15 +874,15 @@ export default function WaterBlobAiPage() {
 
     const next = nextUnansweredStepForConfig(step, updated, nextConfig);
     if (updated.size === 0 && step !== 'ready') {
-      askNext(step, nextConfig, "I am not sure I caught that design detail.");
+      await askNextDynamic(step, nextConfig, answer, "I am not sure I caught that design detail.");
       return;
     }
     if (!updated.has(step) && step !== 'product' && step !== 'notes' && step !== 'ready') {
-      askNext(step, nextConfig, helper);
+      await askNextDynamic(step, nextConfig, answer, helper);
       return;
     }
     if (step === 'notes') {
-      askNext('ready', nextConfig, 'Everything is ready.');
+      await askNextDynamic('ready', nextConfig, answer, 'Everything is ready.');
       return;
     }
     if (step === 'ready') {
@@ -871,7 +907,7 @@ export default function WaterBlobAiPage() {
       return;
     }
 
-    askNext(next, nextConfig, helper);
+    await askNextDynamic(next, nextConfig, answer, helper);
   }
 
   async function handleTypedSubmit(e: FormEvent) {

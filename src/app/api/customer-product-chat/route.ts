@@ -52,7 +52,20 @@ function bounceDifferenceAnswer() {
   return 'The Originals are the bigger-launch blobs. The Family Blob / Weekender is friendlier and easier for younger kids or casual family use. The 30 ft Original gives the classic full-size Water Blob bounce. The 35 ft Original is a stronger jump for older kids, teens, and camps. The 40 ft Original is the biggest launch and most airtime. Bigger Originals have more length and air volume, so the jumper puts more energy into the blob and the person on the end gets sent higher when it is used safely and supervised.';
 }
 
-function buildResponseInput(message: string, config: unknown, conversationHistory: unknown): ResponseInputItem[] {
+function fallbackReply(nextQuestion?: string, helper?: string) {
+  if (nextQuestion) {
+    return `${helper || 'I saved that detail.'} ${nextQuestion}`;
+  }
+  return 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.';
+}
+
+function buildResponseInput(
+  message: string,
+  config: unknown,
+  conversationHistory: unknown,
+  nextQuestion?: string,
+  helper?: string
+): ResponseInputItem[] {
   const recent: ResponseInputItem[] = Array.isArray(conversationHistory)
     ? conversationHistory.slice(-10).map((entry: any) => ({
         role: entry.role === 'customer' ? 'user' : 'assistant',
@@ -65,6 +78,15 @@ function buildResponseInput(message: string, config: unknown, conversationHistor
       role: 'developer',
       content: `Current Blobby design state:\n${JSON.stringify(config || {}, null, 2)}`,
     },
+    ...(nextQuestion
+      ? [{
+          role: 'developer' as const,
+          content:
+            `The deterministic checkout flow needs this next customer question answered: "${nextQuestion}". ` +
+            `Optional local helper/context: "${helper || ''}". Reply as Blobby in 2-4 conversational sentences. ` +
+            'React to the customer naturally, use sales knowledge when relevant, then ask the next question clearly. Do not list every option unless it helps.',
+        }]
+      : []),
     {
       role: 'developer',
       content:
@@ -76,28 +98,33 @@ function buildResponseInput(message: string, config: unknown, conversationHistor
 }
 
 export async function POST(request: NextRequest) {
+  let nextQuestionForFallback = '';
+  let helperForFallback = '';
+
   try {
-    const { message, config, conversationHistory } = await request.json();
+    const { message, config, conversationHistory, nextQuestion, helper } = await request.json();
+    nextQuestionForFallback = typeof nextQuestion === 'string' ? nextQuestion : '';
+    helperForFallback = typeof helper === 'string' ? helper : '';
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    if (isBounceQuestion(message)) {
+    if (!nextQuestion && isBounceQuestion(message)) {
       return NextResponse.json({ reply: bounceDifferenceAnswer() });
     }
 
     const openai = getOpenAIClient();
     if (!openai) {
       return NextResponse.json({
-        reply: 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.',
+        reply: fallbackReply(nextQuestion, helper),
       });
     }
 
     const response = await openai.responses.create({
       model: 'gpt-4o-mini',
       instructions: SYSTEM_PROMPT,
-      input: buildResponseInput(message, config, conversationHistory),
+      input: buildResponseInput(message, config, conversationHistory, nextQuestion, helper),
       tools: [{ type: 'web_search_preview', search_context_size: 'low' }],
       tool_choice: 'auto',
       max_output_tokens: 450,
@@ -109,7 +136,7 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     return NextResponse.json({
-      reply: 'I saved that detail. If you are comparing sizes, the short version is: Weekender is friendlier, Originals launch harder, and the 35 ft or 40 ft Original is where you go for bigger airtime. For firm pricing, send the finished design or call us at (417) 864-8461.',
+      reply: fallbackReply(nextQuestionForFallback, helperForFallback),
     });
   }
 }
