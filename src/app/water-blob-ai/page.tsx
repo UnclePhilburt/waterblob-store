@@ -400,7 +400,13 @@ export default function WaterBlobAiPage() {
 
     viewer.partGroups.forEach((group, index) => {
       const name = group.name.toLowerCase();
-      if (name.includes('primary') || name.includes('main') || name.includes('top') || name.includes('bottom')) {
+      if (
+        name.includes('primary') ||
+        name.includes('main') ||
+        name.includes('top') ||
+        name.includes('bottom') ||
+        name.includes('end cap')
+      ) {
         viewer.setGroupColor?.(index, baseHex);
       }
       if (name.includes('secondary') || name.includes('side')) {
@@ -413,7 +419,7 @@ export default function WaterBlobAiPage() {
   }, []);
 
   const scheduleColorSync = useCallback((viewer: ViewerInstance | null, nextConfig: Config) => {
-    [120, 350, 800, 1400].forEach((delay) => {
+    [120, 350, 800, 1400, 2400, 3800, 5600].forEach((delay) => {
       window.setTimeout(() => syncViewerColors(viewer, nextConfig), delay);
     });
   }, [syncViewerColors]);

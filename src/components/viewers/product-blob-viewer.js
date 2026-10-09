@@ -430,6 +430,12 @@ export class ProductBlobViewer {
                 this.scene.add(this.model);
                 this.model.rotation.y = Math.PI / 4;
 
+                // Build color groups even when the visible color picker is disabled.
+                // Programmatic customizers like Blobby still need these mappings.
+                if (this.colorableParts.length > 0) {
+                    this.buildPartGroups();
+                }
+
                 // Create color customizer UI if enabled and we have parts
                 if (this.options.enableColorCustomizer && this.colorableParts.length > 0) {
                     this.createColorCustomizerUI();
@@ -506,6 +512,63 @@ export class ProductBlobViewer {
         );
     }
 
+    buildPartGroups() {
+        // Check model types
+        const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
+        const isBlob35 = this.options.modelPath && this.options.modelPath.includes('blob35');
+        const isBlob30 = this.options.modelPath && this.options.modelPath.includes('blob30');
+        const isSkiTube = this.options.modelPath && this.options.modelPath.includes('skitube');
+
+        // Model-specific groupings
+        if (isSkiTube) {
+            this.partGroups = [
+                { name: 'Top', partIndices: [3] },
+                { name: 'Bottom', partIndices: [4] },
+                { name: 'Handles', partIndices: [5], yellowOnly: true }
+            ];
+        } else if (this.options.showIndividualParts) {
+            this.partGroups = this.colorableParts.map((part, index) => ({
+                name: part.name || `Part ${index + 1}`,
+                partIndices: [index]
+            }));
+        } else if (isBlob35) {
+            this.partGroups = [
+                { name: 'End Caps', partIndices: [0, 3] },
+                { name: 'Primary', partIndices: [1] },
+                { name: 'Secondary', partIndices: [2] },
+                { name: 'Anchor Points', partIndices: [4, 5, 6, 7] }
+            ];
+        } else if (isBlob30) {
+            this.partGroups = [
+                { name: 'End Caps', partIndices: [2] },
+                { name: 'Primary', partIndices: [3, 5, 6] },
+                { name: 'Secondary', partIndices: [4] },
+                { name: 'Anchor Points', partIndices: [0, 1, 7, 8] }
+            ];
+        } else if (isWeekender) {
+            this.partGroups = [
+                { name: 'Main Body', partIndices: [0] },
+                { name: 'Side Panels', partIndices: [1, 4] },
+                { name: 'End Caps', partIndices: [2, 3] },
+                { name: 'Anchor Points', partIndices: [5, 6, 7] }
+            ];
+        } else if (this.options.customGroups) {
+            this.partGroups = this.options.customGroups;
+        } else {
+            this.partGroups = [
+                { name: 'End Caps', partIndices: [0, 3] },
+                { name: 'Primary', partIndices: [1] },
+                { name: 'Secondary', partIndices: [2] },
+                { name: 'Anchor Points', partIndices: [4, 5, 6, 7] }
+            ];
+        }
+
+        this.partGroups = this.partGroups.map(group => ({
+            ...group,
+            partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
+        })).filter(group => group.partIndices.length > 0);
+    }
+
     createColorCustomizerUI() {
         // Available color swatches
         const colorSwatches = [
@@ -518,104 +581,8 @@ export class ProductBlobViewer {
             { name: 'Gray', hex: '#757575' }
         ];
 
-        // Check model types
-        const isWeekender = this.options.modelPath && this.options.modelPath.includes('weekender');
-        const isBlob35 = this.options.modelPath && this.options.modelPath.includes('blob35');
-        const isBlob30 = this.options.modelPath && this.options.modelPath.includes('blob30');
-        const isSkiTube = this.options.modelPath && this.options.modelPath.includes('skitube');
-
-        // Model-specific groupings
-        if (isSkiTube) {
-            // Ski tube custom groupings:
-            // Nodes 1-3 (indices 0-2): Combined, hidden
-            // Node 4 (index 3): Shown as "Top"
-            // Node 5 (index 4): Shown as "Bottom"
-            // Node 6 (index 5): Hidden, default yellow
-
-            this.partGroups = [
-                { name: 'Top', partIndices: [3] },
-                { name: 'Bottom', partIndices: [4] },
-                { name: 'Handles', partIndices: [5], yellowOnly: true }
-            ];
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
-        } else if (this.options.showIndividualParts) {
-            // Show each part individually
-            this.partGroups = this.colorableParts.map((part, index) => ({
-                name: part.name || `Part ${index + 1}`,
-                partIndices: [index]
-            }));
-        } else if (isBlob35) {
-            // Custom groupings for 35ft Blob model (0-indexed)
-            // Parts 1&4 together, Part 2 alone, Part 3 alone, Parts 5-8 together
-            this.partGroups = [
-                { name: 'End Caps', partIndices: [0, 3] },
-                { name: 'Primary', partIndices: [1] },
-                { name: 'Secondary', partIndices: [2] },
-                { name: 'Anchor Points', partIndices: [4, 5, 6, 7] }
-            ];
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
-        } else if (isBlob30) {
-            // Custom groupings for 30ft Blob model (0-indexed)
-            this.partGroups = [
-                { name: 'End Caps', partIndices: [2] },
-                { name: 'Primary', partIndices: [3, 5, 6] },
-                { name: 'Secondary', partIndices: [4] },
-                { name: 'Anchor Points', partIndices: [0, 1, 7, 8] }
-            ];
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
-        } else if (isWeekender) {
-            // Custom groupings for Weekender model (0-indexed)
-            // Plane 1 alone, Plane 2&5 together, Plane 3&4 together, Plane 6,7,8 together
-            this.partGroups = [
-                { name: 'Main Body', partIndices: [0] },
-                { name: 'Side Panels', partIndices: [1, 4] },
-                { name: 'End Caps', partIndices: [2, 3] },
-                { name: 'Anchor Points', partIndices: [5, 6, 7] }
-            ];
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
-        } else if (this.options.customGroups) {
-            // Use custom groups if provided
-            this.partGroups = this.options.customGroups;
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
-        } else {
-            // Default/40ft blob - same groupings as 35ft
-            this.partGroups = [
-                { name: 'End Caps', partIndices: [0, 3] },
-                { name: 'Primary', partIndices: [1] },
-                { name: 'Secondary', partIndices: [2] },
-                { name: 'Anchor Points', partIndices: [4, 5, 6, 7] }
-            ];
-
-            // Filter groups to only include indices that exist
-            this.partGroups = this.partGroups.map(group => ({
-                ...group,
-                partIndices: group.partIndices.filter(i => i < this.colorableParts.length)
-            })).filter(group => group.partIndices.length > 0);
+        if (!this.partGroups || this.partGroups.length === 0) {
+            this.buildPartGroups();
         }
 
         // Create color customizer panel — horizontal, below the viewer
