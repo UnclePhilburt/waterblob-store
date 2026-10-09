@@ -125,6 +125,7 @@ function fallbackReply(message?: string, nextQuestion?: string, helper?: string)
 function buildResponseInput(
   message: string,
   config: unknown,
+  viewerState: unknown,
   conversationHistory: unknown,
   nextQuestion?: string,
   helper?: string
@@ -139,7 +140,9 @@ function buildResponseInput(
   return [
     {
       role: 'developer',
-      content: `Current Blobby design state:\n${JSON.stringify(config || {}, null, 2)}`,
+      content:
+        `Current intended Blobby design state:\n${JSON.stringify(config || {}, null, 2)}\n\n` +
+        `Current live 3D model color report from getCustomization():\n${JSON.stringify(viewerState || {}, null, 2)}`,
     },
     ...(nextQuestion
       ? [{
@@ -166,7 +169,7 @@ export async function POST(request: NextRequest) {
   let helperForFallback = '';
 
   try {
-    const { message, config, conversationHistory, nextQuestion, helper } = await request.json();
+    const { message, config, viewerState, conversationHistory, nextQuestion, helper } = await request.json();
     messageForFallback = typeof message === 'string' ? message : '';
     nextQuestionForFallback = typeof nextQuestion === 'string' ? nextQuestion : '';
     helperForFallback = typeof helper === 'string' ? helper : '';
@@ -193,7 +196,7 @@ export async function POST(request: NextRequest) {
     const response = await openai.responses.create({
       model: 'gpt-4o-mini',
       instructions: SYSTEM_PROMPT,
-      input: buildResponseInput(message, config, conversationHistory, nextQuestion, helper),
+      input: buildResponseInput(message, config, viewerState, conversationHistory, nextQuestion, helper),
       tools: [{ type: 'web_search_preview', search_context_size: 'low' }],
       tool_choice: 'auto',
       max_output_tokens: 450,

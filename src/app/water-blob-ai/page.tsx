@@ -56,6 +56,17 @@ type Config = {
   notes: string;
 };
 
+type VisibleModelState = {
+  raw: Record<string, string>;
+  groups: {
+    body: string;
+    stripes: string;
+    endCaps: string;
+    anchorPatches: string;
+  };
+  summary: string;
+};
+
 const WATER_BLOB_SIZES = ['Family Blob / Weekender', '25 ft Weekender', '30 ft Weekender', '30 ft Original', '35 ft Original', '40 ft Original'];
 const COLORS = ['Blue', 'Yellow', 'Red', 'Green', 'Black', 'White', 'Gray', 'Orange'];
 const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', 'Custom stripe layout'];
@@ -115,6 +126,50 @@ function starterMessage() {
 function productLabel(product: ProductType | '') {
   if (product === 'waterblob') return 'Water Blob';
   return 'Water Blob';
+}
+
+function colorNameFromHex(hex: string) {
+  const normalized = hex.toUpperCase();
+  const match = Object.entries(COLOR_HEX).find(([, value]) => value.toUpperCase() === normalized);
+  return match?.[0] || normalized;
+}
+
+function normalizeViewerCustomization(customization?: Record<string, string> | null): VisibleModelState | null {
+  if (!customization || Object.keys(customization).length === 0) return null;
+
+  const groups = {
+    body: '',
+    stripes: '',
+    endCaps: '',
+    anchorPatches: '',
+  };
+
+  Object.entries(customization).forEach(([groupName, hex]) => {
+    const name = groupName.toLowerCase();
+    const color = colorNameFromHex(hex);
+    if (name.includes('primary') || name.includes('main') || name.includes('top') || name.includes('bottom')) {
+      groups.body = color;
+    } else if (name.includes('secondary') || name.includes('side')) {
+      groups.stripes = color;
+    } else if (name.includes('end cap')) {
+      groups.endCaps = color;
+    } else if (name.includes('anchor') || name.includes('patch') || name.includes('handle')) {
+      groups.anchorPatches = color;
+    }
+  });
+
+  const summary = [
+    groups.body ? `body/main panels ${groups.body}` : '',
+    groups.stripes ? `stripes/side panels ${groups.stripes}` : '',
+    groups.endCaps ? `end caps ${groups.endCaps}` : '',
+    groups.anchorPatches ? `anchor patches ${groups.anchorPatches}` : '',
+  ].filter(Boolean).join(', ');
+
+  return {
+    raw: customization,
+    groups,
+    summary: summary || Object.entries(customization).map(([group, hex]) => `${group} ${colorNameFromHex(hex)}`).join(', '),
+  };
 }
 
 function modelForConfig(config: Config) {
@@ -890,6 +945,10 @@ export default function WaterBlobAiPage() {
     syncViewerColors(viewerRef.current, nextConfig);
   }
 
+  function readVisibleModelState() {
+    return normalizeViewerCustomization(viewerRef.current?.getCustomization?.());
+  }
+
   function applyRandomColors(message = 'I rolled a fresh random combo.') {
     const randomTheme = getRandomColorTheme();
     const nextConfig = {
@@ -985,6 +1044,7 @@ export default function WaterBlobAiPage() {
   async function askNextDynamic(next: ChatStep, nextConfig: Config, answer: string, helper?: string) {
     const question = questionForStep(next, nextConfig);
     setStep(next);
+    const viewerState = readVisibleModelState();
 
     try {
       const response = await fetch('/api/customer-product-chat', {
@@ -993,9 +1053,10 @@ export default function WaterBlobAiPage() {
         body: JSON.stringify({
           message: answer,
           config: nextConfig,
+          viewerState,
           conversationHistory: messages,
           nextQuestion: question,
-          helper,
+          helper: viewerState ? `${helper || ''} Current live 3D model colors: ${viewerState.summary}.` : helper,
         }),
       });
       const data = await response.json();
@@ -1022,7 +1083,8 @@ export default function WaterBlobAiPage() {
     }
   }
 
-  async function answerConversationQuestion(answer: string, allowDesignUpdates = true) {
+  async function answerConversationQuestion(answer: string, allowDesignUpdates = true, helperOverride?: string) {
+    const viewerState = readVisibleModelState();
     setMessages((prev) => [
       ...prev,
       { role: 'customer', text: answer },
@@ -1036,9 +1098,13 @@ export default function WaterBlobAiPage() {
         body: JSON.stringify({
           message: answer,
           config,
+          viewerState,
           conversationHistory: messages,
           nextQuestion: questionForStep(step, config),
-          helper: 'Answer the customer question first, then gently continue the current design conversation.',
+          helper: helperOverride ||
+            `Answer the customer question first, then gently continue the current design conversation.${
+              viewerState ? ` Current live 3D model colors: ${viewerState.summary}.` : ''
+            }`,
         }),
       });
       const data = await response.json();
@@ -1169,7 +1235,14 @@ export default function WaterBlobAiPage() {
     }
 
     if (isColorObservation(answer)) {
-      await answerConversationQuestion(answer, false);
+      const viewerState = readVisibleModelState();
+      await answerConversationQuestion(
+        answer,
+        false,
+        viewerState
+          ? `The customer is commenting on what they can see in the 3D preview. Do not change the design. The live 3D model currently reports these visible colors: ${viewerState.summary}. Raw model groups: ${JSON.stringify(viewerState.raw)}. Explain what the model is showing and ask whether they want a color moved to a more visible group.`
+          : 'The customer is commenting on what they can see in the 3D preview. Do not change the design. Explain that the model may still be loading or the angle can hide small color groups, then ask if they want the color moved to a more visible group.'
+      );
       return;
     }
 
@@ -1249,6 +1322,7 @@ export default function WaterBlobAiPage() {
           body: JSON.stringify({
             message: answer,
             config: nextConfig,
+            viewerState: readVisibleModelState(),
             conversationHistory: messages,
           }),
         });
