@@ -11342,6 +11342,40 @@
             checkField.style.display = method === 'check' ? 'block' : 'none';
         }
 
+        function wait(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function pollTerminalCheckout(checkoutId) {
+            const maxAttempts = 60;
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                await wait(3000);
+
+                const response = await fetch(`${API_BASE}/api/terminal-checkout/${checkoutId}/status`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.details || data.error || 'Failed to check terminal payment status');
+                }
+
+                if (data.status === 'COMPLETED') {
+                    return data;
+                }
+
+                if (['CANCELED', 'CANCEL_REQUESTED'].includes(data.status)) {
+                    throw new Error(`Terminal payment was ${data.status.toLowerCase().replace('_', ' ')}`);
+                }
+            }
+
+            throw new Error('Timed out waiting for terminal payment. Check Square before trying again.');
+        }
+
         async function processWorkOrderPayment() {
             const paymentMethod = document.querySelector('input[name="workOrderPayment"]:checked').value;
             let checkNumber = null;
@@ -11389,8 +11423,9 @@
                     if (paymentMethod === 'square_invoice') {
                         alert('Square invoice sent to customer successfully!');
                     } else if (paymentMethod === 'card') {
-                        alert('Terminal checkout initiated! Customer can now pay on the terminal.');
-                        // Could add polling here to check terminal status
+                        alert(`Terminal checkout sent for $${Number(data.amount || 0).toFixed(2)}. Complete the payment on the Square terminal, then this page will confirm it.`);
+                        await pollTerminalCheckout(data.checkoutId);
+                        alert('Square terminal payment completed and work order marked paid!');
                     } else {
                         alert(`Payment recorded successfully! (${paymentMethod.toUpperCase()}${checkNumber ? ` #${checkNumber}` : ''})`);
                     }
