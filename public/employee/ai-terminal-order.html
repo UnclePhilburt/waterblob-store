@@ -693,6 +693,26 @@
             return { ...extra, Authorization: `Bearer ${authToken}` };
         }
 
+        function expireSession() {
+            localStorage.removeItem('employeeToken');
+            localStorage.removeItem('authToken');
+            authToken = '';
+            setStatus('');
+            showLogin();
+            setLoginStatus('Session expired after the server updated. Log in again and keep going.', 'bad');
+        }
+
+        async function apiFetch(url, options = {}) {
+            const response = await fetch(url, options);
+            if (response.status === 401) {
+                expireSession();
+                const error = new Error('Session expired. Please log in again.');
+                error.authExpired = true;
+                throw error;
+            }
+            return response;
+        }
+
         function setStatus(text, kind = '') {
             const node = el('chatStatus');
             node.textContent = text || '';
@@ -984,7 +1004,7 @@
             el('sendPromptButton').disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE}/api/employee/terminal-chat/parse`, {
+                const response = await apiFetch(`${API_BASE}/api/employee/terminal-chat/parse`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ message }),
@@ -1016,6 +1036,7 @@
                 renderAll();
                 setStatus('Cart ready.', 'good');
             } catch (error) {
+                if (error.authExpired) return;
                 addMessage('assistant', error.message || 'Failed to build cart.');
                 setStatus(error.message || 'Failed to build cart.', 'bad');
             } finally {
@@ -1035,7 +1056,7 @@
             setStatus(`Sending ${money.format(total)} to Square Terminal...`);
 
             try {
-                const response = await fetch(`${API_BASE}/api/employee/terminal-chat/checkout`, {
+                const response = await apiFetch(`${API_BASE}/api/employee/terminal-chat/checkout`, {
                     method: 'POST',
                     headers: authHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({
@@ -1061,6 +1082,7 @@
                 setStatus('Waiting for terminal payment...', 'good');
                 await pollCheckout(data.checkoutId);
             } catch (error) {
+                if (error.authExpired) return;
                 addMessage('assistant', error.message || 'Terminal checkout failed.');
                 setStatus(error.message || 'Terminal checkout failed.', 'bad');
                 if (send) send.disabled = false;
@@ -1070,7 +1092,7 @@
         async function pollCheckout(checkoutId) {
             for (let attempt = 0; attempt < 80; attempt++) {
                 await new Promise((resolve) => setTimeout(resolve, 3000));
-                const response = await fetch(`${API_BASE}/api/terminal-checkout/${checkoutId}/status`, {
+                const response = await apiFetch(`${API_BASE}/api/terminal-checkout/${checkoutId}/status`, {
                     headers: authHeaders(),
                 });
                 const data = await response.json();
