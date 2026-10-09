@@ -1,0 +1,148 @@
+import PDFDocument from 'pdfkit';
+
+type WorkOrderItem = {
+  name?: string;
+  quantity?: number | string;
+  price?: number | string;
+  unitPrice?: number | string;
+  notes?: string;
+  description?: string;
+  color?: string;
+};
+
+type WorkOrderLike = {
+  id?: number | string;
+  work_order_number?: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  items?: WorkOrderItem[] | string | null;
+  notes?: string | null;
+  payment_method?: string | null;
+  payment_status?: string | null;
+  payment_notes?: string | null;
+  square_terminal_checkout_id?: string | null;
+  square_payment_id?: string | null;
+  paid_at?: string | Date | null;
+  total?: number | string | null;
+  created_at?: string | Date | null;
+};
+
+function parseItems(value: WorkOrderLike['items']): WorkOrderItem[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function currency(value: number | string | null | undefined) {
+  const amount = Number(value) || 0;
+  return `$${amount.toFixed(2)}`;
+}
+
+function formatDate(value: WorkOrderLike['created_at']) {
+  if (!value) return new Date().toLocaleString('en-US');
+  return new Date(value).toLocaleString('en-US');
+}
+
+function text(value: unknown, fallback = '-') {
+  const stringValue = String(value || '').trim();
+  return stringValue || fallback;
+}
+
+export function generateWorkOrderPdfBuffer(workOrder: WorkOrderLike): Promise<Buffer> {
+  const doc = new PDFDocument({ size: 'LETTER', margin: 50 });
+  const chunks: Buffer[] = [];
+  const items = parseItems(workOrder.items);
+
+  doc.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+
+  const done = new Promise<Buffer>((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+  });
+
+  doc.fontSize(22).text('Water Blob Work Order', { align: 'center' });
+  doc.moveDown(0.5);
+  doc.fontSize(11).fillColor('#555').text(`Created ${formatDate(workOrder.created_at)}`, { align: 'center' });
+  doc.moveDown(1.5);
+  doc.fillColor('#000');
+
+  doc.fontSize(14).text(`Work Order: ${text(workOrder.work_order_number || workOrder.id)}`);
+  doc.fontSize(11).text(`Customer: ${text(workOrder.customer_name, 'Terminal Customer')}`);
+  doc.text(`Phone: ${text(workOrder.customer_phone)}`);
+  doc.text(`Email: ${text(workOrder.customer_email)}`);
+  doc.moveDown();
+
+  doc.fontSize(13).text('Payment', { underline: true });
+  doc.fontSize(11).text(`Method: ${text(workOrder.payment_method)}`);
+  doc.text(`Status: ${text(workOrder.payment_status)}`);
+  if (workOrder.paid_at) doc.text(`Paid at: ${formatDate(workOrder.paid_at)}`);
+  if (workOrder.square_terminal_checkout_id) doc.text(`Square checkout: ${workOrder.square_terminal_checkout_id}`);
+  if (workOrder.square_payment_id) doc.text(`Square payment: ${workOrder.square_payment_id}`);
+  if (workOrder.payment_notes) doc.text(`Payment notes: ${workOrder.payment_notes}`);
+  doc.moveDown();
+
+  doc.fontSize(13).text('Items', { underline: true });
+  doc.moveDown(0.4);
+  doc.fontSize(10).font('Helvetica-Bold');
+  doc.text('Qty', 50, doc.y, { width: 45 });
+  doc.text('Item', 95, doc.y - 12, { width: 285 });
+  doc.text('Each', 380, doc.y - 12, { width: 75, align: 'right' });
+  doc.text('Line Total', 455, doc.y - 12, { width: 90, align: 'right' });
+  doc.moveDown(0.4);
+  doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ccc').stroke();
+  doc.moveDown(0.4);
+  doc.font('Helvetica');
+
+  if (items.length === 0) {
+    doc.text('No items listed.');
+  }
+
+  items.forEach((item) => {
+    const y = doc.y;
+    const quantity = Number(item.quantity) || 1;
+    const price = Number(item.price ?? item.unitPrice) || 0;
+    const lineTotal = quantity * price;
+    const details = [item.description, item.color ? `Color: ${item.color}` : '', item.notes]
+      .map((part) => String(part || '').trim())
+      .filter(Boolean)
+      .join(' | ');
+
+    doc.text(String(quantity), 50, y, { width: 45 });
+    doc.text(text(item.name, 'Custom item'), 95, y, { width: 285 });
+    doc.text(currency(price), 380, y, { width: 75, align: 'right' });
+    doc.text(currency(lineTotal), 455, y, { width: 90, align: 'right' });
+    if (details) {
+      doc.fillColor('#555').fontSize(9).text(details, 95, doc.y + 2, { width: 450 });
+      doc.fillColor('#000').fontSize(10);
+    }
+    doc.moveDown(0.8);
+  });
+
+  doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#ccc').stroke();
+  doc.moveDown();
+  doc.fontSize(16).font('Helvetica-Bold').text(`Total: ${currency(workOrder.total)}`, { align: 'right' });
+  doc.font('Helvetica');
+
+  if (workOrder.notes) {
+    doc.moveDown();
+    doc.fontSize(13).text('Notes', { underline: true });
+    doc.fontSize(11).text(String(workOrder.notes), { width: 495 });
+  }
+
+  doc.moveDown(2);
+  doc.fontSize(10).fillColor('#666').text('Generated by Water Blob AI Terminal Order.', { align: 'center' });
+  doc.end();
+
+  return done;
+}
+
+export async function generateWorkOrderPdfBase64(workOrder: WorkOrderLike): Promise<string> {
+  const buffer = await generateWorkOrderPdfBuffer(workOrder);
+  return buffer.toString('base64');
+}

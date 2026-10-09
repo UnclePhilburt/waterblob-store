@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { generateWorkOrderPdfBase64 } from '@/lib/work-order-pdf';
 
 function getSquareApiBase() {
   return process.env.SQUARE_ENVIRONMENT === 'production'
@@ -23,6 +24,8 @@ async function ensureWorkOrderColumns(pool: NonNullable<ReturnType<typeof getPoo
       ADD COLUMN IF NOT EXISTS square_terminal_checkout_id TEXT,
       ADD COLUMN IF NOT EXISTS square_payment_id TEXT,
       ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS pdf_data TEXT,
+      ADD COLUMN IF NOT EXISTS pdf_path TEXT,
       ADD COLUMN IF NOT EXISTS notes TEXT,
       ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'incomplete',
       ADD COLUMN IF NOT EXISTS total NUMERIC DEFAULT 0,
@@ -125,21 +128,33 @@ export async function POST(request: NextRequest) {
     });
 
     const checkout = checkoutResult.checkout;
+    const pdfPath = `/api/work-orders/${workOrder.id}/pdf`;
+    const finalWorkOrder = {
+      ...workOrder,
+      square_terminal_checkout_id: checkout.id,
+      payment_notes: `Square Terminal checkout ${checkout.id}`,
+      pdf_path: pdfPath,
+    };
+    const pdfData = await generateWorkOrderPdfBase64(finalWorkOrder);
+
     await pool.query(
       `UPDATE work_orders
        SET square_terminal_checkout_id = $1,
            payment_notes = $2,
+           pdf_data = $3,
+           pdf_path = $4,
            updated_at = NOW()
-       WHERE id = $3`,
-      [checkout.id, `Square Terminal checkout ${checkout.id}`, workOrder.id]
+       WHERE id = $5`,
+      [checkout.id, `Square Terminal checkout ${checkout.id}`, pdfData, pdfPath, workOrder.id]
     );
 
     return NextResponse.json({
       success: true,
-      workOrder: { ...workOrder, square_terminal_checkout_id: checkout.id },
+      workOrder: finalWorkOrder,
       checkoutId: checkout.id,
       status: checkout.status,
       amount: total,
+      pdfPath,
     });
   } catch (error) {
     const details = error instanceof Error ? error.message : 'Unknown error';

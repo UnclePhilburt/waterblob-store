@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { getPool } from '@/lib/db';
+import { generateWorkOrderPdfBase64 } from '@/lib/work-order-pdf';
 
 function getSquareApiBase() {
   return process.env.SQUARE_ENVIRONMENT === 'production'
@@ -17,6 +18,8 @@ async function ensureTerminalPaymentColumns(pool: NonNullable<ReturnType<typeof 
       ADD COLUMN IF NOT EXISTS square_terminal_checkout_id TEXT,
       ADD COLUMN IF NOT EXISTS square_payment_id TEXT,
       ADD COLUMN IF NOT EXISTS paid_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS pdf_data TEXT,
+      ADD COLUMN IF NOT EXISTS pdf_path TEXT,
       ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW()
   `);
 }
@@ -87,6 +90,21 @@ export async function GET(
             workOrderId,
           ]
         );
+
+        const workOrderResult = await pool.query('SELECT * FROM work_orders WHERE id = $1', [workOrderId]);
+        const paidWorkOrder = workOrderResult.rows[0];
+        if (paidWorkOrder) {
+          const pdfPath = `/api/work-orders/${paidWorkOrder.id}/pdf`;
+          const pdfData = await generateWorkOrderPdfBase64({ ...paidWorkOrder, pdf_path: pdfPath });
+          await pool.query(
+            `UPDATE work_orders
+             SET pdf_data = $1,
+                 pdf_path = $2,
+                 updated_at = NOW()
+             WHERE id = $3`,
+            [pdfData, pdfPath, paidWorkOrder.id]
+          );
+        }
       }
     }
 
@@ -96,6 +114,7 @@ export async function GET(
       paymentIds,
       workOrderId,
       referenceId,
+      pdfPath: workOrderId ? `/api/work-orders/${workOrderId}/pdf` : null,
     });
   } catch (error) {
     const details = error instanceof Error ? error.message : 'Unknown error';

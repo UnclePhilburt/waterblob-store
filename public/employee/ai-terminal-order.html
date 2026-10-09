@@ -391,6 +391,18 @@
             overflow: hidden;
         }
 
+        .pdf-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            border-radius: 999px;
+            background: #0d0d0d;
+            color: white;
+            padding: 10px 14px;
+            font-weight: 700;
+        }
+
         .cart-head {
             display: flex;
             justify-content: space-between;
@@ -803,12 +815,16 @@
             wrap.innerHTML = chat.messages.map((message, index) => {
                 const isAssistant = message.role === 'assistant';
                 const cartHtml = message.cart ? renderCartCard() : '';
+                const pdfHtml = message.pdfPath
+                    ? `<a class="pdf-link" href="${escapeHtml(message.pdfPath)}" target="_blank" rel="noopener">Open printable work order PDF</a>`
+                    : '';
                 return `
                     <article class="message ${isAssistant ? 'assistant' : 'user'}">
                         <div class="message-inner">
                             <div class="avatar">${isAssistant ? 'WB' : 'You'}</div>
                             <div>
                                 <div class="message-text">${escapeHtml(message.text)}</div>
+                                ${pdfHtml}
                                 ${cartHtml}
                             </div>
                         </div>
@@ -1036,7 +1052,12 @@
                 if (!response.ok) throw new Error(data.details || data.error || 'Failed to send to terminal');
 
                 activeCheckoutId = data.checkoutId;
-                addMessage('assistant', `Sent ${money.format(Number(data.amount || total))} to the Square Terminal. Waiting for the card payment now.`);
+                const pdfPath = data.pdfPath || data.workOrder?.pdf_path || null;
+                addMessage(
+                    'assistant',
+                    `Created work order ${data.workOrder?.work_order_number || ''} and sent ${money.format(Number(data.amount || total))} to the Square Terminal. The printable PDF is ready.`,
+                    { pdfPath }
+                );
                 setStatus('Waiting for terminal payment...', 'good');
                 await pollCheckout(data.checkoutId);
             } catch (error) {
@@ -1056,7 +1077,11 @@
                 if (!response.ok) throw new Error(data.details || data.error || 'Failed to check payment status');
 
                 if (data.status === 'COMPLETED') {
-                    addMessage('assistant', 'Payment completed. The work order was marked paid automatically.');
+                    addMessage(
+                        'assistant',
+                        'Payment completed. The work order was marked paid automatically and the printable PDF was updated.',
+                        { pdfPath: data.pdfPath || (data.workOrderId ? `/api/work-orders/${data.workOrderId}/pdf` : null) }
+                    );
                     setStatus('Paid and marked complete.', 'good');
                     return;
                 }
