@@ -260,8 +260,16 @@ function wantsAmericanColors(text: string) {
   return /\b(american|patriotic|usa|u\.s\.a\.|america|fourth of july|4th of july|red white and blue|red, white, and blue)\b/i.test(text);
 }
 
+function wantsChristmasColors(text: string) {
+  return /\b(christmas|xmas|holiday|festive)\b/i.test(text);
+}
+
 function looksLikeAgreement(text: string) {
   return /\b(yes|yeah|yep|sure|ok|okay|correct|right|that works|sounds good|do that|lets do that|let's do that|go with that|use that|perfect)\b/i.test(text);
+}
+
+function wantsBlobbyToChoose(text: string) {
+  return /\b(you pick|you choose|pick for me|choose for me|change the colors for me|change colors for me|make the colors for me|surprise me|whatever you think)\b/i.test(text);
 }
 
 function escapedRegex(text: string) {
@@ -300,6 +308,18 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
     return;
   }
 
+  if (wantsChristmasColors(answer) && colors.length === 0) {
+    nextConfig.baseColor = 'Red';
+    nextConfig.stripeColor = 'Green';
+    nextConfig.endCapColor = 'White';
+    nextConfig.anchorColor = 'White';
+    updated.add('baseColor');
+    updated.add('stripeColor');
+    updated.add('endCapColor');
+    updated.add('anchorColor');
+    return;
+  }
+
   if (colors.length === 0) return;
 
   const explicitBodyColor = findColorForGroup(answer, ['body', 'main', 'base', 'primary', 'main panels']);
@@ -323,6 +343,10 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
   }
   if (explicitAnchorColor) {
     nextConfig.anchorColor = explicitAnchorColor;
+    updated.add('anchorColor');
+  }
+  if (explicitEndCapColor && /\banchor(?:\s+patch(?:es)?)?s?\b/.test(normalized) && !explicitAnchorColor) {
+    nextConfig.anchorColor = explicitEndCapColor;
     updated.add('anchorColor');
   }
 
@@ -889,7 +913,8 @@ export default function WaterBlobAiPage() {
     }
 
     const lastAssistantSuggestion = [...messages].reverse().find((message) => message.role === 'assistant')?.text || '';
-    const answerForParsing = looksLikeAgreement(answer) && lastAssistantSuggestion
+    const shouldApplyLastSuggestion = (looksLikeAgreement(answer) || wantsBlobbyToChoose(answer)) && lastAssistantSuggestion;
+    const answerForParsing = shouldApplyLastSuggestion
       ? `${answer}. ${lastAssistantSuggestion}`
       : answer;
     const { nextConfig, updated } = applyNaturalLanguageAnswer(config, step, answerForParsing);
