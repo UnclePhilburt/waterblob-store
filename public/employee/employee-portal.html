@@ -4188,62 +4188,65 @@
             }
 
             .desktop-layout > .desktop-grid .dashboard-primary-card {
-                grid-column: 1 / -1;
-                min-height: 230px;
+                grid-column: span 2;
+                min-height: 142px;
                 display: grid;
-                grid-template-columns: auto minmax(0, 1fr) auto;
+                grid-template-columns: auto minmax(0, 1fr);
                 align-items: center;
-                gap: 26px;
-                padding: 34px !important;
+                gap: 16px;
+                padding: 20px !important;
                 background: linear-gradient(135deg, #ffffff 0%, #f7fbff 52%, #eefbf6 100%) !important;
                 border-color: rgba(16, 163, 127, 0.28) !important;
-                box-shadow: 0 28px 80px rgba(15, 23, 42, 0.12) !important;
+                box-shadow: 0 16px 44px rgba(15, 23, 42, 0.1) !important;
                 opacity: 1 !important;
                 filter: none !important;
             }
 
             .desktop-layout > .desktop-grid .dashboard-primary-card:hover {
                 border-color: rgba(16, 163, 127, 0.55) !important;
-                box-shadow: 0 34px 90px rgba(15, 23, 42, 0.16) !important;
+                box-shadow: 0 20px 52px rgba(15, 23, 42, 0.14) !important;
                 transform: translateY(-3px) !important;
             }
 
             .dashboard-primary-card .desktop-card-icon {
-                width: 84px;
-                height: 84px;
-                border-radius: 24px;
+                width: 58px;
+                height: 58px;
+                border-radius: 18px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 0 !important;
                 background: #0d0d0d;
                 color: #ffffff;
-                font-size: 38px !important;
+                font-size: 26px !important;
                 filter: none !important;
             }
 
             .dashboard-primary-card .desktop-card-title {
-                font-size: 36px !important;
+                font-size: 24px !important;
                 line-height: 1;
                 letter-spacing: -0.03em;
-                margin-bottom: 12px;
+                margin-bottom: 8px;
             }
 
             .dashboard-primary-card .desktop-card-description {
-                max-width: 650px;
-                font-size: 18px !important;
-                line-height: 1.45;
+                max-width: 420px;
+                font-size: 13px !important;
+                line-height: 1.35;
                 color: #4b5563 !important;
             }
 
             .dashboard-primary-cta {
+                grid-column: 2;
+                justify-self: flex-start;
                 border-radius: 999px;
                 background: #0d0d0d;
                 color: #ffffff;
-                padding: 14px 22px;
-                font-size: 15px;
+                padding: 9px 14px;
+                font-size: 13px;
                 font-weight: 800;
                 white-space: nowrap;
+                margin-top: 10px;
             }
 
             .desktop-layout > .desktop-grid .dashboard-secondary-card {
@@ -4554,9 +4557,9 @@
                 <div class="desktop-card-icon">💬</div>
                 <div>
                     <div class="desktop-card-title">Water Blob AI</div>
-                    <div class="desktop-card-description">Type an order like “black tarp 10x10 and 4 straps,” review the cart, print the work order, and send payment straight to the Square Terminal.</div>
+                    <div class="desktop-card-description">Type an order, review the cart, print the work order, and send it to Square.</div>
+                    <div class="dashboard-primary-cta">Open chatbot</div>
                 </div>
-                <div class="dashboard-primary-cta">Open chatbot</div>
             </div>
 
             <div class="desktop-card menu-card dashboard-secondary-card" onclick="goToWorkOrders()" style="display: none;">
