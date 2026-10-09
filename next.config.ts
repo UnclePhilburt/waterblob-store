@@ -63,6 +63,7 @@ const nextConfig: NextConfig = {
       { source: '/admin/debug.html', destination: '/admin/admin-debug.html', permanent: true },
       { source: '/admin/orders.html', destination: '/admin/admin-orders.html', permanent: true },
       { source: '/admin/videos.html', destination: '/admin/admin-videos.html', permanent: true },
+      { source: '/admin/terminal.html', destination: '/admin/terminal-setup.html', permanent: true },
       // Old employee pages → new employee directory
       { source: '/employee-portal.html', destination: '/employee/', permanent: true },
       { source: '/employee-hub.html', destination: '/employee/hub.html', permanent: true },

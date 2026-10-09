@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Square Terminal Setup | Water Blob Admin</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07131f;
+        --panel: #101c2e;
+        --panel-2: #17243a;
+        --text: #f7fbff;
+        --muted: #9fb0c5;
+        --accent: #19b5ff;
+        --good: #22c55e;
+        --bad: #ef4444;
+        --border: rgba(255, 255, 255, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        width: min(980px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      a { color: var(--accent); }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.1;
+      }
+
+      .subtitle {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .card h2 {
+        margin: 0 0 10px;
+        font-size: 18px;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        background: var(--accent);
+        color: #001421;
+        font-weight: 800;
+        padding: 12px 16px;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .code {
+        display: none;
+        margin-top: 18px;
+        padding: 18px;
+        border-radius: 12px;
+        background: #031d2d;
+        border: 1px solid rgba(25, 181, 255, 0.35);
+      }
+
+      .device-code {
+        display: block;
+        margin-top: 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: clamp(32px, 8vw, 64px);
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        color: #7dd3fc;
+        word-break: break-all;
+      }
+
+      .status {
+        min-height: 24px;
+        margin-top: 14px;
+        color: var(--muted);
+      }
+
+      .error { color: #fca5a5; }
+      .success { color: #86efac; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+        overflow: hidden;
+        border-radius: 10px;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+
+      th {
+        color: var(--muted);
+        background: var(--panel-2);
+      }
+
+      code {
+        display: inline-block;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        color: #bfdbfe;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.14);
+        color: #86efac;
+        font-size: 12px;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="topbar">
+        <div>
+          <h1>Square Terminal Setup</h1>
+          <p class="subtitle">Pair a Square Terminal so work-order payments can be sent from this website to the machine.</p>
+        </div>
+        <a href="/employee/employee-portal.html">Employee portal</a>
+      </div>
+
+      <div class="grid">
+        <section class="card">
+          <h2>1. Generate Device Code</h2>
+          <p>Use this when the Square machine asks for a device code. Enter the code shown here on the Square machine.</p>
+          <div class="button-row">
+            <button id="createCodeBtn">Create device code</button>
+          </div>
+          <div id="codeBox" class="code">
+            <span>Enter this on the Square machine:</span>
+            <strong id="deviceCode" class="device-code"></strong>
+            <p id="deviceCodeId"></p>
+          </div>
+          <div id="createStatus" class="status"></div>
+        </section>
+
+        <section class="card">
+          <h2>2. Check Paired Devices</h2>
+          <p>After entering the code on the terminal, refresh this list. Copy the active <strong>deviceId</strong> into Render as <code>SQUARE_TERMINAL_DEVICE_ID</code> if it changed.</p>
+          <div class="button-row">
+            <button id="listDevicesBtn" class="secondary">Refresh devices</button>
+          </div>
+          <div id="devicesStatus" class="status"></div>
+          <div id="configuredDevice"></div>
+          <div id="devicesTable"></div>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top: 16px;">
+        <h2>Machine Steps</h2>
+        <ol>
+          <li>On the Square machine, cancel/exit any normal checkout screen.</li>
+          <li>Open account/settings and sign out of normal Square POS if it is signed in there.</li>
+          <li>On the sign-in screen, choose device-code sign in.</li>
+          <li>Generate a code here and type it into the Square machine.</li>
+          <li>Refresh paired devices here. The terminal should appear with a <code>deviceId</code>.</li>
+          <li>Make sure Render has that exact <code>SQUARE_TERMINAL_DEVICE_ID</code>, then redeploy/restart Render.</li>
+        </ol>
+      </section>
+    </main>
+
+    <script>
+      const API_BASE = '';
+
+      function getToken() {
+        return localStorage.getItem('employeeToken') || localStorage.getItem('authToken');
+      }
+
+      async function api(path, options = {}) {
+        const token = getToken();
+        if (!token) {
+          throw new Error('No login token found. Log into the employee portal or admin first, then reload this page.');
+        }
+
+        const response = await fetch(`${API_BASE}${path}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...(options.headers || {}),
+          },
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || `Request failed with status ${response.status}`);
+        }
+        return data;
+      }
+
+      function setStatus(id, message, type = '') {
+        const el = document.getElementById(id);
+        el.className = `status ${type}`;
+        el.textContent = message;
+      }
+
+      async function createDeviceCode() {
+        const btn = document.getElementById('createCodeBtn');
+        btn.disabled = true;
+        setStatus('createStatus', 'Creating device code...');
+
+        try {
+          const data = await api('/api/square/devices/code', { method: 'POST' });
+          document.getElementById('deviceCode').textContent = data.code || '';
+          document.getElementById('deviceCodeId').innerHTML = `Device code id: <code>${data.deviceCodeId || ''}</code>`;
+          document.getElementById('codeBox').style.display = 'block';
+          setStatus('createStatus', 'Code created. Enter it on the Square machine.', 'success');
+        } catch (error) {
+          setStatus('createStatus', error.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function renderDevices(data) {
+        const configured = data.configuredDeviceId;
+        document.getElementById('configuredDevice').innerHTML = configured
+          ? `<p>Render currently has: <code>${configured}</code></p>`
+          : '<p class="error">Render does not report a configured terminal device id.</p>';
+
+        const devices = data.devices || [];
+        if (devices.length === 0) {
+          document.getElementById('devicesTable').innerHTML = '<p>No paired terminal devices returned yet.</p>';
+          return;
+        }
+
+        const rows = devices.map((device) => `
+          <tr>
+            <td>${device.name || ''}${device.deviceId === configured ? ' <span class="pill">configured</span>' : ''}</td>
+            <td><code>${device.deviceId || ''}</code></td>
+            <td>${device.status || ''}</td>
+            <td>${device.code || ''}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('devicesTable').innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>deviceId</th>
+                <th>Status</th>
+                <th>Code</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+
+      async function listDevices() {
+        const btn = document.getElementById('listDevicesBtn');
+        btn.disabled = true;
+        setStatus('devicesStatus', 'Loading devices...');
+
+        try {
+          const data = await api('/api/square/devices');
+          renderDevices(data);
+          setStatus('devicesStatus', 'Device list refreshed.', 'success');
+        } catch (error) {
+          setStatus('devicesStatus', error.message, 'error');
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      document.getElementById('createCodeBtn').addEventListener('click', createDeviceCode);
+      document.getElementById('listDevicesBtn').addEventListener('click', listDevices);
+      listDevices();
+    </script>
+  </body>
+</html>
