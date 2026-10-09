@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useMemo, useRef, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import styles from './water-blob-ai.module.css';
@@ -11,6 +11,19 @@ const ProductBlobViewerWrapper = dynamic(
 );
 
 type ProductType = 'waterblob' | 'skitube';
+type ChatStep =
+  | 'product'
+  | 'size'
+  | 'baseColor'
+  | 'stripeStyle'
+  | 'stripeColor'
+  | 'useCase'
+  | 'waterDepth'
+  | 'timeline'
+  | 'quantity'
+  | 'contact'
+  | 'notes'
+  | 'ready';
 
 type ChatMessage = {
   role: 'assistant' | 'customer';
@@ -20,11 +33,13 @@ type ChatMessage = {
 type ViewerInstance = {
   getCustomization?: () => Record<string, string> | null;
   captureScreenshot?: (width?: number, height?: number) => string | null;
+  setGroupColor?: (groupIndex: number, hexColor: string) => void;
+  partGroups?: Array<{ name: string }>;
   destroy: () => void;
 };
 
 type Config = {
-  product: ProductType;
+  product: ProductType | '';
   size: string;
   quantity: number;
   baseColor: string;
@@ -39,11 +54,6 @@ type Config = {
   notes: string;
 };
 
-const PRODUCT_OPTIONS = [
-  { value: 'waterblob' as const, label: 'Water Blob', model: '/assets/blob30.glb' },
-  { value: 'skitube' as const, label: 'Ski Tube', model: '/assets/skitube3dmodel/skitube.glb' },
-];
-
 const WATER_BLOB_SIZES = ['25 ft Weekender', '30 ft Original', '35 ft Original', '40 ft Original'];
 const SKI_TUBE_SIZES = ['Standard ski tube', 'Custom ski tube'];
 const COLORS = ['Blue', 'Yellow', 'Red', 'Green', 'Black', 'White', 'Gray', 'Orange'];
@@ -51,9 +61,20 @@ const STRIPES = ['No stripes', 'Single stripe', 'Two stripes', 'Side stripes', '
 const USE_CASES = ['Summer camp', 'Resort', 'Private lake', 'Rental business', 'Marina', 'Other'];
 const TIMELINES = ['ASAP', 'This month', '1-3 months', 'Before summer', 'Just planning'];
 
+const COLOR_HEX: Record<string, string> = {
+  Blue: '#0044AA',
+  Yellow: '#FFD600',
+  Red: '#E53935',
+  Green: '#16A34A',
+  Black: '#111827',
+  White: '#FFFFFF',
+  Gray: '#9CA3AF',
+  Orange: '#F97316',
+};
+
 const INITIAL_CONFIG: Config = {
-  product: 'waterblob',
-  size: '30 ft Original',
+  product: '',
+  size: '',
   quantity: 1,
   baseColor: 'Blue',
   stripeColor: 'Yellow',
@@ -70,12 +91,14 @@ const INITIAL_CONFIG: Config = {
 const START_MESSAGES: ChatMessage[] = [
   {
     role: 'assistant',
-    text: 'Hi, I can help build a Water Blob or Ski Tube quote. Pick a product first, then I will collect size, stripes, colors, use case, and contact details.',
+    text: 'Hi, I can build your quote. What are we making today: a Water Blob or a Ski Tube?',
   },
 ];
 
-function productLabel(product: ProductType) {
-  return product === 'waterblob' ? 'Water Blob' : 'Ski Tube';
+function productLabel(product: ProductType | '') {
+  if (product === 'skitube') return 'Ski Tube';
+  if (product === 'waterblob') return 'Water Blob';
+  return 'Water Blob';
 }
 
 function modelForConfig(config: Config) {
@@ -86,10 +109,14 @@ function modelForConfig(config: Config) {
   return '/assets/blob30.glb';
 }
 
+function sizeOptionsFor(product: ProductType | '') {
+  return product === 'skitube' ? SKI_TUBE_SIZES : WATER_BLOB_SIZES;
+}
+
 function summarizeConfig(config: Config) {
   const parts = [
     `Product: ${productLabel(config.product)}`,
-    `Size: ${config.size}`,
+    `Size: ${config.size || 'Not selected'}`,
     `Quantity: ${config.quantity}`,
     `Base color: ${config.baseColor}`,
     `Stripe style: ${config.stripeStyle}`,
@@ -102,94 +129,276 @@ function summarizeConfig(config: Config) {
   return parts.join('\n');
 }
 
+function questionForStep(step: ChatStep, config: Config) {
+  switch (step) {
+    case 'product':
+      return 'What are we making today?';
+    case 'size':
+      return `What size ${productLabel(config.product)} do you want?`;
+    case 'baseColor':
+      return 'What main color should the body be?';
+    case 'stripeStyle':
+      return 'How do you want the stripes laid out?';
+    case 'stripeColor':
+      return 'What color should the stripe be?';
+    case 'useCase':
+      return 'Who is this for?';
+    case 'waterDepth':
+      return config.product === 'waterblob'
+        ? 'How deep is the water where this will be used?'
+        : 'Where will the ski tube mostly be used?';
+    case 'timeline':
+      return 'When do you need it?';
+    case 'quantity':
+      return 'How many should we quote?';
+    case 'contact':
+      return 'What name, email, and phone should we use for the quote?';
+    case 'notes':
+      return 'Any logo, stripe notes, or special details?';
+    default:
+      return 'Review this and send the quote request.';
+  }
+}
+
+function nextStep(current: ChatStep): ChatStep {
+  const flow: ChatStep[] = [
+    'product',
+    'size',
+    'baseColor',
+    'stripeStyle',
+    'stripeColor',
+    'useCase',
+    'waterDepth',
+    'timeline',
+    'quantity',
+    'contact',
+    'notes',
+    'ready',
+  ];
+  return flow[Math.min(flow.indexOf(current) + 1, flow.length - 1)];
+}
+
+function choicesForStep(step: ChatStep, config: Config) {
+  switch (step) {
+    case 'product':
+      return ['Water Blob', 'Ski Tube'];
+    case 'size':
+      return sizeOptionsFor(config.product);
+    case 'baseColor':
+    case 'stripeColor':
+      return COLORS;
+    case 'stripeStyle':
+      return STRIPES;
+    case 'useCase':
+      return USE_CASES;
+    case 'timeline':
+      return TIMELINES;
+    case 'quantity':
+      return ['1', '2', '3', '4+'];
+    case 'notes':
+      return ['No extra notes'];
+    default:
+      return [];
+  }
+}
+
+function parseProduct(text: string): ProductType {
+  return text.toLowerCase().includes('ski') ? 'skitube' : 'waterblob';
+}
+
+function parseContact(text: string) {
+  const email = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0] || '';
+  const phone = text.match(/(?:\+?1[\s.-]?)?(?:\(?\d{3}\)?[\s.-]?)\d{3}[\s.-]?\d{4}/)?.[0] || '';
+  const name = text
+    .replace(email, '')
+    .replace(phone, '')
+    .replace(/\b(name|email|phone|is|my|number)\b/gi, '')
+    .replace(/[,:;]/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+  return { name, email, phone };
+}
+
 export default function WaterBlobAiPage() {
   const [config, setConfig] = useState<Config>(INITIAL_CONFIG);
   const [messages, setMessages] = useState<ChatMessage[]>(START_MESSAGES);
+  const [step, setStep] = useState<ChatStep>('product');
   const [input, setInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const viewerRef = useRef<ViewerInstance | null>(null);
+  const messagesRef = useRef<HTMLDivElement | null>(null);
 
   const modelPath = useMemo(() => modelForConfig(config), [config]);
-  const sizeOptions = config.product === 'waterblob' ? WATER_BLOB_SIZES : SKI_TUBE_SIZES;
+  const choices = choicesForStep(step, config);
+  const currentQuestion = questionForStep(step, config);
+  const progress = Math.round(([
+    'product',
+    'size',
+    'baseColor',
+    'stripeStyle',
+    'stripeColor',
+    'useCase',
+    'waterDepth',
+    'timeline',
+    'quantity',
+    'contact',
+    'notes',
+    'ready',
+  ].indexOf(step) / 11) * 100);
 
-  const addAssistant = useCallback((text: string) => {
-    setMessages((prev) => [...prev, { role: 'assistant', text }]);
+  const syncViewerColors = useCallback((viewer: ViewerInstance | null, nextConfig: Config) => {
+    if (!viewer?.setGroupColor || !viewer.partGroups?.length) return;
+
+    const baseHex = COLOR_HEX[nextConfig.baseColor] || COLOR_HEX.Blue;
+    const stripeHex = nextConfig.stripeStyle === 'No stripes'
+      ? baseHex
+      : COLOR_HEX[nextConfig.stripeColor] || COLOR_HEX.Yellow;
+
+    viewer.partGroups.forEach((group, index) => {
+      const name = group.name.toLowerCase();
+      if (name.includes('primary') || name.includes('main') || name.includes('top') || name.includes('bottom')) {
+        viewer.setGroupColor?.(index, baseHex);
+      }
+      if (name.includes('secondary') || name.includes('side')) {
+        viewer.setGroupColor?.(index, stripeHex);
+      }
+      if (name.includes('handles')) {
+        viewer.setGroupColor?.(index, stripeHex);
+      }
+    });
   }, []);
 
-  const updateConfig = useCallback(
-    <K extends keyof Config>(key: K, value: Config[K], response: string) => {
-      setConfig((prev) => ({ ...prev, [key]: value }));
-      setMessages((prev) => [
-        ...prev,
-        { role: 'customer', text: String(value) },
-        { role: 'assistant', text: response },
-      ]);
-    },
-    []
-  );
+  const scheduleColorSync = useCallback((viewer: ViewerInstance | null, nextConfig: Config) => {
+    [120, 350, 800, 1400].forEach((delay) => {
+      window.setTimeout(() => syncViewerColors(viewer, nextConfig), delay);
+    });
+  }, [syncViewerColors]);
 
-  function handleProduct(product: ProductType) {
-    const size = product === 'waterblob' ? '30 ft Original' : 'Standard ski tube';
-    setConfig((prev) => ({ ...prev, product, size }));
+  useEffect(() => {
+    messagesRef.current?.scrollTo({ top: messagesRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    scheduleColorSync(viewerRef.current, config);
+  }, [config, modelPath, scheduleColorSync]);
+
+  function askNext(next: ChatStep, nextConfig: Config, extra?: string) {
+    const question = questionForStep(next, nextConfig);
     setMessages((prev) => [
       ...prev,
-      { role: 'customer', text: productLabel(product) },
       {
         role: 'assistant',
-        text:
-          product === 'waterblob'
-            ? 'Good. For a Water Blob, choose a size and then pick the stripe setup.'
-            : 'Got it. For a Ski Tube, pick the tube option and stripe colors.',
+        text: extra ? `${extra} ${question}` : question,
       },
     ]);
+    setStep(next);
+  }
+
+  async function processAnswer(rawAnswer: string) {
+    const answer = rawAnswer.trim();
+    if (!answer) return;
+
+    setError('');
+    setSubmitted(false);
+    setInput('');
+
+    let nextConfig = { ...config };
+    let helper = '';
+
+    if (step === 'product') {
+      const product = parseProduct(answer);
+      nextConfig = {
+        ...nextConfig,
+        product,
+        size: product === 'skitube' ? 'Standard ski tube' : '30 ft Original',
+      };
+      helper = product === 'waterblob'
+        ? 'Perfect. Water Blob selected.'
+        : 'Perfect. Ski Tube selected.';
+    } else if (step === 'size') {
+      nextConfig.size = answer;
+      helper = 'Got it.';
+    } else if (step === 'baseColor') {
+      nextConfig.baseColor = answer;
+      helper = 'Nice, the preview is changing now.';
+    } else if (step === 'stripeStyle') {
+      nextConfig.stripeStyle = answer;
+      helper = answer === 'No stripes' ? 'Clean look.' : 'Stripe layout saved.';
+    } else if (step === 'stripeColor') {
+      nextConfig.stripeColor = answer;
+      helper = 'Stripe color saved, and the model is updating.';
+    } else if (step === 'useCase') {
+      nextConfig.useCase = answer;
+      helper = 'That helps us quote it correctly.';
+    } else if (step === 'waterDepth') {
+      nextConfig.waterDepth = answer;
+      helper = nextConfig.product === 'waterblob'
+        ? 'For Water Blob use, we usually recommend 8-10 ft minimum water depth.'
+        : 'Use location saved.';
+    } else if (step === 'timeline') {
+      nextConfig.timeline = answer;
+      helper = 'Timeline saved.';
+    } else if (step === 'quantity') {
+      const quantity = Number(answer.replace(/\D/g, '')) || 1;
+      nextConfig.quantity = Math.max(1, quantity);
+      helper = 'Quantity saved.';
+    } else if (step === 'contact') {
+      const contact = parseContact(answer);
+      nextConfig.name = contact.name || nextConfig.name;
+      nextConfig.email = contact.email || nextConfig.email;
+      nextConfig.phone = contact.phone || nextConfig.phone;
+      helper = contact.email && contact.phone
+        ? 'Contact saved.'
+        : 'I saved what I could. If name, email, or phone is missing, add it in the next note.';
+    } else if (step === 'notes') {
+      nextConfig.notes = answer === 'No extra notes'
+        ? nextConfig.notes
+        : [nextConfig.notes, answer].filter(Boolean).join('\n');
+      helper = 'Added.';
+    } else {
+      nextConfig.notes = [nextConfig.notes, answer].filter(Boolean).join('\n');
+      helper = 'Added that note.';
+    }
+
+    setConfig(nextConfig);
+    syncViewerColors(viewerRef.current, nextConfig);
+    setMessages((prev) => [...prev, { role: 'customer', text: answer }]);
+
+    const next = nextStep(step);
+    if (step === 'notes') {
+      askNext('ready', nextConfig, 'Everything is ready.');
+      return;
+    }
+    if (step === 'ready') {
+      try {
+        const response = await fetch('/api/customer-product-chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: answer,
+            config: nextConfig,
+            conversationHistory: messages,
+          }),
+        });
+        const data = await response.json();
+        setMessages((prev) => [
+          ...prev,
+          { role: 'assistant', text: data.reply || 'I added that to the quote notes.' },
+        ]);
+      } catch {
+        setMessages((prev) => [...prev, { role: 'assistant', text: 'I added that to the quote notes.' }]);
+      }
+      return;
+    }
+
+    askNext(next, nextConfig, helper);
   }
 
   async function handleTypedSubmit(e: FormEvent) {
     e.preventDefault();
-    const text = input.trim();
-    if (!text) return;
-    setInput('');
-    setConfig((prev) => ({ ...prev, notes: [prev.notes, text].filter(Boolean).join('\n') }));
-    setMessages((prev) => [
-      ...prev,
-      { role: 'customer', text },
-      {
-        role: 'assistant',
-        text: 'Thinking through that...',
-      },
-    ]);
-
-    try {
-      const response = await fetch('/api/customer-product-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          config,
-          conversationHistory: messages,
-        }),
-      });
-      const data = await response.json();
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: 'assistant',
-          text:
-            data.reply ||
-            'I added that to the quote notes. Keep choosing options, or fill in contact details and send it over.',
-        },
-      ]);
-    } catch {
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        {
-          role: 'assistant',
-          text: 'I added that to the quote notes. Keep choosing options, or fill in contact details and send it over.',
-        },
-      ]);
-    }
+    await processAnswer(input);
   }
 
   async function sendInquiry() {
@@ -197,8 +406,13 @@ export default function WaterBlobAiPage() {
     setError('');
 
     if (!config.name || !config.email || !config.phone) {
-      setError('Name, email, and phone are required before sending.');
+      setError('I still need a name, email, and phone before sending this.');
       setSubmitting(false);
+      setStep('contact');
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Send me the customer name, email, and phone number, then I can submit the quote.' },
+      ]);
       return;
     }
 
@@ -241,7 +455,10 @@ export default function WaterBlobAiPage() {
       }
 
       setSubmitted(true);
-      addAssistant('Sent. We have the product, size, stripe/color choices, notes, and contact details. Someone will follow up.');
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: 'Sent. We have the product, 3D color choices, notes, and contact details.' },
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send inquiry');
     } finally {
@@ -256,8 +473,7 @@ export default function WaterBlobAiPage() {
           <Link href="/products" className={styles.backLink}>Products</Link>
           <h1>Water Blob AI Builder</h1>
           <p>
-            Build a customer quote for Water Blobs or Ski Tubes with live 3D preview,
-            colors, stripes, sizing, and contact details.
+            Chat through a Water Blob or Ski Tube quote while the 3D preview updates in real time.
           </p>
         </div>
         <a href="tel:+14178648461" className={styles.callButton}>(417) 864-8461</a>
@@ -267,23 +483,27 @@ export default function WaterBlobAiPage() {
         <div className={styles.viewerPanel}>
           <div className={styles.modelStage}>
             <ProductBlobViewerWrapper
-              key={`${config.product}-${config.size}`}
+              key={`${config.product || 'waterblob'}-${config.size || 'default'}`}
               containerId="customer-ai-product-viewer"
               modelPath={modelPath}
               autoRotate
               enableInteraction
-              enableColorCustomizer
+              enableColorCustomizer={false}
               showAllParts
               quality="medium"
               onViewerReady={(viewer) => {
                 viewerRef.current = viewer;
+                scheduleColorSync(viewer, config);
               }}
             />
           </div>
           <div className={styles.previewMeta}>
-            <span>{productLabel(config.product)}</span>
-            <strong>{config.size}</strong>
-            <span>{config.baseColor} with {config.stripeColor} {config.stripeStyle.toLowerCase()}</span>
+            <span>Live 3D preview</span>
+            <strong>{config.product ? productLabel(config.product) : 'Start with product type'}</strong>
+            <span>
+              {config.size || 'Size pending'} · {config.baseColor}
+              {config.stripeStyle === 'No stripes' ? ' · no stripes' : ` with ${config.stripeColor} ${config.stripeStyle.toLowerCase()}`}
+            </span>
           </div>
         </div>
 
@@ -291,12 +511,12 @@ export default function WaterBlobAiPage() {
           <div className={styles.chatTop}>
             <div>
               <h2>Customer Chat</h2>
-              <p>Guided quote details</p>
+              <p>{currentQuestion}</p>
             </div>
-            <span className={styles.status}>Live preview</span>
+            <span className={styles.status}>{progress}%</span>
           </div>
 
-          <div className={styles.messages}>
+          <div className={styles.messages} ref={messagesRef}>
             {messages.map((message, index) => (
               <div
                 key={`${message.role}-${index}`}
@@ -307,155 +527,61 @@ export default function WaterBlobAiPage() {
             ))}
           </div>
 
-          <div className={styles.options}>
-            <div className={styles.optionBlock}>
-              <label>Product</label>
-              <div className={styles.chips}>
-                {PRODUCT_OPTIONS.map((option) => (
+          <div className={styles.chatComposer}>
+            {choices.length > 0 && (
+              <div className={styles.suggestedReplies}>
+                {choices.map((choice) => (
                   <button
-                    key={option.value}
+                    key={choice}
                     type="button"
-                    className={config.product === option.value ? styles.activeChip : styles.chip}
-                    onClick={() => handleProduct(option.value)}
+                    onClick={() => processAnswer(choice)}
                   >
-                    {option.label}
+                    {choice}
                   </button>
                 ))}
               </div>
-            </div>
+            )}
 
-            <div className={styles.optionBlock}>
-              <label>Size</label>
-              <div className={styles.chips}>
-                {sizeOptions.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={config.size === size ? styles.activeChip : styles.chip}
-                    onClick={() => updateConfig('size', size, 'Size saved. Now choose colors and stripes.')}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <form className={styles.freeText} onSubmit={handleTypedSubmit}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={
+                  step === 'contact'
+                    ? 'Type name, email, and phone'
+                    : step === 'ready'
+                      ? 'Ask a question or add another note'
+                      : 'Type your answer'
+                }
+              />
+              <button type="submit">Send</button>
+            </form>
+          </div>
 
-            <div className={styles.twoCols}>
-              <div className={styles.optionBlock}>
-                <label>Base color</label>
-                <select
-                  value={config.baseColor}
-                  onChange={(e) => updateConfig('baseColor', e.target.value, 'Base color saved.')}
-                >
-                  {COLORS.map((color) => <option key={color}>{color}</option>)}
-                </select>
-              </div>
-              <div className={styles.optionBlock}>
-                <label>Stripe color</label>
-                <select
-                  value={config.stripeColor}
-                  onChange={(e) => updateConfig('stripeColor', e.target.value, 'Stripe color saved.')}
-                >
-                  {COLORS.map((color) => <option key={color}>{color}</option>)}
-                </select>
-              </div>
+          <div className={styles.quoteSummary}>
+            <div>
+              <span>Quote draft</span>
+              <strong>{config.product ? productLabel(config.product) : 'Not picked yet'}</strong>
             </div>
-
-            <div className={styles.optionBlock}>
-              <label>Stripe layout</label>
-              <div className={styles.chips}>
-                {STRIPES.map((stripe) => (
-                  <button
-                    key={stripe}
-                    type="button"
-                    className={config.stripeStyle === stripe ? styles.activeChip : styles.chip}
-                    onClick={() => updateConfig('stripeStyle', stripe, 'Stripe layout saved.')}
-                  >
-                    {stripe}
-                  </button>
-                ))}
-              </div>
+            <div>
+              <span>Size</span>
+              <strong>{config.size || 'Pending'}</strong>
             </div>
-
-            <div className={styles.twoCols}>
-              <div className={styles.optionBlock}>
-                <label>Use case</label>
-                <select
-                  value={config.useCase}
-                  onChange={(e) => updateConfig('useCase', e.target.value, 'Use case saved.')}
-                >
-                  <option value="">Choose one</option>
-                  {USE_CASES.map((item) => <option key={item}>{item}</option>)}
-                </select>
-              </div>
-              <div className={styles.optionBlock}>
-                <label>Timeline</label>
-                <select
-                  value={config.timeline}
-                  onChange={(e) => updateConfig('timeline', e.target.value, 'Timeline saved.')}
-                >
-                  <option value="">Choose one</option>
-                  {TIMELINES.map((item) => <option key={item}>{item}</option>)}
-                </select>
-              </div>
+            <div>
+              <span>Look</span>
+              <strong>{config.baseColor} / {config.stripeColor}</strong>
             </div>
-
-            <div className={styles.twoCols}>
-              <div className={styles.optionBlock}>
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={config.quantity}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, quantity: Math.max(1, Number(e.target.value) || 1) }))}
-                />
-              </div>
-              <div className={styles.optionBlock}>
-                <label>Water depth</label>
-                <input
-                  placeholder="Example: 10 ft"
-                  value={config.waterDepth}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, waterDepth: e.target.value }))}
-                  onBlur={() => config.waterDepth && addAssistant('Water depth saved. For Water Blob use, we normally recommend 8-10 ft minimum.')}
-                />
-              </div>
+            <div>
+              <span>Contact</span>
+              <strong>{config.name || 'Pending'}</strong>
             </div>
           </div>
 
-          <form className={styles.freeText} onSubmit={handleTypedSubmit}>
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type extra notes, like: wants red side stripes or camp logo"
-            />
-            <button type="submit">Add note</button>
-          </form>
-
-          <div className={styles.contactBox}>
-            <h3>Send this quote request</h3>
-            <div className={styles.contactGrid}>
-              <input
-                placeholder="Name"
-                value={config.name}
-                onChange={(e) => setConfig((prev) => ({ ...prev, name: e.target.value }))}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={config.email}
-                onChange={(e) => setConfig((prev) => ({ ...prev, email: e.target.value }))}
-              />
-              <input
-                type="tel"
-                placeholder="Phone"
-                value={config.phone}
-                onChange={(e) => setConfig((prev) => ({ ...prev, phone: e.target.value }))}
-              />
-            </div>
+          <div className={styles.submitArea}>
             {error && <div className={styles.error}>{error}</div>}
             {submitted && <div className={styles.success}>Quote request sent.</div>}
-            <button className={styles.submitButton} type="button" onClick={sendInquiry} disabled={submitting}>
-              {submitting ? 'Sending...' : 'Send quote request'}
+            <button className={styles.submitButton} type="button" onClick={sendInquiry} disabled={submitting || step !== 'ready'}>
+              {submitting ? 'Sending...' : step === 'ready' ? 'Send quote request' : 'Finish chat to send'}
             </button>
           </div>
         </div>
