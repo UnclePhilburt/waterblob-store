@@ -597,12 +597,6 @@ function applyAssistantRecommendation(config: Config, reply: string) {
     updated.add('size');
   }
 
-  if (
-    getNamedColorTheme(reply) ||
-    /\b(?:for the body|body:|for the stripe|for the stripes|stripes?:|for the end cap|for the end caps|end caps?:|for the anchor|for the anchor patches|anchor patches?:)\b/i.test(reply)
-  ) {
-    applyColorLanguage(nextConfig, updated, 'baseColor', reply);
-  }
   return { nextConfig, updated };
 }
 
@@ -941,8 +935,10 @@ export default function BlobbyDesigner({ embedded = false }: { embedded?: boolea
 
   function applyConfig(nextConfig: Config, remember = true) {
     if (remember) saveHistory();
+    clearColorSyncTimers();
     setConfig(nextConfig);
     syncViewerColors(viewerRef.current, nextConfig);
+    scheduleColorSync(viewerRef.current, nextConfig);
   }
 
   function readVisibleModelState() {
