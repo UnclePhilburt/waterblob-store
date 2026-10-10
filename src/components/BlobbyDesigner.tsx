@@ -447,12 +447,13 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
   const normalized = answer.toLowerCase();
   const colors = parseColors(answer);
 
-  const randomTheme = wantsRandomColors(answer) ? getRandomColorTheme() : null;
-  if (randomTheme && colors.length < 2) {
-    nextConfig.baseColor = randomTheme.baseColor;
-    nextConfig.stripeColor = randomTheme.stripeColor;
-    nextConfig.endCapColor = randomTheme.endCapColor;
-    nextConfig.anchorColor = randomTheme.anchorColor;
+  const namedTheme = getNamedColorTheme(answer);
+  const wantsTheme = /\b(theme|colors|colour|look|combo|scheme|style|vibe)\b/i.test(answer);
+  if (namedTheme && (colors.length < 2 || wantsTheme || looksLikeAgreement(answer) || wantsBlobbyToChoose(answer))) {
+    nextConfig.baseColor = namedTheme.baseColor;
+    nextConfig.stripeColor = namedTheme.stripeColor;
+    nextConfig.endCapColor = namedTheme.endCapColor;
+    nextConfig.anchorColor = namedTheme.anchorColor;
     updated.add('baseColor');
     updated.add('stripeColor');
     updated.add('endCapColor');
@@ -460,12 +461,12 @@ function applyColorLanguage(nextConfig: Config, updated: Set<string>, step: Chat
     return;
   }
 
-  const namedTheme = getNamedColorTheme(answer);
-  if (namedTheme && colors.length < 2) {
-    nextConfig.baseColor = namedTheme.baseColor;
-    nextConfig.stripeColor = namedTheme.stripeColor;
-    nextConfig.endCapColor = namedTheme.endCapColor;
-    nextConfig.anchorColor = namedTheme.anchorColor;
+  const randomTheme = wantsRandomColors(answer) ? getRandomColorTheme() : null;
+  if (randomTheme && colors.length < 2) {
+    nextConfig.baseColor = randomTheme.baseColor;
+    nextConfig.stripeColor = randomTheme.stripeColor;
+    nextConfig.endCapColor = randomTheme.endCapColor;
+    nextConfig.anchorColor = randomTheme.anchorColor;
     updated.add('baseColor');
     updated.add('stripeColor');
     updated.add('endCapColor');
